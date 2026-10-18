@@ -140,6 +140,7 @@ jobs:
       - name: Build
         run: |
           v='${{ needs.test.outputs.version }}'
+          mkdir -p app/android/app/libs
           (cd core && gomobile bind -target=android -androidapi 24 -trimpath \
             -ldflags "-s -w -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$v" \
             -o ../app/android/app/libs/core.aar ./mobile)
