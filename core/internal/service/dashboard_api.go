@@ -149,7 +149,7 @@ func (d *Daemon) StatusView() (StatusView, error) {
 	if code := strings.ToUpper(cfg.Proxy.Country); len(code) == 2 {
 		view.SelectionName = d.countryNameLocked(code)
 	}
-	view.SystemProxySupported = runtime.GOOS == "windows"
+	view.SystemProxySupported = runtime.GOOS == "windows" || d.SystemProxySupported
 	view.Notices = d.notices.Since(time.Now().Add(-noticeWindow))
 	engine := d.engine
 	if engine != nil {

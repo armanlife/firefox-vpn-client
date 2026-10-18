@@ -912,6 +912,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get startWithWindows => 'Windows-এর সাথে চালু করুন';
 
   @override
+  String get startAtSignIn => 'সাইন ইন করলে চালু করুন';
+
+  @override
   String get proxyServiceActive => 'প্রক্সি সার্ভিস চালু আছে';
 
   @override
@@ -997,6 +1000,14 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get modeSystemProxyHint =>
       'Windows ও বেশিরভাগ অ্যাপ প্রক্সি দিয়ে যায়।';
+
+  @override
+  String get modeProxyHintLinux =>
+      'শুধু যেসব অ্যাপে প্রক্সি সেট করা আছে সেগুলোই এর মধ্য দিয়ে যায়; সিস্টেমের সেটিংস বদলায় না।';
+
+  @override
+  String get modeSystemProxyHintLinux =>
+      'ব্রাউজার ও বেশিরভাগ অ্যাপ প্রক্সি দিয়ে যায়।';
 
   @override
   String get suggestedApps => 'প্রস্তাবিত অ্যাপ';

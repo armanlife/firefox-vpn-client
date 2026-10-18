@@ -917,6 +917,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get startWithWindows => 'Indítás a Windows-zal';
 
   @override
+  String get startAtSignIn => 'Indítás bejelentkezéskor';
+
+  @override
   String get proxyServiceActive => 'A proxyszolgáltatás aktív';
 
   @override
@@ -1002,6 +1005,14 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get modeSystemProxyHint =>
       'A Windows és a legtöbb alkalmazás a proxyn át megy.';
+
+  @override
+  String get modeProxyHintLinux =>
+      'Csak a proxy használatára beállított alkalmazások mennek rajta át; a rendszer beállításai nem változnak.';
+
+  @override
+  String get modeSystemProxyHintLinux =>
+      'A böngészők és a legtöbb alkalmazás a proxyn át megy.';
 
   @override
   String get suggestedApps => 'Javasolt alkalmazások';

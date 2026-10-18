@@ -912,6 +912,9 @@ class AppLocalizationsAz extends AppLocalizations {
   String get startWithWindows => 'Windows ilə başlat';
 
   @override
+  String get startAtSignIn => 'Sistemə girəndə başlat';
+
+  @override
   String get proxyServiceActive => 'Proksi xidməti aktivdir';
 
   @override
@@ -997,6 +1000,14 @@ class AppLocalizationsAz extends AppLocalizations {
   @override
   String get modeSystemProxyHint =>
       'Windows və əksər tətbiqlər proksidən keçir.';
+
+  @override
+  String get modeProxyHintLinux =>
+      'Yalnız proksi ayarlanmış tətbiqlər ondan keçir; sistem ayarları dəyişmir.';
+
+  @override
+  String get modeSystemProxyHintLinux =>
+      'Brauzerlər və əksər tətbiqlər proksidən keçir.';
 
   @override
   String get suggestedApps => 'Təklif olunan tətbiqlər';

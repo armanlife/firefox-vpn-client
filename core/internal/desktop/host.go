@@ -38,6 +38,7 @@ func newHostedDaemon(paths service.DataPaths, verbose bool, exit func()) (*servi
 	}
 	d.ExitApp = exit
 	d.OpenFolder = openBrowser
+	d.SystemProxySupported = systemProxySupported()
 	return d, nil
 }
 
@@ -46,7 +47,7 @@ func newHostedDaemon(paths service.DataPaths, verbose bool, exit func()) (*servi
 // this program's setting is removed. The tray applies the mode from its
 // own polling instead.
 func (s *systemProxySync) follow(ctx context.Context, client *service.Client, interval time.Duration) {
-	if !systemProxySupported {
+	if !systemProxySupported() {
 		return
 	}
 	for {

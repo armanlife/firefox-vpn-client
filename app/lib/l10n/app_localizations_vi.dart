@@ -911,6 +911,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get startWithWindows => 'Khởi động cùng Windows';
 
   @override
+  String get startAtSignIn => 'Khởi động khi đăng nhập';
+
+  @override
   String get proxyServiceActive => 'Dịch vụ proxy đang hoạt động';
 
   @override
@@ -995,6 +998,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get modeSystemProxyHint => 'Windows và hầu hết ứng dụng đi qua proxy.';
+
+  @override
+  String get modeProxyHintLinux =>
+      'Chỉ những ứng dụng được cài đặt dùng proxy mới đi qua proxy; cài đặt của hệ thống không bị thay đổi.';
+
+  @override
+  String get modeSystemProxyHintLinux =>
+      'Trình duyệt và hầu hết ứng dụng đi qua proxy.';
 
   @override
   String get suggestedApps => 'Ứng dụng gợi ý';

@@ -915,6 +915,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get startWithWindows => 'Démarrer avec Windows';
 
   @override
+  String get startAtSignIn => 'Démarrer à l\'ouverture de session';
+
+  @override
   String get proxyServiceActive => 'Service proxy actif';
 
   @override
@@ -1000,6 +1003,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get modeSystemProxyHint =>
       'Windows et la plupart des applications passent par le proxy.';
+
+  @override
+  String get modeProxyHintLinux =>
+      'Seules les applications configurées pour utiliser le proxy passent par lui ; les réglages du système restent inchangés.';
+
+  @override
+  String get modeSystemProxyHintLinux =>
+      'Les navigateurs et la plupart des applications passent par le proxy.';
 
   @override
   String get suggestedApps => 'Applications suggérées';

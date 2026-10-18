@@ -19,6 +19,15 @@ void main() {
       'zh_Hant',
     );
     expect(AppSettings.languageFor(const Locale('de')), 'en');
+    // The first preferred language the app has; else English, also for a
+    // system without one (Linux's C locale).
+    expect(
+      AppSettings.languageForList(const [Locale('de'), Locale('fa')]),
+      'fa',
+    );
+    expect(AppSettings.languageForList(const [Locale('de')]), 'en');
+    expect(AppSettings.languageForList(const [Locale('und')]), 'en');
+    expect(AppSettings.languageForList(null), 'en');
     expect(
       AppSettings.localeOf('zh_Hant'),
       const Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),

@@ -912,6 +912,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get startWithWindows => 'Mulai bersama Windows';
 
   @override
+  String get startAtSignIn => 'Mulai saat masuk';
+
+  @override
   String get proxyServiceActive => 'Layanan proxy aktif';
 
   @override
@@ -997,6 +1000,14 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get modeSystemProxyHint =>
       'Windows dan sebagian besar aplikasi lewat proxy.';
+
+  @override
+  String get modeProxyHintLinux =>
+      'Hanya aplikasi yang diatur memakai proxy yang lewat proxy; pengaturan sistem tidak diubah.';
+
+  @override
+  String get modeSystemProxyHintLinux =>
+      'Browser dan sebagian besar aplikasi lewat proxy.';
 
   @override
   String get suggestedApps => 'Aplikasi yang disarankan';

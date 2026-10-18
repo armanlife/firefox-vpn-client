@@ -251,7 +251,7 @@ func TestBesideApp(t *testing.T) {
 	if besideApp("dir", exists) {
 		t.Fatal("a core on its own is not beside the app")
 	}
-	for _, name := range []string{"firefox-vpn.exe", "firefox_vpn"} {
+	for _, name := range []string{"firefox-vpn.exe", "firefox-vpn", "firefox_vpn"} {
 		files = map[string]bool{name: true}
 		if !besideApp("dir", exists) {
 			t.Fatalf("beside %s", name)

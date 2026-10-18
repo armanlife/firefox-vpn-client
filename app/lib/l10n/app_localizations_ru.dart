@@ -914,6 +914,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get startWithWindows => 'Запускать вместе с Windows';
 
   @override
+  String get startAtSignIn => 'Запускать при входе в систему';
+
+  @override
   String get proxyServiceActive => 'Прокси-служба работает';
 
   @override
@@ -999,6 +1002,14 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get modeSystemProxyHint =>
       'Через прокси идут Windows и большинство приложений.';
+
+  @override
+  String get modeProxyHintLinux =>
+      'Через прокси идут только приложения, в которых он настроен; настройки системы не меняются.';
+
+  @override
+  String get modeSystemProxyHintLinux =>
+      'Через прокси идут браузеры и большинство приложений.';
 
   @override
   String get suggestedApps => 'Рекомендуемые приложения';

@@ -91,6 +91,19 @@ class AppSettings extends ChangeNotifier {
         : 'en';
   }
 
+  /// The app language for the system's preferred [locales], in order: the
+  /// first one the app has; else English (not Flutter's default, the first
+  /// language it was built with).
+  static String languageForList(List<Locale>? locales) {
+    for (final locale in locales ?? const <Locale>[]) {
+      if (locale.languageCode == 'zh' ||
+          supportedLanguages.contains(locale.languageCode)) {
+        return languageFor(locale);
+      }
+    }
+    return 'en';
+  }
+
   /// The core's routing regions (`routing.region`); empty is none.
   static const regions = ['ir', 'cn', 'ru', 'af', 'tr', 'id', 'br', ''];
 

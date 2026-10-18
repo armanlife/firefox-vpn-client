@@ -86,6 +86,8 @@ class VpnApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       locale: settings.locale,
       supportedLocales: AppLocalizations.supportedLocales,
+      localeListResolutionCallback: (locales, _) =>
+          AppSettings.localeOf(AppSettings.languageForList(locales)),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

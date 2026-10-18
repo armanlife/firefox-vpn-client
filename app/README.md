@@ -1,6 +1,6 @@
 # Firefox VPN app
 
-The Flutter app: the shared UI for Windows, macOS, and Android. It holds no
+The Flutter app: the shared UI for Windows, Linux, macOS, and Android. It holds no
 VPN logic; it is a client of the core's dashboard API on loopback
 (`core/doc/DASHBOARD.md`), authorized by the `X-Local-Token` header from
 `local-api.token` in the data folder.
@@ -28,6 +28,25 @@ VPN logic; it is a client of the core's dashboard API on loopback
   app needs no plugins.
 - App preferences (language, theme, close button) are in
   `<data>/app-settings.json`; VPN settings belong to the core.
+
+## Desktop model (Linux)
+
+The same as on Windows, with the Linux names: the app is `firefox-vpn`
+beside `firefox-vpn-core`, and `linux/runner/desktop_bridge.cc` is the
+native side of the same channel.
+
+- The tray icon is an AppIndicator, loaded at run time
+  (`libayatana-appindicator3` or `libappindicator3`); without it the app
+  still runs, and minimizing to the tray minimizes the window instead. An
+  AppIndicator has only a menu: its first entry (Open) also answers a middle
+  click.
+- Notifications go to the desktop's notification service over D-Bus; a
+  click opens the window.
+- Start at sign-in writes `~/.config/autostart/firefox-vpn-client.desktop`.
+- One copy per user (GtkApplication `com.arman.firefoxvpn`); copies started
+  with `--data-dir` run beside it.
+- The core sets GNOME's proxy setting (gsettings `org.gnome.system.proxy`),
+  which GNOME-based desktops and most browsers read.
 
 The data folder (accounts, settings, logs) on Windows is `user-data` next
 to the app (not `data`, which holds Flutter's own files). The installer puts
@@ -129,7 +148,8 @@ shield in white, for the app's tray (`assets/tray`) and the core's
 ## Development
 
 - Build a release folder with the core: `scripts\build-windows.ps1` from
-  the repository root (output in `dist\Firefox-VPN-<version>\`).
+  the repository root (output in `dist\Firefox-VPN-<version>\`); on Linux,
+  `scripts/build-linux.sh` (output in `dist/Firefox-VPN-<version>-Linux-x64.tar.gz`).
 - Work on the UI without a real core or accounts:
 
   ```

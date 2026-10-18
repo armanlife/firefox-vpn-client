@@ -339,7 +339,12 @@ class _DesktopHome extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          systemProxy ? l.modeSystemProxyHint : l.modeProxyHint,
+          switch ((systemProxy, Platform.isLinux)) {
+            (true, false) => l.modeSystemProxyHint,
+            (true, true) => l.modeSystemProxyHintLinux,
+            (false, false) => l.modeProxyHint,
+            (false, true) => l.modeProxyHintLinux,
+          },
           textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall?.copyWith(color: p.muted),
         ),

@@ -892,6 +892,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get startWithWindows => '开机启动';
 
   @override
+  String get startAtSignIn => '登录时启动';
+
+  @override
   String get proxyServiceActive => '代理服务运行中';
 
   @override
@@ -971,6 +974,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modeSystemProxyHint => 'Windows 和大多数应用都走代理。';
+
+  @override
+  String get modeProxyHintLinux => '仅对已设置代理的应用生效，不更改系统设置。';
+
+  @override
+  String get modeSystemProxyHintLinux => '浏览器和大多数应用都走代理。';
 
   @override
   String get suggestedApps => '推荐应用';
@@ -1956,6 +1965,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get startWithWindows => '隨 Windows 啟動';
 
   @override
+  String get startAtSignIn => '登入時啟動';
+
+  @override
   String get proxyServiceActive => '代理服務執行中';
 
   @override
@@ -2035,6 +2047,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get modeSystemProxyHint => 'Windows 和大多數應用程式都會經過代理。';
+
+  @override
+  String get modeProxyHintLinux => '只有已設定使用代理的應用程式會經過代理；不會變更系統設定。';
+
+  @override
+  String get modeSystemProxyHintLinux => '瀏覽器和大多數應用程式都會經過代理。';
 
   @override
   String get suggestedApps => '推薦的應用程式';

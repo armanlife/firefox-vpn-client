@@ -14,7 +14,7 @@
   the page icon and the logo.
 - The tray icons, drawn rather than made from the art, which 16 px cannot
   show: a disk in the state's color with the logo's shield in white. The
-  app's tray (assets/tray/*.ico) and the core's (core/internal/desktop/tray:
+  app's tray (assets/tray: .ico for Windows, .png for Linux) and the core's (core/internal/desktop/tray:
   .ico for Windows, .png elsewhere) use the same drawings.
 
 Run from app/ after changing the art or the colors (needs Pillow):
@@ -203,6 +203,8 @@ def tray():
     app = os.path.join(APP, 'assets', 'tray')
     for name, state in [('on', 'running'), ('idle', 'running-asleep'), ('busy', 'waiting'), ('error', 'error'), ('off', 'off')]:
         tray_ico(os.path.join(app, name + '.ico'), states[state])
+        # Linux (AppIndicator) takes a .png; 64 px stays sharp when scaled.
+        tray_icon(states[state]).resize((64, 64), Image.LANCZOS).save(os.path.join(app, name + '.png'), optimize=True)
     # The core's tray: an .ico for Windows, a 32 px .png elsewhere.
     folder = os.path.join(CORE, 'internal', 'desktop', 'tray')
     os.makedirs(folder, exist_ok=True)

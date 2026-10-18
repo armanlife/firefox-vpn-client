@@ -910,6 +910,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get startWithWindows => 'اجرا با روشن شدن ویندوز';
 
   @override
+  String get startAtSignIn => 'اجرا هنگام ورود به سیستم';
+
+  @override
   String get proxyServiceActive => 'سرویس پروکسی فعال';
 
   @override
@@ -995,6 +998,14 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get modeSystemProxyHint =>
       'ویندوز و بیشتر برنامه‌ها از پروکسی رد می‌شوند.';
+
+  @override
+  String get modeProxyHintLinux =>
+      'فقط برنامه‌هایی که برای پروکسی تنظیم شده‌اند از آن استفاده می‌کنند؛ تنظیمات سیستم تغییر نمی‌کند.';
+
+  @override
+  String get modeSystemProxyHintLinux =>
+      'مرورگرها و بیشتر برنامه‌ها از پروکسی رد می‌شوند.';
 
   @override
   String get suggestedApps => 'برنامه‌های پیشنهادی';

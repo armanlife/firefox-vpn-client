@@ -912,6 +912,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get startWithWindows => 'Windows ile başlat';
 
   @override
+  String get startAtSignIn => 'Oturum açınca başlat';
+
+  @override
   String get proxyServiceActive => 'Proxy hizmeti etkin';
 
   @override
@@ -997,6 +1000,14 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get modeSystemProxyHint =>
       'Windows ve çoğu uygulama proxy üzerinden geçer.';
+
+  @override
+  String get modeProxyHintLinux =>
+      'Yalnızca proxy ayarı yapılmış uygulamalar proxy\'den geçer; sistem ayarlarına dokunulmaz.';
+
+  @override
+  String get modeSystemProxyHintLinux =>
+      'Tarayıcılar ve çoğu uygulama proxy üzerinden geçer.';
 
   @override
   String get suggestedApps => 'Önerilen uygulamalar';

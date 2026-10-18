@@ -1701,6 +1701,12 @@ abstract class AppLocalizations {
   /// **'Start with Windows'**
   String get startWithWindows;
 
+  /// No description provided for @startAtSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Start when you sign in'**
+  String get startAtSignIn;
+
   /// No description provided for @proxyServiceActive.
   ///
   /// In en, this message translates to:
@@ -1850,6 +1856,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Windows and most apps go through the proxy.'**
   String get modeSystemProxyHint;
+
+  /// No description provided for @modeProxyHintLinux.
+  ///
+  /// In en, this message translates to:
+  /// **'Only apps set up to use the proxy go through it; the system\'s settings stay as they are.'**
+  String get modeProxyHintLinux;
+
+  /// No description provided for @modeSystemProxyHintLinux.
+  ///
+  /// In en, this message translates to:
+  /// **'Browsers and most apps go through the proxy.'**
+  String get modeSystemProxyHintLinux;
 
   /// No description provided for @suggestedApps.
   ///

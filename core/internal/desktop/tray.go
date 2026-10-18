@@ -85,7 +85,7 @@ func (a *trayApp) onReady() {
 
 	// The layout follows v2rayN's tray menu.
 	a.mOpen = systray.AddMenuItem("Open dashboard", "Open the web dashboard")
-	if systemProxySupported {
+	if systemProxySupported() {
 		systray.AddSeparator()
 		a.mModes = map[string]*systray.MenuItem{}
 		for _, m := range systemProxyModes {

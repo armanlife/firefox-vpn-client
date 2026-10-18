@@ -111,13 +111,17 @@ class CoreProcess {
     _stderr.clear();
     _appError = null;
     _startedAt = DateTime.now();
-    // detachedWithStdio: no console window for the console-subsystem core,
-    // and stdin stays a pipe that closes when this process ends.
-    final p = await Process.start(executable, [
-      '-app',
-      '-data-dir',
-      dataDir,
-    ], mode: ProcessStartMode.detachedWithStdio);
+    // On Windows detachedWithStdio: no console window for the
+    // console-subsystem core, and stdin stays a pipe that closes when this
+    // process ends. Elsewhere a plain child, which the app reaps (a detached
+    // one leaves a zombie on Linux).
+    final p = await Process.start(
+      executable,
+      ['-app', '-data-dir', dataDir],
+      mode: Platform.isWindows
+          ? ProcessStartMode.detachedWithStdio
+          : ProcessStartMode.normal,
+    );
     _process = p;
     _running = true;
     p.stdout.drain<void>();

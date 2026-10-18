@@ -486,8 +486,9 @@ const (
 	PortableMarker = "portable"
 )
 
-// appExecutables are the desktop app's executables (Flutter's build names).
-var appExecutables = []string{"firefox-vpn.exe", "firefox_vpn"}
+// appExecutables are the desktop app's executables: Windows, Linux, and
+// Flutter's default name (macOS).
+var appExecutables = []string{"firefox-vpn.exe", "firefox-vpn", "firefox_vpn"}
 
 // DefaultDataDir returns the data folder: DataDirName next to the running
 // executable (symlinks resolved, so a linked binary still uses its real

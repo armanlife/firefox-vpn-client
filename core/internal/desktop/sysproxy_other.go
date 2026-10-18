@@ -1,8 +1,8 @@
-//go:build !windows
+//go:build !windows && !linux
 
 package desktop
 
-const systemProxySupported = false
+func systemProxySupported() bool { return false }
 
 func setSystemProxy(string) error { return nil }
 

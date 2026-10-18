@@ -9,10 +9,11 @@ import (
 	"github.com/armanlife/firefox-vpn-client/core/internal/service"
 )
 
-// systemProxySync carries out the system_proxy mode (Windows), in the
+// systemProxySync carries out the system_proxy mode (Windows, and GNOME's
+// setting on Linux), in the
 // tray's or the app mode's session:
 //
-//   - set points Windows at the local proxy only while the proxy runs, so
+//   - set points the system at the local proxy only while the proxy runs, so
 //     stopping the program never leaves applications pointed at a closed
 //     port; the previous setting comes back then.
 //   - clear restores a setting this program made, then turns the system
@@ -27,7 +28,7 @@ type systemProxySync struct {
 // update carries out the mode for st (nil when the service is not
 // reachable).
 func (s *systemProxySync) update(st *service.TrayStatus) {
-	if !systemProxySupported {
+	if !systemProxySupported() {
 		return
 	}
 	s.mu.Lock()
@@ -46,32 +47,32 @@ func (s *systemProxySync) update(st *service.TrayStatus) {
 	// would be undone on every refresh).
 	if s.applied != "" && s.applied != want {
 		if err := restoreSystemProxy(s.applied); err != nil {
-			logx.Warn("restoring the Windows proxy setting failed err=%s", logx.Err(err))
+			logx.Warn("restoring the system proxy setting failed err=%s", logx.Err(err))
 		} else if want == "" {
-			logx.Info("Windows proxy setting restored")
+			logx.Info("system proxy setting restored")
 		}
 	}
 	if ours != "" && ours != want {
 		if err := restoreSystemProxy(ours); err != nil {
-			logx.Warn("restoring the Windows proxy setting failed err=%s", logx.Err(err))
+			logx.Warn("restoring the system proxy setting failed err=%s", logx.Err(err))
 		}
 	}
 	if st != nil && st.SystemProxy != s.mode {
 		if st.SystemProxy == config.SystemProxyClear {
 			if err := clearSystemProxy(); err != nil {
-				logx.Warn("clearing the Windows proxy setting failed err=%s", logx.Err(err))
+				logx.Warn("clearing the system proxy setting failed err=%s", logx.Err(err))
 			} else {
-				logx.Info("Windows system proxy cleared")
+				logx.Info("system proxy cleared")
 			}
 		}
 		s.mode = st.SystemProxy
 	}
 	if want != "" && want != s.applied {
 		if err := setSystemProxy(want); err != nil {
-			logx.Warn("setting the Windows proxy failed err=%s", logx.Err(err))
+			logx.Warn("setting the system proxy failed err=%s", logx.Err(err))
 			want = ""
 		} else {
-			logx.Info("Windows proxy set to the local proxy address=%s", want)
+			logx.Info("system proxy set to the local proxy address=%s", want)
 		}
 	}
 	s.applied = want
@@ -92,7 +93,7 @@ func (s *systemProxySync) clear() {
 		return
 	}
 	if err := restoreSystemProxy(s.applied); err != nil {
-		logx.Warn("restoring the Windows proxy setting failed err=%s", logx.Err(err))
+		logx.Warn("restoring the system proxy setting failed err=%s", logx.Err(err))
 	}
 	s.applied = ""
 }

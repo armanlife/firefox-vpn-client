@@ -926,7 +926,7 @@ func (ui *consoleUI) menuItems() []menuItem {
 			menuItem{action: actLocation, label: "Choose a server (test the real delay)"},
 			menuItem{action: actTest, label: "Test the connection"},
 			menuItem{action: actRestart, label: "Restart the proxy"})
-		if systemProxySupported {
+		if systemProxySupported() {
 			label := "Turn on system proxy"
 			if st.SystemProxy == config.SystemProxySet {
 				label = "Turn off system proxy"

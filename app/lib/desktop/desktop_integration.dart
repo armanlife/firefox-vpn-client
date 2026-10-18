@@ -33,7 +33,7 @@ class DesktopIntegration {
   final CoreProcess process;
   final GlobalKey<NavigatorState> navigatorKey;
 
-  /// Started by Windows at sign-in: the window stays in the tray.
+  /// Started at sign-in: the window stays in the tray.
   final bool startHidden;
 
   /// Whether this copy owns the Run entry; not for a copy started with
@@ -93,7 +93,8 @@ class DesktopIntegration {
     AppSettings.languageFor(PlatformDispatcher.instance.locale),
   );
 
-  /// The icon file inside the build's flutter_assets.
+  /// The icon file inside the build's flutter_assets: an .ico on Windows,
+  /// a .png on Linux.
   static String _icon(String name) {
     final sep = Platform.pathSeparator;
     final dir = File(Platform.resolvedExecutable).parent.path;
@@ -103,7 +104,7 @@ class DesktopIntegration {
       'flutter_assets',
       'assets',
       'tray',
-      '$name.ico',
+      Platform.isWindows ? '$name.ico' : '$name.png',
     ].join(sep);
   }
 

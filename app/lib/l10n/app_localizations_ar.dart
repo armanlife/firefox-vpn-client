@@ -919,6 +919,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get startWithWindows => 'التشغيل مع Windows';
 
   @override
+  String get startAtSignIn => 'التشغيل عند تسجيل الدخول';
+
+  @override
   String get proxyServiceActive => 'خدمة البروكسي تعمل';
 
   @override
@@ -1002,6 +1005,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get modeSystemProxyHint => 'يمر Windows ومعظم التطبيقات عبر البروكسي.';
+
+  @override
+  String get modeProxyHintLinux =>
+      'تمر عبره فقط التطبيقات المضبوطة على استخدام البروكسي؛ ولا يتغير شيء في إعدادات النظام.';
+
+  @override
+  String get modeSystemProxyHintLinux =>
+      'تمر المتصفحات ومعظم التطبيقات عبر البروكسي.';
 
   @override
   String get suggestedApps => 'التطبيقات المقترحة';

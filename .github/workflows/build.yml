@@ -1,5 +1,5 @@
 # Tests every push and pull request. A tag "v<version>" (the version in
-# app/pubspec.yaml) also builds Windows, Android, and the Linux core, and
+# app/pubspec.yaml) also builds Windows, Android, Linux, and the Linux core, and
 # publishes them as a GitHub release under fixed names, which the README's
 # releases/latest/download links fetch. "Run workflow" builds without
 # publishing.
@@ -179,8 +179,40 @@ jobs:
           path: dist/firefox-vpn-core-linux-*.tar.gz
           if-no-files-found: error
 
+  linux-desktop:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    # The oldest supported runner: the app runs where its glibc and GTK do.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: core/go.mod
+          cache-dependency-path: core/go.sum
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang cmake ninja-build pkg-config libgtk-3-dev
+      - name: Build
+        run: bash scripts/build-linux.sh
+      - name: Release name
+        run: |
+          mkdir out
+          mv "dist/Firefox-VPN-${{ needs.test.outputs.version }}-Linux-x64.tar.gz" out/Firefox-VPN-Linux-x64.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-desktop
+          path: out/*
+          if-no-files-found: error
+
   release:
-    needs: [test, windows, android, linux]
+    needs: [test, windows, android, linux, linux-desktop]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:

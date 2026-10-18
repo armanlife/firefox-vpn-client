@@ -13,6 +13,7 @@ analyzer:
   exclude:
     - build/**
     - android/**
+    - linux/**
     - windows/**
     - macos/**
 

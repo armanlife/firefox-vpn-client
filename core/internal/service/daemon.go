@@ -107,6 +107,10 @@ type Daemon struct {
 	// process. A Windows service cannot reach the desktop, so it asks the
 	// tray instead (folderRequests).
 	OpenFolder func(dir string) error
+
+	// SystemProxySupported: the process hosting this daemon sets the
+	// system proxy (the Linux desktop app; Windows always can).
+	SystemProxySupported bool
 	// folderRequests counts requests to open the data folder; the tray
 	// opens it when the count in the status rises.
 	folderRequests atomic.Uint64

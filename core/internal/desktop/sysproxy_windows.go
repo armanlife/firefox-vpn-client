@@ -10,7 +10,8 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-const systemProxySupported = true
+// systemProxySupported: Windows always has the setting.
+func systemProxySupported() bool { return true }
 
 // The user's proxy setting (what "Use a proxy server" and "Use setup
 // script" in Windows settings, and most browsers, read). A ProxyServer

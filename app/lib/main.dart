@@ -15,8 +15,8 @@ import 'ui/app.dart';
 
 /// The desktop app starts the core as its child process (`-app`) and stops
 /// it on quit. Arguments: `--data-dir=<path>` (default: see
-/// [CoreLocator.dataDir]) and `--core=<path>` (default: `firefox-vpn-core.exe` next
-/// to the app).
+/// [CoreLocator.dataDir]) and `--core=<path>` (default: `firefox-vpn-core.exe`, or
+/// `firefox-vpn-core` on Linux, next to the app).
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isAndroid) return runAndroid();
@@ -36,7 +36,7 @@ Future<void> main(List<String> args) async {
     retryStoppedCore: () async => process.retryNow(),
   )..start();
   final navigatorKey = GlobalKey<NavigatorState>();
-  if (Platform.isWindows) {
+  if (Platform.isWindows || Platform.isLinux) {
     DesktopIntegration(
       core: core,
       settings: settings,
