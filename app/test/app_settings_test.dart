@@ -67,7 +67,9 @@ void main() {
     );
     expect(
       CoreProcess.executableFrom(const []),
-      endsWith('firefox-vpn-core.exe'),
+      endsWith(
+        Platform.isWindows ? 'firefox-vpn-core.exe' : 'firefox-vpn-core',
+      ),
     );
   });
 }
