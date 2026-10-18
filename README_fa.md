@@ -64,9 +64,14 @@
 - در کنار ساعت (tray) می‌ماند و اگر بخواهید با ویندوز اجرا می‌شود.
 - اشتراک پروکسی با دستگاه‌های دیگر شبکه، با نام کاربری و رمز.
 
+### مک
+
+- همین برنامه در نوار منو، با پروکسی سیستم برای همهٔ شبکه‌ها (Wi-Fi، Ethernet) و اجرا هنگام ورود به سیستم.
+- یک فایل برای مک‌های Apple silicon و Intel.
+
 ### لینوکس
 
-- همین برنامه، با پروکسی سیستم (تنظیم GNOME)، آیکون کنار ساعت و اجرا هنگام ورود به سیستم، که با [یک دستور](#نصب-در-لینوکس-با-یک-دستور) نصب می‌شود.
+- همین برنامه، با پروکسی سیستم (تنظیم GNOME)، آیکون کنار ساعت و اجرا هنگام ورود به سیستم، که با [یک دستور](#نصب-از-ترمینال) نصب می‌شود.
 - برای سرورها، هستهٔ بدون رابط کاربری به‌صورت سرویس systemd، آن هم با یک دستور.
 - داشبورد وب برای مدیریت همه‌چیز از مرورگر: وضعیت، حساب‌ها، مکان‌ها، تنظیمات و لاگ‌ها.
 
@@ -85,19 +90,20 @@
 <tr><th>System</th><th>Download</th></tr>
 <tr><td>Android</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-universal.apk"><img src="https://img.shields.io/badge/APK-Universal-1a7f37?logo=android&logoColor=white" alt="APK Universal"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-arm64-v8a.apk"><img src="https://img.shields.io/badge/APK-ARMv8-2da44e?logo=android&logoColor=white" alt="APK ARMv8"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-armeabi-v7a.apk"><img src="https://img.shields.io/badge/APK-ARMv7-4ac26b?logo=android&logoColor=white" alt="APK ARMv7"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-x86_64.apk"><img src="https://img.shields.io/badge/APK-x64-6fdd8b?logo=android&logoColor=white" alt="APK x64"></a></td></tr>
 <tr><td>Windows</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Windows-Setup-x64.exe"><img src="https://img.shields.io/badge/Setup-x64-0550ae?logo=windows&logoColor=white" alt="Setup x64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Windows-x64.zip"><img src="https://img.shields.io/badge/Portable-x64-0969da" alt="Portable x64"></a></td></tr>
-<tr><td>macOS</td><td><img src="https://img.shields.io/badge/macOS-soon-lightgrey" alt="macOS: soon"></td></tr>
-<tr><td>Linux</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-x64.tar.gz"><img src="https://img.shields.io/badge/App-x64-e36209?logo=linux&logoColor=white" alt="App x64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-amd64.tar.gz"><img src="https://img.shields.io/badge/Core-x64-f0883e?logo=linux&logoColor=white" alt="Core x64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-arm64.tar.gz"><img src="https://img.shields.io/badge/Core-ARM64-f6a35e?logo=linux&logoColor=white" alt="Core ARM64"></a></td></tr>
+<tr><td>macOS</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-macOS.dmg"><img src="https://img.shields.io/badge/DMG-Universal-24292f?logo=apple&logoColor=white" alt="DMG Universal"></a></td></tr>
+<tr><td>Linux</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-amd64.tar.gz"><img src="https://img.shields.io/badge/App-amd64-e36209?logo=linux&logoColor=white" alt="App amd64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-arm64.tar.gz"><img src="https://img.shields.io/badge/App-ARM64-e36209?logo=linux&logoColor=white" alt="App ARM64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-amd64.tar.gz"><img src="https://img.shields.io/badge/Core-amd64-f0883e?logo=linux&logoColor=white" alt="Core amd64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-arm64.tar.gz"><img src="https://img.shields.io/badge/Core-ARM64-f6a35e?logo=linux&logoColor=white" alt="Core ARM64"></a></td></tr>
 </table>
 
 <div dir="rtl">
 
 - **اندروید** ۷٫۰ به بالا: نسخهٔ ARMv8 برای تقریباً همهٔ گوشی‌هاست؛ Universal روی همه نصب می‌شود ولی حجمش بیشتر است.
 - **ویندوز** ۱۰ یا ۱۱: Setup برنامه را فقط برای کاربر شما و بدون نیاز به دسترسی مدیر نصب می‌کند و نسخهٔ جدید روی قبلی نصب می‌شود. Portable یک پوشهٔ `Firefox VPN` است: آن را هر جا خواستید از حالت فشرده خارج کنید و `firefox-vpn.exe` را اجرا کنید. در هر دو حالت حساب‌ها و تنظیمات در پوشهٔ `user-data` کنار برنامه می‌مانند.
-- **لینوکس:** برنامه برای دسکتاپ، یا فقط هسته با داشبورد وب برای سرورها؛ هر دو با یک دستور نصب می‌شوند (پایین).
+- **مک** ۱۲ به بالا: فایل DMG را باز کنید و Firefox VPN را به Applications بکشید. برنامه امضای اپل ندارد، پس بار اول مک اجازهٔ باز شدنش را نمی‌دهد: در System Settings > Privacy & Security گزینهٔ Open Anyway را بزنید. دستور پایین بدون این مرحله نصبش می‌کند.
+- **لینوکس:** برنامه برای دسکتاپ (amd64 همان کامپیوترهای معمولی Intel و AMD است؛ ARM64 مثل Raspberry Pi یا لپ‌تاپ‌های ARM)، یا فقط هسته با داشبورد وب برای سرورها؛ هر دو با یک دستور نصب می‌شوند (پایین).
 
-### نصب در لینوکس با یک دستور
+### نصب از ترمینال
 
-برنامه، برای خودتان (کامپیوتر ۶۴ بیتی با دسکتاپ؛ بدون sudo):
+برنامه روی مک یا دسکتاپ لینوکس، برای خودتان (بدون sudo):
 
 </div>
 
@@ -107,9 +113,9 @@ curl -fsSL https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/i
 
 <div dir="rtl">
 
-برنامه در `~/.local/opt/firefox-vpn-client` و منوی برنامه‌ها قرار می‌گیرد و حساب‌ها در `~/.local/share/firefox-vpn-client` می‌مانند. آیکون کنار ساعت به `libayatana-appindicator3-1` (دبیان، اوبونتو) یا `libappindicator-gtk3` (فدورا، آرچ) نیاز دارد؛ در GNOME افزونهٔ AppIndicator هم لازم است. برای حذف: `... | bash -s -- remove-desktop`.
+در مک برنامه در Applications قرار می‌گیرد و حساب‌ها در `~/Library/Application Support/Firefox VPN Client` می‌مانند. در لینوکس برنامه در `~/.local/opt/firefox-vpn-client` و منوی برنامه‌ها قرار می‌گیرد و حساب‌ها در `~/.local/share/firefox-vpn-client` می‌مانند؛ آیکون کنار ساعت به `libayatana-appindicator3-1` (دبیان، اوبونتو) یا `libappindicator-gtk3` (فدورا، آرچ) نیاز دارد؛ در GNOME افزونهٔ AppIndicator هم لازم است. برای حذف: `... | bash -s -- remove-desktop`.
 
-هسته به‌صورت سرویس، برای سرور (x64 یا ARM64، با systemd):
+هسته به‌صورت سرویس، برای سرور لینوکس (amd64 یا ARM64، با systemd):
 
 </div>
 

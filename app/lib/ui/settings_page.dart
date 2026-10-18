@@ -356,12 +356,12 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
-        if (Platform.isWindows || Platform.isLinux)
+        if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
           _Row(
             icon: Icons.power_settings_new_rounded,
-            label: defaultTargetPlatform == TargetPlatform.linux
-                ? l.startAtSignIn
-                : l.startWithWindows,
+            label: defaultTargetPlatform == TargetPlatform.windows
+                ? l.startWithWindows
+                : l.startAtSignIn,
             child: Switch(
               value: s.autostart,
               onChanged: (v) => s.update(autostart: v),

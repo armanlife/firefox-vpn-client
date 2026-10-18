@@ -1002,11 +1002,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Windows ve çoğu uygulama proxy üzerinden geçer.';
 
   @override
-  String get modeProxyHintLinux =>
+  String get modeProxyHintOther =>
       'Yalnızca proxy ayarı yapılmış uygulamalar proxy\'den geçer; sistem ayarlarına dokunulmaz.';
 
   @override
-  String get modeSystemProxyHintLinux =>
+  String get modeSystemProxyHintOther =>
       'Tarayıcılar ve çoğu uygulama proxy üzerinden geçer.';
 
   @override

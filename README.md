@@ -62,9 +62,14 @@ Firefox has a built-in VPN: every Firefox Account gets 50 GB a month through Moz
 - Lives in the tray and, if you like, starts with Windows.
 - Share the proxy with other devices on your network, protected with a login.
 
+### macOS
+
+- The same app in the menu bar, with the system proxy for every network (Wi-Fi, Ethernet), and starting at sign-in.
+- One file for Apple silicon and Intel Macs.
+
 ### Linux
 
-- The same app, with the system proxy (GNOME's setting), the tray, and starting at sign-in, installed with [one command](#linux-in-one-command).
+- The same app, with the system proxy (GNOME's setting), the tray, and starting at sign-in, installed with [one command](#install-from-the-terminal).
 - For servers, a headless core as a systemd service, also with one command.
 - A web dashboard to manage everything from a browser: status, accounts, locations, settings, and logs.
 
@@ -81,25 +86,26 @@ The newest version, straight from [Releases](https://github.com/armanlife/firefo
 <tr><th>System</th><th>Download</th></tr>
 <tr><td>Android</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-universal.apk"><img src="https://img.shields.io/badge/APK-Universal-1a7f37?logo=android&logoColor=white" alt="APK Universal"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-arm64-v8a.apk"><img src="https://img.shields.io/badge/APK-ARMv8-2da44e?logo=android&logoColor=white" alt="APK ARMv8"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-armeabi-v7a.apk"><img src="https://img.shields.io/badge/APK-ARMv7-4ac26b?logo=android&logoColor=white" alt="APK ARMv7"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-x86_64.apk"><img src="https://img.shields.io/badge/APK-x64-6fdd8b?logo=android&logoColor=white" alt="APK x64"></a></td></tr>
 <tr><td>Windows</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Windows-Setup-x64.exe"><img src="https://img.shields.io/badge/Setup-x64-0550ae?logo=windows&logoColor=white" alt="Setup x64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Windows-x64.zip"><img src="https://img.shields.io/badge/Portable-x64-0969da" alt="Portable x64"></a></td></tr>
-<tr><td>macOS</td><td><img src="https://img.shields.io/badge/macOS-soon-lightgrey" alt="macOS: soon"></td></tr>
-<tr><td>Linux</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-x64.tar.gz"><img src="https://img.shields.io/badge/App-x64-e36209?logo=linux&logoColor=white" alt="App x64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-amd64.tar.gz"><img src="https://img.shields.io/badge/Core-x64-f0883e?logo=linux&logoColor=white" alt="Core x64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-arm64.tar.gz"><img src="https://img.shields.io/badge/Core-ARM64-f6a35e?logo=linux&logoColor=white" alt="Core ARM64"></a></td></tr>
+<tr><td>macOS</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-macOS.dmg"><img src="https://img.shields.io/badge/DMG-Universal-24292f?logo=apple&logoColor=white" alt="DMG Universal"></a></td></tr>
+<tr><td>Linux</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-amd64.tar.gz"><img src="https://img.shields.io/badge/App-amd64-e36209?logo=linux&logoColor=white" alt="App amd64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-arm64.tar.gz"><img src="https://img.shields.io/badge/App-ARM64-e36209?logo=linux&logoColor=white" alt="App ARM64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-amd64.tar.gz"><img src="https://img.shields.io/badge/Core-amd64-f0883e?logo=linux&logoColor=white" alt="Core amd64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-arm64.tar.gz"><img src="https://img.shields.io/badge/Core-ARM64-f6a35e?logo=linux&logoColor=white" alt="Core ARM64"></a></td></tr>
 </table>
 
 - **Android** 7.0 or later: ARMv8 fits almost every phone; Universal fits all of them and is larger.
 - **Windows** 10 or 11: Setup installs the app for you alone, with no administrator rights, and a new version installs over the old one. Portable is a `Firefox VPN` folder: unzip it anywhere and run `firefox-vpn.exe`. Either way, your accounts and settings stay in `user-data` beside the app.
-- **Linux:** the app for the desktop, or the core alone with its web dashboard for servers; install either with one command, below.
+- **macOS** 12 or later: open the DMG and drag Firefox VPN to Applications. The app is not signed by Apple, so the first time macOS refuses to open it: in System Settings > Privacy & Security, choose Open Anyway. The command below installs it without that step.
+- **Linux:** the app for the desktop (amd64 is a usual Intel or AMD PC; ARM64 is a Raspberry Pi or an ARM laptop), or the core alone with its web dashboard for servers; install either with one command, below.
 
-### Linux in one command
+### Install from the terminal
 
-The app, for you (a 64-bit PC with a desktop; no sudo):
+The app on macOS, or on a Linux desktop, for you (no sudo):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/install.sh | bash -s -- desktop
 ```
 
-It goes into `~/.local/opt/firefox-vpn-client` and the applications menu, and keeps your accounts in `~/.local/share/firefox-vpn-client`. The tray icon needs `libayatana-appindicator3-1` (Debian, Ubuntu) or `libappindicator-gtk3` (Fedora, Arch); on GNOME, also the AppIndicator extension. To remove it: `... | bash -s -- remove-desktop`.
+On macOS it goes into Applications and keeps your accounts in `~/Library/Application Support/Firefox VPN Client`. On Linux it goes into `~/.local/opt/firefox-vpn-client` and the applications menu, and keeps your accounts in `~/.local/share/firefox-vpn-client`; the tray icon needs `libayatana-appindicator3-1` (Debian, Ubuntu) or `libappindicator-gtk3` (Fedora, Arch); on GNOME, also the AppIndicator extension. To remove it: `... | bash -s -- remove-desktop`.
 
-The core as a service, for a server (x64 or ARM64, with systemd):
+The core as a service, for a Linux server (amd64 or ARM64, with systemd):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/install.sh | sudo bash

@@ -1004,11 +1004,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Через прокси идут Windows и большинство приложений.';
 
   @override
-  String get modeProxyHintLinux =>
+  String get modeProxyHintOther =>
       'Через прокси идут только приложения, в которых он настроен; настройки системы не меняются.';
 
   @override
-  String get modeSystemProxyHintLinux =>
+  String get modeSystemProxyHintOther =>
       'Через прокси идут браузеры и большинство приложений.';
 
   @override

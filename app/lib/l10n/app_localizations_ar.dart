@@ -1007,11 +1007,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get modeSystemProxyHint => 'يمر Windows ومعظم التطبيقات عبر البروكسي.';
 
   @override
-  String get modeProxyHintLinux =>
+  String get modeProxyHintOther =>
       'تمر عبره فقط التطبيقات المضبوطة على استخدام البروكسي؛ ولا يتغير شيء في إعدادات النظام.';
 
   @override
-  String get modeSystemProxyHintLinux =>
+  String get modeSystemProxyHintOther =>
       'تمر المتصفحات ومعظم التطبيقات عبر البروكسي.';
 
   @override

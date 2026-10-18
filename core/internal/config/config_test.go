@@ -234,7 +234,7 @@ func TestDefaultDataDirFollowsTheApp(t *testing.T) {
 		t.Fatalf("beside the app on Windows: %s", got)
 	}
 	// On macOS: the app's folder in the user's data location.
-	files["firefox_vpn"] = true
+	files["Firefox VPN"] = true
 	if got := defaultDataDirFor(dir, "darwin", getenv, exists); got != filepath.Join("/home/u", "Library", "Application Support", "Firefox VPN Client") {
 		t.Fatalf("beside the app on macOS: %s", got)
 	}
@@ -251,7 +251,7 @@ func TestBesideApp(t *testing.T) {
 	if besideApp("dir", exists) {
 		t.Fatal("a core on its own is not beside the app")
 	}
-	for _, name := range []string{"firefox-vpn.exe", "firefox-vpn", "firefox_vpn"} {
+	for _, name := range []string{"firefox-vpn.exe", "firefox-vpn", "Firefox VPN"} {
 		files = map[string]bool{name: true}
 		if !besideApp("dir", exists) {
 			t.Fatalf("beside %s", name)

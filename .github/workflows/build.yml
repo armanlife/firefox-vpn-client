@@ -1,7 +1,7 @@
 # Tests every push and pull request. A tag "v<version>" (the version in
-# app/pubspec.yaml) also builds Windows, Android, Linux, and the Linux core, and
-# publishes them as a GitHub release under fixed names, which the README's
-# releases/latest/download links fetch. "Run workflow" builds without
+# app/pubspec.yaml) also builds Windows, macOS, Android, Linux, and the Linux
+# core, and publishes them as a GitHub release under fixed names, which the
+# README's releases/latest/download links fetch. "Run workflow" builds without
 # publishing.
 #
 # Secrets for the Android release key (required for a tag):
@@ -183,8 +183,55 @@ jobs:
   linux-desktop:
     needs: test
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-    # The oldest supported runner: the app runs where its glibc and GTK do.
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-22.04
+          - arch: arm64
+            runner: ubuntu-22.04-arm
+    # The oldest supported runners: the app runs where their glibc and GTK do.
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: core/go.mod
+          cache-dependency-path: core/go.sum
+      - uses: subosito/flutter-action@v2
+        if: matrix.arch == 'amd64'
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      # Flutter publishes SDK archives for x64 Linux only; on ARM it runs
+      # from its Git tag and fetches its ARM engine itself.
+      - name: Flutter (ARM)
+        if: matrix.arch == 'arm64'
+        run: |
+          git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git "$HOME/flutter"
+          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+          "$HOME/flutter/bin/flutter" --version
+      - name: Build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang cmake ninja-build pkg-config libgtk-3-dev
+      - name: Build
+        run: bash scripts/build-linux.sh
+      - name: Release name
+        run: |
+          mkdir out
+          mv "dist/Firefox-VPN-${{ needs.test.outputs.version }}-Linux-${{ matrix.arch }}.tar.gz" "out/Firefox-VPN-Linux-${{ matrix.arch }}.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-desktop-${{ matrix.arch }}
+          path: out/*
+          if-no-files-found: error
+
+  macos:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -196,24 +243,23 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
-      - name: Build tools
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq clang cmake ninja-build pkg-config libgtk-3-dev
+      - name: Core tests on macOS
+        working-directory: core
+        run: go test ./internal/desktop ./internal/config
       - name: Build
-        run: bash scripts/build-linux.sh
+        run: bash scripts/build-macos.sh
       - name: Release name
         run: |
           mkdir out
-          mv "dist/Firefox-VPN-${{ needs.test.outputs.version }}-Linux-x64.tar.gz" out/Firefox-VPN-Linux-x64.tar.gz
+          mv "dist/Firefox-VPN-${{ needs.test.outputs.version }}-macOS.dmg" out/Firefox-VPN-macOS.dmg
       - uses: actions/upload-artifact@v4
         with:
-          name: linux-desktop
+          name: macos
           path: out/*
           if-no-files-found: error
 
   release:
-    needs: [test, windows, android, linux, linux-desktop]
+    needs: [test, windows, android, linux, linux-desktop, macos]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:

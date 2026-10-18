@@ -1000,11 +1000,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get modeSystemProxyHint => 'Windows và hầu hết ứng dụng đi qua proxy.';
 
   @override
-  String get modeProxyHintLinux =>
+  String get modeProxyHintOther =>
       'Chỉ những ứng dụng được cài đặt dùng proxy mới đi qua proxy; cài đặt của hệ thống không bị thay đổi.';
 
   @override
-  String get modeSystemProxyHintLinux =>
+  String get modeSystemProxyHintOther =>
       'Trình duyệt và hầu hết ứng dụng đi qua proxy.';
 
   @override

@@ -631,8 +631,8 @@
   "connectionMode": "Connection mode",
   "modeProxyHint": "Only apps set up to use the proxy go through it; Windows is left as it is.",
   "modeSystemProxyHint": "Windows and most apps go through the proxy.",
-  "modeProxyHintLinux": "Only apps set up to use the proxy go through it; the system's settings stay as they are.",
-  "modeSystemProxyHintLinux": "Browsers and most apps go through the proxy.",
+  "modeProxyHintOther": "Only apps set up to use the proxy go through it; the system's settings stay as they are.",
+  "modeSystemProxyHintOther": "Browsers and most apps go through the proxy.",
   "suggestedApps": "Suggested apps",
   "suggestedAdded": "{count, plural, =0{The suggested apps are already selected} =1{1 suggested app selected} other{{count} suggested apps selected}}",
   "@suggestedAdded": {

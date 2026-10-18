@@ -1002,11 +1002,11 @@ class AppLocalizationsBn extends AppLocalizations {
       'Windows ও বেশিরভাগ অ্যাপ প্রক্সি দিয়ে যায়।';
 
   @override
-  String get modeProxyHintLinux =>
+  String get modeProxyHintOther =>
       'শুধু যেসব অ্যাপে প্রক্সি সেট করা আছে সেগুলোই এর মধ্য দিয়ে যায়; সিস্টেমের সেটিংস বদলায় না।';
 
   @override
-  String get modeSystemProxyHintLinux =>
+  String get modeSystemProxyHintOther =>
       'ব্রাউজার ও বেশিরভাগ অ্যাপ প্রক্সি দিয়ে যায়।';
 
   @override

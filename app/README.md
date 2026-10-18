@@ -48,6 +48,23 @@ native side of the same channel.
 - The core sets GNOME's proxy setting (gsettings `org.gnome.system.proxy`),
   which GNOME-based desktops and most browsers read.
 
+## Desktop model (macOS)
+
+The same again: `Firefox VPN.app` holds `firefox-vpn-core` beside its
+executable in `Contents/MacOS`, and `DesktopBridge` in
+`macos/Runner/MainFlutterWindow.swift` is the native side of the channel.
+
+- The tray icon is a menu bar icon; a click opens its menu. While the window
+  is hidden the app has no Dock icon. Opening the app again (Finder, Dock,
+  Spotlight) brings the window up.
+- Start at sign-in writes the LaunchAgent
+  `~/Library/LaunchAgents/com.arman.firefoxvpn.plist`.
+- No App Sandbox: the app starts its core and changes the proxy setting.
+  It is signed ad hoc, not with an Apple Developer ID.
+- The core sets the web, secure web, and SOCKS proxies of every enabled
+  network service with `networksetup`, keeping each service's previous
+  setting to restore.
+
 The data folder (accounts, settings, logs) on Windows is `user-data` next
 to the app (not `data`, which holds Flutter's own files). The installer puts
 the app in `%LOCALAPPDATA%\Programs\Firefox VPN Client`, a folder of the user's own,
@@ -149,7 +166,8 @@ shield in white, for the app's tray (`assets/tray`) and the core's
 
 - Build a release folder with the core: `scripts\build-windows.ps1` from
   the repository root (output in `dist\Firefox-VPN-<version>\`); on Linux,
-  `scripts/build-linux.sh` (output in `dist/Firefox-VPN-<version>-Linux-x64.tar.gz`).
+  `scripts/build-linux.sh` (output in `dist/Firefox-VPN-<version>-Linux-<amd64|arm64>.tar.gz`);
+  on macOS, `scripts/build-macos.sh` (output in `dist/Firefox-VPN-<version>-macOS.dmg`).
 - Work on the UI without a real core or accounts:
 
   ```

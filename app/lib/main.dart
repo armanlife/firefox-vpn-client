@@ -36,7 +36,7 @@ Future<void> main(List<String> args) async {
     retryStoppedCore: () async => process.retryNow(),
   )..start();
   final navigatorKey = GlobalKey<NavigatorState>();
-  if (Platform.isWindows || Platform.isLinux) {
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     DesktopIntegration(
       core: core,
       settings: settings,

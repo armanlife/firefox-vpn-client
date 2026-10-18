@@ -5,6 +5,9 @@
   blue gradient background layer and the art as the foreground layer, 108 dp
   each, which the launcher crops to its own shape; and ic_launcher.png for
   older Android, the same tile, rounded.
+- macOS (macos/Runner/Assets.xcassets/AppIcon.appiconset): the Android
+  tile in Apple's grid, a rounded square of 824 in 1024 with room for its
+  shadow, in the sizes the icon set lists.
 - Windows (windows/runner/resources/app_icon.ico): the art alone, without a
   tile, as Windows shows icons, in every size Explorer and the taskbar use;
   the small sizes sharpened, since the taskbar shows 24 or 32 px.
@@ -114,6 +117,32 @@ def write_ico(path, art):
     images[-1].save(path, format='ICO', sizes=[(n, n) for n in WINDOWS_SIZES], append_images=images[:-1])
 
 
+MACOS_SIZES = [16, 32, 64, 128, 256, 512, 1024]
+
+
+def macos_icon(art):
+    """The 1024 px macOS icon: the gradient tile, 824 px with rounded
+    corners, over a soft shadow, the art in its middle."""
+    size, body = 1024, 824
+    off = (size - body) // 2
+    mask = Image.new('L', (body, body), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, body - 1, body - 1], radius=round(body * 0.225), fill=255)
+    shadow = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    shadow.paste((0, 0, 0, 90), (off, off + 12), mask)
+    out = shadow.filter(ImageFilter.GaussianBlur(14))
+    face = gradient(body)
+    face.alpha_composite(art_layer(art, body, ART * 108 / 72 * 0.9))
+    out.paste(face, (off, off), mask)
+    return out
+
+
+def macos(art):
+    folder = os.path.join(APP, 'macos', 'Runner', 'Assets.xcassets', 'AppIcon.appiconset')
+    big = macos_icon(art)
+    for n in MACOS_SIZES:
+        big.resize((n, n), Image.LANCZOS).save(os.path.join(folder, 'app_icon_%d.png' % n), optimize=True)
+
+
 def windows(art):
     write_ico(os.path.join(APP, 'windows', 'runner', 'resources', 'app_icon.ico'), art)
 
@@ -216,6 +245,7 @@ def tray():
 def main():
     art = Image.open(SOURCE).convert('RGBA')
     android(art)
+    macos(art)
     windows(art)
     core(art)
     tray()

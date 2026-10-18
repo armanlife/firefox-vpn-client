@@ -1007,11 +1007,11 @@ class AppLocalizationsHu extends AppLocalizations {
       'A Windows és a legtöbb alkalmazás a proxyn át megy.';
 
   @override
-  String get modeProxyHintLinux =>
+  String get modeProxyHintOther =>
       'Csak a proxy használatára beállított alkalmazások mennek rajta át; a rendszer beállításai nem változnak.';
 
   @override
-  String get modeSystemProxyHintLinux =>
+  String get modeSystemProxyHintOther =>
       'A böngészők és a legtöbb alkalmazás a proxyn át megy.';
 
   @override

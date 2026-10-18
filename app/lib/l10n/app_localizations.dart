@@ -1857,17 +1857,17 @@ abstract class AppLocalizations {
   /// **'Windows and most apps go through the proxy.'**
   String get modeSystemProxyHint;
 
-  /// No description provided for @modeProxyHintLinux.
+  /// No description provided for @modeProxyHintOther.
   ///
   /// In en, this message translates to:
   /// **'Only apps set up to use the proxy go through it; the system\'s settings stay as they are.'**
-  String get modeProxyHintLinux;
+  String get modeProxyHintOther;
 
-  /// No description provided for @modeSystemProxyHintLinux.
+  /// No description provided for @modeSystemProxyHintOther.
   ///
   /// In en, this message translates to:
   /// **'Browsers and most apps go through the proxy.'**
-  String get modeSystemProxyHintLinux;
+  String get modeSystemProxyHintOther;
 
   /// No description provided for @suggestedApps.
   ///

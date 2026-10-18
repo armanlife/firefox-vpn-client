@@ -1002,11 +1002,11 @@ class AppLocalizationsAz extends AppLocalizations {
       'Windows və əksər tətbiqlər proksidən keçir.';
 
   @override
-  String get modeProxyHintLinux =>
+  String get modeProxyHintOther =>
       'Yalnız proksi ayarlanmış tətbiqlər ondan keçir; sistem ayarları dəyişmir.';
 
   @override
-  String get modeSystemProxyHintLinux =>
+  String get modeSystemProxyHintOther =>
       'Brauzerlər və əksər tətbiqlər proksidən keçir.';
 
   @override

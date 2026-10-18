@@ -1002,11 +1002,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Windows dan sebagian besar aplikasi lewat proxy.';
 
   @override
-  String get modeProxyHintLinux =>
+  String get modeProxyHintOther =>
       'Hanya aplikasi yang diatur memakai proxy yang lewat proxy; pengaturan sistem tidak diubah.';
 
   @override
-  String get modeSystemProxyHintLinux =>
+  String get modeSystemProxyHintOther =>
       'Browser dan sebagian besar aplikasi lewat proxy.';
 
   @override

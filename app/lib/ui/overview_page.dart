@@ -340,14 +340,15 @@ class _DesktopHome extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
+          // Windows names itself; Linux and macOS say "the system".
           switch ((
             systemProxy,
-            defaultTargetPlatform == TargetPlatform.linux,
+            defaultTargetPlatform == TargetPlatform.windows,
           )) {
-            (true, false) => l.modeSystemProxyHint,
-            (true, true) => l.modeSystemProxyHintLinux,
-            (false, false) => l.modeProxyHint,
-            (false, true) => l.modeProxyHintLinux,
+            (true, true) => l.modeSystemProxyHint,
+            (true, false) => l.modeSystemProxyHintOther,
+            (false, true) => l.modeProxyHint,
+            (false, false) => l.modeProxyHintOther,
           },
           textAlign: TextAlign.center,
           style: theme.textTheme.bodySmall?.copyWith(color: p.muted),

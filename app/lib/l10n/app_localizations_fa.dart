@@ -1000,11 +1000,11 @@ class AppLocalizationsFa extends AppLocalizations {
       'ویندوز و بیشتر برنامه‌ها از پروکسی رد می‌شوند.';
 
   @override
-  String get modeProxyHintLinux =>
+  String get modeProxyHintOther =>
       'فقط برنامه‌هایی که برای پروکسی تنظیم شده‌اند از آن استفاده می‌کنند؛ تنظیمات سیستم تغییر نمی‌کند.';
 
   @override
-  String get modeSystemProxyHintLinux =>
+  String get modeSystemProxyHintOther =>
       'مرورگرها و بیشتر برنامه‌ها از پروکسی رد می‌شوند.';
 
   @override

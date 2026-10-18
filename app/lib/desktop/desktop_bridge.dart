@@ -47,8 +47,9 @@ class TrayItem {
 }
 
 /// The native side of the window's close button and the tray icon
-/// (windows/runner/desktop_bridge.cpp and linux/runner/desktop_bridge.cc,
-/// channel "app/desktop").
+/// (windows/runner/desktop_bridge.cpp, linux/runner/desktop_bridge.cc, and
+/// DesktopBridge in macos/Runner/MainFlutterWindow.swift; channel
+/// "app/desktop").
 class DesktopBridge {
   DesktopBridge({
     required this.onCloseRequested,
@@ -91,13 +92,13 @@ class DesktopBridge {
     'items': [for (final i in items) i.toMap()],
   });
 
-  /// A notification from the tray icon (a Windows toast; on Linux, the
-  /// desktop's notifications).
+  /// A notification from the tray icon (a Windows toast; elsewhere, the
+  /// system's notifications).
   Future<void> notify(String title, String body) =>
       _channel.invokeMethod('notify', {'title': title, 'body': body});
 
   /// Starts [command] at sign-in (the current user's Run key; on Linux, an
-  /// XDG autostart entry), or not.
+  /// XDG autostart entry; on macOS, a LaunchAgent for this app), or not.
   Future<void> setAutostart({required bool enabled, required String command}) =>
       _channel.invokeMethod('setAutostart', {
         'enabled': enabled,

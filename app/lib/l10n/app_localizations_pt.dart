@@ -1003,11 +1003,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'O Windows e a maioria dos apps passam pelo proxy.';
 
   @override
-  String get modeProxyHintLinux =>
+  String get modeProxyHintOther =>
       'Apenas os apps configurados para usar o proxy passam por ele; as configurações do sistema ficam como estão.';
 
   @override
-  String get modeSystemProxyHintLinux =>
+  String get modeSystemProxyHintOther =>
       'Os navegadores e a maioria dos apps passam pelo proxy.';
 
   @override
