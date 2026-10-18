@@ -64,7 +64,7 @@ Firefox has a built-in VPN: every Firefox Account gets 50 GB a month through Moz
 
 ### Linux and servers
 
-- A headless core with a systemd installer.
+- A headless core, installed as a systemd service with [one command](#linux-in-one-command).
 - A web dashboard to manage everything from a browser: status, accounts, locations, settings, and logs.
 
 ### For everyone
@@ -86,7 +86,25 @@ The newest version, straight from [Releases](https://github.com/armanlife/firefo
 
 - **Android:** ARMv8 fits almost every phone; Universal fits all of them and is larger.
 - **Windows:** Setup installs the app for you alone, with no administrator rights, and a new version installs over the old one. Portable is a `Firefox VPN` folder: unzip it anywhere and run `firefox-vpn.exe`. Either way, your accounts and settings stay in `user-data` beside the app.
-- **Linux:** the core with its web dashboard; install it as a service with `core/scripts/install-systemd.sh`.
+- **Linux:** the core with its web dashboard, as a systemd service; install it with one command, below.
+
+### Linux in one command
+
+On a 64-bit Linux server or PC (x64 or ARM64) with systemd:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/install.sh | sudo bash
+```
+
+It downloads the newest core from Releases, checks it against the release's checksums, and starts it as the `firefox-vpn` service. Then:
+
+```bash
+sudo firefox-vpn add-account    # sign in to a Firefox Account
+sudo firefox-vpn status         # the service and its state
+sudo firefox-vpn help           # every command
+```
+
+The dashboard is at http://127.0.0.1:10820, and the proxy (SOCKS5 and HTTP) at `127.0.0.1:10810`. Run the same command again to update; accounts and settings stay. `sudo firefox-vpn uninstall` removes the service (`PURGE=1` also deletes the accounts). The script is [install.sh](install.sh).
 
 ## Getting started
 

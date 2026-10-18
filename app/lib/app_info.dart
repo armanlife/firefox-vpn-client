@@ -32,25 +32,28 @@ bool newerVersion(String a, String b) {
   return false;
 }
 
-/// Reads the latest release from GitHub; null when [appVersion] is the
-/// newest. [proxy] ("host:port"), when set, carries the request (the VPN's
-/// own proxy, for networks where GitHub is blocked); it falls back to a
-/// direct connection.
-Future<Release?> checkForUpdate({String? proxy}) async {
+/// Reads the latest release of [repo] from GitHub; null when [appVersion] is
+/// the newest, or when there is no release yet. [proxy] ("host:port"), when
+/// set, carries the request (the VPN's own proxy, for networks where GitHub
+/// is blocked); it falls back to a direct connection.
+Future<Release?> checkForUpdate({
+  String? proxy,
+  String repo = githubRepo,
+}) async {
   final client = HttpClient()
     ..connectionTimeout = const Duration(seconds: 15)
     ..findProxy = (_) => proxy == null ? 'DIRECT' : 'PROXY $proxy; DIRECT';
   try {
     final req = await client
-        .getUrl(
-          Uri.parse('https://api.github.com/repos/$githubRepo/releases/latest'),
-        )
+        .getUrl(Uri.parse('https://api.github.com/repos/$repo/releases/latest'))
         .timeout(const Duration(seconds: 20));
     req.headers
       ..set(HttpHeaders.acceptHeader, 'application/vnd.github+json')
       ..set(HttpHeaders.userAgentHeader, 'firefox-vpn/$appVersion');
     final res = await req.close().timeout(const Duration(seconds: 20));
     final body = await res.transform(utf8.decoder).join();
+    // GitHub's answer for a repository without releases.
+    if (res.statusCode == 404) return null;
     if (res.statusCode != 200) throw HttpException('HTTP ${res.statusCode}');
     final j = jsonDecode(body);
     final tag = j is Map<String, Object?> ? j['tag_name'] as String? ?? '' : '';

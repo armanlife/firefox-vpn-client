@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# Installs firefox-vpn-core as a systemd service on Linux.
+# Installs firefox-vpn-core as a systemd service on Linux, from the source
+# tree or from a prebuilt binary. The release's install.sh (at the repository
+# root) runs it with the downloaded binary and keeps it as the firefox-vpn
+# command.
 #
 # The program and its data folder live together in INSTALL_DIR (portable
 # layout): INSTALL_DIR/firefox-vpn-core and INSTALL_DIR/user-data. Settings and
@@ -12,18 +15,18 @@ SERVICE_USER="${SERVICE_USER:-firefox-vpn}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/firefox-vpn}"
 BINARY="${BINARY:-}"
 PURGE="${PURGE:-0}"
+# How the help and the messages name this script (install.sh: firefox-vpn).
+SELF="${SELF:-$0}"
 UNIT_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 BIN_PATH="$INSTALL_DIR/firefox-vpn-core"
 DATA_DIR="$INSTALL_DIR/user-data"
-
-# The previous (flag-based) installation, migrated on install.
 
 log() { printf '[%s] %s\n' "$SERVICE_NAME" "$*"; }
 die() { printf '[%s] error: %s\n' "$SERVICE_NAME" "$*" >&2; exit 1; }
 
 usage() {
   cat <<EOF
-Usage: sudo $0 <command>
+Usage: sudo $SELF <command>
 
 Commands:
   install              Install or update the binary and the service, then start it
@@ -57,6 +60,9 @@ build_binary() {
     cp "$BINARY" "$out"
     return
   fi
+  # Installed as the firefox-vpn command (install.sh), with no source tree.
+  [ -d "$(repo_root)/cmd/firefox-vpn-core" ] ||
+    die "to update, run the install command again: curl -fsSL https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/install.sh | sudo bash"
   command -v go >/dev/null 2>&1 || die "Go is not installed; install Go or pass BINARY=path/to/firefox-vpn-core"
   log "building from $(repo_root)"
   (cd "$(repo_root)" && CGO_ENABLED=0 go build -trimpath -o "$out" ./cmd/firefox-vpn-core)
@@ -97,7 +103,7 @@ EOF
 }
 
 run_as_service_user() {
-  [ -x "$BIN_PATH" ] || die "not installed; run: sudo $0 install"
+  [ -x "$BIN_PATH" ] || die "not installed; run: sudo $SELF install"
   runuser -u "$SERVICE_USER" -- "$BIN_PATH" "$@"
 }
 
@@ -106,7 +112,8 @@ cmd_install() {
   command -v systemctl >/dev/null 2>&1 || die "systemd is required"
   local tmp
   tmp="$(mktemp)"
-  trap 'rm -f "$tmp"' EXIT
+  # The value now: the local variable is gone when the script exits.
+  trap "rm -f -- '$tmp'" EXIT
   build_binary "$tmp"
   ensure_user
   install -d -m 0755 -o root -g root "$INSTALL_DIR"
@@ -117,7 +124,7 @@ cmd_install() {
   systemctl enable "${SERVICE_NAME}.service" >/dev/null
   systemctl restart "${SERVICE_NAME}.service"
   log "installed $BIN_PATH; data in $DATA_DIR"
-  log "dashboard: http://127.0.0.1:10820 (add accounts there, or: sudo $0 add-account)"
+  log "dashboard: http://127.0.0.1:10820 (add accounts there, or: sudo $SELF add-account)"
 }
 
 cmd_uninstall() {
