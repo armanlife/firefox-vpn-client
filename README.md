@@ -4,17 +4,21 @@
 
 [فارسی](README_fa.md)
 
-Firefox has a built-in VPN: every Firefox Account gets 50 GB a month through Mozilla's own proxy servers. Firefox VPN takes that service out of the browser. It runs it for every app on Windows and Android, and as a headless proxy on Linux. Several accounts work together, so a month's data no longer ends at 50 GB.
+## What is Firefox VPN?
 
-> **Unofficial.** This project is not made, endorsed, or supported by Mozilla. Firefox and Mozilla are trademarks of the Mozilla Foundation.
+**Firefox VPN** is a free, open-source VPN client that uses a Firefox Account to carry the internet traffic of **every app on the device** through **Fastly**'s infrastructure, over **HTTP/2 and HTTP/3** tunnels.
+
+Every Firefox Account comes with **50 GB of free traffic a month**. The app supports several accounts and uses their combined allowance, so you are not held to one account's 50 GB.
+
+Firefox VPN is available for **Android, Windows, macOS, and Linux**, completely free, with no ads, and open source.
 
 ## Why Firefox VPN
 
 - **Free, from a trusted network.** The traffic goes through Mozilla's own servers (Fastly), the same ones Firefox uses. There is no third-party VPN company in the middle.
 - **More data with more accounts.** Add several Firefox Accounts. When the active one has used 90% of its data, the next one takes over by itself, without dropping your connections.
 - **Every app, not only the browser.** A real VPN on Android. A system-wide proxy on Windows. A SOCKS5 and HTTP proxy for anything else.
-- **Fast where it matters.** Your own country's sites can open directly, without the VPN. They load faster and use no data.
-- **Made for filtered networks.** Encrypted DNS, HTTP/3 with an automatic fallback to HTTP/2, a check that detects tampered DNS, and an optional relay of your own for when signing in to Mozilla is blocked.
+- **Smart traffic routing.** Your own country's sites open directly, without the VPN, so they load faster and use no data.
+- **Made for filtered networks.** Encrypted DNS, HTTP/2 and HTTP/3 (QUIC) support, a check that detects tampered DNS, and an optional relay of your own for when signing in to Mozilla is blocked.
 - **Small and light.** About 14 MB for Android and 18 MB for Windows. No ads, no tracking, and no server involved but Mozilla's.
 
 ## Features
@@ -23,7 +27,7 @@ Firefox has a built-in VPN: every Firefox Account gets 50 GB a month through Moz
 
 - One tap to connect. The app always starts disconnected and connects only when you ask.
 - Locations from Mozilla's server list, each with its flag and real delay. Choose one yourself, or let the app pick the recommended or the fastest.
-- HTTP/2 or HTTP/3 (QUIC). Where QUIC is blocked, the app falls back to HTTP/2 by itself.
+- HTTP/2 and HTTP/3 (QUIC) support.
 - Pauses the connection to Mozilla when nothing uses it, so the accounts rest. The next request wakes it in a few seconds.
 - Waits quietly while there is no network, and reconnects at once on a new one.
 - A connection test with every stage timed, and the public IP address, country, and network that websites see.
@@ -36,9 +40,9 @@ Firefox has a built-in VPN: every Firefox Account gets 50 GB a month through Moz
 - A reminder when the active account runs low and no other is ready.
 - Expired sign-ins are renewed by themselves, with the password stored on your device.
 
-### Routing
+### Smart traffic routing
 
-- Sites and addresses of your country open directly: Iran, China, Russia, Afghanistan, Turkey, Indonesia, or Brazil.
+- Sites and addresses of your country open directly, without the VPN: Iran, China, Russia, Afghanistan, Turkey, Indonesia, or Brazil.
 - Rules in the v2ray format (geosite, geoip, domain, keyword, IP ranges), with lists from Chocolate4U or Loyalsoldier, updated automatically.
 - Your own Direct and Block lists.
 - Ad blocking with one switch.
@@ -53,7 +57,6 @@ Firefox has a built-in VPN: every Firefox Account gets 50 GB a month through Moz
 ### Android
 
 - A full VPN for every app, or a local proxy only.
-- A Quick Settings tile and a home-screen button to connect in one tap.
 - The speed and the location in the notification.
 
 ### Windows
@@ -69,13 +72,13 @@ Firefox has a built-in VPN: every Firefox Account gets 50 GB a month through Moz
 
 ### Linux
 
-- The same app, with the system proxy (GNOME's setting), the tray, and starting at sign-in, installed with [one command](#install-from-the-terminal).
+- The same app, with the system proxy (GNOME's setting), the tray, and starting at sign-in, installed with [one command](#install-and-update-to-the-latest-version-on-linuxmacos).
 - For servers, a headless core as a systemd service, also with one command.
 - A web dashboard to manage everything from a browser: status, accounts, locations, settings, and logs.
 
 ### For everyone
 
-- 15 languages: English, فارسی, 简体中文, 繁體中文, Русский, Türkçe, العربية, Azərbaycan, Bahasa Indonesia, Español, Français, Magyar, Português, Tiếng Việt, and বাংলা. Persian and Arabic read right to left, and Persian dates follow the Solar Hijri calendar.
+- 15 languages: English, فارسی, 简体中文, 繁體中文, Русский, Türkçe, العربية, Azərbaycan, Bahasa Indonesia, Español, Français, Magyar, Português, Tiếng Việt, and বাংলা. Persian and Arabic read right to left.
 - Light and dark themes.
 
 ## Download
@@ -91,73 +94,39 @@ The newest version, straight from [Releases](https://github.com/armanlife/firefo
 <tr><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-amd64.tar.gz"><img src="https://img.shields.io/badge/Core-amd64-f0883e?logo=linux&logoColor=white" alt="Core amd64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-arm64.tar.gz"><img src="https://img.shields.io/badge/Core-ARM64-f6a35e?logo=linux&logoColor=white" alt="Core ARM64"></a></td></tr>
 </table>
 
-- **Android** 7.0 or later: ARMv8 fits almost every phone; Universal fits all of them and is larger.
-- **Windows** 10 or 11: Setup installs the app for you alone, with no administrator rights, and a new version installs over the old one. Portable is a `Firefox VPN` folder: unzip it anywhere and run `firefox-vpn.exe`. Either way, your accounts and settings stay in `user-data` beside the app.
-- **macOS** 12 or later: open the DMG and drag Firefox VPN to Applications. The app is not signed by Apple, so the first time macOS refuses to open it: in System Settings > Privacy & Security, choose Open Anyway. The command below installs it without that step.
-- **Linux:** the app for the desktop (amd64 is a usual Intel or AMD PC; ARM64 is a Raspberry Pi or an ARM laptop), or the core alone with its web dashboard for servers; install either with one command, below.
+### Install and update to the latest version on Linux/macOS
 
-### Install from the terminal
-
-The app on macOS, or on a Linux desktop, for you (no sudo):
+Windows and Android users don't need this: take the installer from the table above.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/install.sh | bash -s -- desktop
+curl -fsSL https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/install.sh | bash
 ```
 
-On macOS it goes into Applications and keeps your accounts in `~/Library/Application Support/Firefox VPN Client`. On Linux it goes into `~/.local/opt/firefox-vpn-client` and the applications menu, and keeps your accounts in `~/.local/share/firefox-vpn-client`; the tray icon needs `libayatana-appindicator3-1` (Debian, Ubuntu) or `libappindicator-gtk3` (Fedora, Arch); on GNOME, also the AppIndicator extension. To remove it: `... | bash -s -- remove-desktop`.
+- **macOS:** the app, in Applications.
+- **Linux with a desktop:** the app, for you (no sudo), in the applications menu.
+- **Linux without a desktop (a server):** the core as a systemd service with the web dashboard; sudo asks for your password.
+- **An SSH session:** it could be a server or a desktop computer reached remotely, so the script asks.
 
-The core as a service, for a Linux server (amd64 or ARM64, with systemd):
+When Firefox VPN is already installed, the same command asks whether to update it (the default: press Enter) or remove it, and on removal whether to delete the accounts and settings too. Every download is checked against the release's checksums. For scripts, an argument skips the questions: `desktop`, `server`, `remove-desktop`, or `remove-server` (for example `... | bash -s -- server`).
+
+### Web dashboard
+
+The web dashboard is for **Linux servers without a desktop (CLI)**, where the app cannot run; on Windows, macOS, Android, and Linux desktops, use the app. It is built into the core, opens in any browser, and does everything the app does: accounts and their remaining data, server choice and real-delay tests, the connection test and public IP, the live log, and every setting.
+
+- **Address:** http://127.0.0.1:10820
+- **Proxy:** SOCKS5 and HTTP on `127.0.0.1:10810`; point apps or other devices at it.
+- **Reaching a server's dashboard from your computer:** it listens on the server itself only, which is the safest default. Open it through an SSH tunnel, then browse to http://127.0.0.1:10820 on your computer:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/install.sh | sudo bash
+ssh -L 10820:127.0.0.1:10820 user@your-server
 ```
 
-Either one downloads the newest release, checks it against the release's checksums, and installs it. For the service, then:
+Service commands on the server:
 
 ```bash
-sudo firefox-vpn add-account    # sign in to a Firefox Account
-sudo firefox-vpn status         # the service and its state
-sudo firefox-vpn help           # every command
+sudo firefox-vpn add-account           # sign in to a Firefox Account (also possible in the web dashboard)
+sudo firefox-vpn status                # the service and its state
+sudo firefox-vpn logs                  # follow the service's log
+sudo firefox-vpn restart               # restart the service
+sudo firefox-vpn set-dashboard-login   # set the web dashboard's username and password
 ```
-
-The dashboard is at http://127.0.0.1:10820, and the proxy (SOCKS5 and HTTP) at `127.0.0.1:10810`. Run the same command again to update; accounts and settings stay. `sudo firefox-vpn uninstall` removes the service (`PURGE=1` also deletes the accounts). The script is [install.sh](install.sh).
-
-## Getting started
-
-1. Make a free Firefox Account at [accounts.firefox.com](https://accounts.firefox.com), if you have none.
-2. Open the app, choose your language and country, and add the account.
-3. Tap the button to connect.
-
-For more data, add more accounts: each one brings 50 GB a month.
-
-## Limits
-
-These come from Mozilla's service:
-
-- **TCP only.** UDP does not pass, so apps that use it (some games and calls) fall back to TCP.
-- **Web ports only.** Mozilla's proxy connects to ports 80, 443, 8080, and 8443.
-- Mozilla locks some locations for some accounts.
-
-## Building from source
-
-```powershell
-scripts\build-windows.ps1   # dist\Firefox-VPN-<version>\, its .zip, and the installer
-scripts\build-android.ps1   # dist\Firefox-VPN-<version>-android\
-```
-
-You need Go and Flutter, and for Android the Android SDK and NDK with gomobile. The project has two parts:
-
-```text
-core/   Go: the VPN core (accounts, connections, routing, DNS, the dashboard and its API)
-app/    Flutter: the app for Windows, Android, and macOS
-```
-
-The app is a client of the core's local API, so every platform shares one core. The developer documentation is in [core/doc](core/doc/README.md).
-
-## License
-
-[MIT](LICENSE).
-
-## Credits
-
-Country flags are from [flag-icons](https://github.com/lipis/flag-icons) (MIT). The Persian font is [Vazirmatn](https://github.com/rastikerdar/vazirmatn) (SIL Open Font License).
