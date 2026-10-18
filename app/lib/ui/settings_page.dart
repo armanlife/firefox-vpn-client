@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -358,7 +359,9 @@ class _SettingsPageState extends State<SettingsPage> {
         if (Platform.isWindows || Platform.isLinux)
           _Row(
             icon: Icons.power_settings_new_rounded,
-            label: Platform.isWindows ? l.startWithWindows : l.startAtSignIn,
+            label: defaultTargetPlatform == TargetPlatform.linux
+                ? l.startAtSignIn
+                : l.startWithWindows,
             child: Switch(
               value: s.autostart,
               onChanged: (v) => s.update(autostart: v),

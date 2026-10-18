@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -339,7 +340,10 @@ class _DesktopHome extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          switch ((systemProxy, Platform.isLinux)) {
+          switch ((
+            systemProxy,
+            defaultTargetPlatform == TargetPlatform.linux,
+          )) {
             (true, false) => l.modeSystemProxyHint,
             (true, true) => l.modeSystemProxyHintLinux,
             (false, false) => l.modeProxyHint,
