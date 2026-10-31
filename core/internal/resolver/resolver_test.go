@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/netip"
-	"os"
 	"strings"
 	"sync/atomic"
 	"syscall"
@@ -221,37 +220,27 @@ func TestServerErrorsKeepTheCause(t *testing.T) {
 // they all fail the system still answers, as it did not on a network where
 // the DNS over HTTPS servers hung (the relay was used for nothing).
 func TestDialWithinLeavesTheNameItsOwnTime(t *testing.T) {
-	host, err := os.Hostname()
-	if err != nil {
-		t.Skip(err)
-	}
-	if addrs, err := net.LookupHost(host); err != nil || len(addrs) == 0 {
-		t.Skipf("this machine's name does not resolve: %v", err)
-	}
-	silent, err := net.ListenPacket("udp4", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer silent.Close()
-	ln, err := net.Listen("tcp", ":0")
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer ln.Close()
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
 
-	r, err := New([]string{"udp://" + silent.LocalAddr().String()}, true)
-	if err != nil {
-		t.Fatal(err)
-	}
+	var asked atomic.Int32
+	srv := &fakeServer{delay: 400 * time.Millisecond}
+	r := withFakes(srv, "127.0.0.1", &asked)
 	start := time.Now()
-	conn, err := r.DialWithin(context.Background(), 200*time.Millisecond, "tcp", net.JoinHostPort(host, port))
+	conn, err := r.DialWithin(context.Background(), 200*time.Millisecond, "tcp", net.JoinHostPort("a.example", port))
 	if err != nil {
 		t.Fatalf("after %s: %v", time.Since(start), err)
 	}
 	conn.Close()
-	if took := time.Since(start); took < 200*time.Millisecond {
-		t.Fatalf("the silent server was not asked: %s", took)
+	if took := time.Since(start); took < srv.delay {
+		t.Fatalf("cut short after %s", took)
+	}
+	if srv.hits.Load() != 1 || asked.Load() != 1 {
+		t.Fatalf("server asked %d times, system %d", srv.hits.Load(), asked.Load())
 	}
 }
 
