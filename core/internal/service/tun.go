@@ -16,14 +16,16 @@ import (
 )
 
 // The desktop TUN mode (system_proxy.mode "tun"): the TUN service
-// (cmd/firefox-vpn-tun) sends every TCP connection of the computer to a
-// SOCKS5 listener of its own here, on loopback with a login made for this
+// (cmd/firefox-vpn-tun) sends every TCP connection of the computer, and UDP
+// on the ports the VPN carries, to a SOCKS5 listener of its own here, on
+// loopback with a login made for this
 // process, so that another program holding proxy.listen never receives
 // them, a taken proxy port does not stop the TUN, and the user's proxy
 // login does not apply. The running engine serves them like its other
-// clients, with the VPN's rule (TunnelAllows). The process hosting the
-// service (the desktop app's core, internal/desktop) runs the TUN session
-// and reports its state here.
+// clients, with the VPN's rule (TunnelAllows, TunnelAllowsUDP). The process
+// hosting the service (the desktop app's core, internal/desktop) runs the TUN
+// session and reports its state here. The phone's VPN (core/mobile) comes in
+// through the same listener, from hev-socks5-tunnel.
 
 // TunStatus is the TUN mode's state in /api/status.
 type TunStatus struct {
@@ -43,9 +45,9 @@ type TunStatus struct {
 	// TUN service finds each connection's program on Windows and Linux).
 	ProgramsSupported bool `json:"programs_supported"`
 	// RefusedUDP is the last program whose UDP that looks like a call or a
-	// game the running TUN refused (Mozilla carries no UDP), while it is not
-	// in tun.programs: the app offers to send it directly. RefusedUDPPath
-	// is its executable.
+	// game the running TUN refused (Mozilla does not carry its port), while
+	// it is not in tun.programs: the app offers to send it directly.
+	// RefusedUDPPath is its executable.
 	RefusedUDP     string `json:"refused_udp,omitempty"`
 	RefusedUDPPath string `json:"refused_udp_path,omitempty"`
 }
@@ -202,7 +204,7 @@ func (d *Daemon) NoteRefusedUDP(program, path string) {
 	d.tun.mu.Lock()
 	d.tun.refusedUDP, d.tun.refusedUDPPath = program, path
 	d.tun.mu.Unlock()
-	logx.Info("TUN: UDP of program=%s was refused (a call or a game; Mozilla carries no UDP)", program)
+	logx.Info("TUN: UDP of program=%s was refused (a call or a game; Mozilla does not carry its port)", program)
 }
 
 // tunStatus is the TUN's state for cfg's programs; StatusView calls it

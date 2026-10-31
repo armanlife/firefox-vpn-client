@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
 import '../app_settings.dart';
+import '../core/android_core.dart';
 import '../core/core_controller.dart';
 import '../l10n/app_localizations.dart';
 import 'widgets.dart';
@@ -145,6 +147,9 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                   const SizedBox(height: 28),
                   FilledButton(
+                    // A TV starts on Start: the remote's OK goes on with
+                    // the language and the country it found.
+                    autofocus: Platform.isAndroid && AndroidCore.isTv,
                     style: FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),
                     ),

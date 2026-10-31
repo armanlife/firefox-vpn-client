@@ -3,6 +3,7 @@ package proxy
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -30,16 +31,29 @@ const (
 	// restart or a short outage returns to the choice within a quarter of
 	// an hour.
 	serverAvoidTime = 15 * time.Minute
+
+	// serverDropLimit failures of one server within serverDropWindow move
+	// the upstream too, also when tunnels opened between them (which clears
+	// the strikes in a row): a network that cuts the connection to the
+	// server every minute or so, as some Iranian networks do, lets every new
+	// session work for a while and then drops it. A short blip is one or
+	// two drops; four in five minutes is a server this network will not
+	// keep.
+	serverDropLimit  = 4
+	serverDropWindow = 5 * time.Minute
 )
 
 // ServerFailover moves the upstream to another server of the chosen
 // location when one server keeps failing: after serverFailoverStrikes
-// failures in a row to establish or keep a session on it (serverFault
-// decides which failures are the server's), the server is avoided for
-// serverAvoidTime and another server of the same city, else of the
-// location's next city, is used and saved as the persisted choice. When
-// every other server of the location is avoided, the upstream stays where
-// it is and the usual retries go on; the location never changes.
+// failures in a row to establish or keep a session on it, or
+// serverDropLimit within serverDropWindow (serverFault decides which
+// failures are the server's), the server is avoided for serverAvoidTime
+// and another server of the same city, else of the location's next city,
+// is used and saved as the persisted choice. A location may have stand-ins
+// (the recommended location, which has one server): when none of its own
+// servers is left, the first stand-in is used for the time being, and not
+// saved. When every other server is avoided, the upstream stays where it
+// is and the usual retries go on.
 //
 // One per daemon: it outlives controllers and engines, so the wakes and
 // the controllers of one location share the strikes and the avoided
@@ -58,6 +72,9 @@ type ServerFailover struct {
 	// failing is the canonical address of the server with strikes.
 	failing string
 	strikes int
+	// drops maps canonical addresses to the times of their recent failures
+	// (within serverDropWindow).
+	drops map[string][]time.Time
 	// avoided maps canonical addresses to the end of their avoidance.
 	avoided map[string]time.Time
 }
@@ -110,13 +127,15 @@ func (f *ServerFailover) Worked(addr string) {
 	f.mu.Unlock()
 }
 
-// Failed counts err against server, one of location's servers, when the
-// server is to blame (serverFault). At its serverFailoverStrikes-th
-// failure in a row the server is avoided for serverAvoidTime and Failed
-// returns the server to use instead (nextServer), saved as the persisted
-// choice. ok is false otherwise, also when every other server of the
-// location is avoided: the caller then stays on server.
-func (f *ServerFailover) Failed(location []Candidate, server Candidate, err error) (next Candidate, ok bool) {
+// Failed counts err against server, one of location's servers or of its
+// stand-ins (fallback), when the server is to blame (serverFault). At its
+// serverFailoverStrikes-th failure in a row, or its serverDropLimit-th
+// within serverDropWindow, the server is avoided for serverAvoidTime and
+// Failed returns the server to use instead (nextServer, the location's
+// servers before the stand-ins), saved as the persisted choice when it is
+// the location's. ok is false otherwise, also when every other server is
+// avoided: the caller then stays on server.
+func (f *ServerFailover) Failed(location, fallback []Candidate, server Candidate, err error) (next Candidate, ok bool) {
 	if f == nil || !serverFault(err) {
 		return Candidate{}, false
 	}
@@ -124,44 +143,100 @@ func (f *ServerFailover) Failed(location []Candidate, server Candidate, err erro
 	if keyErr != nil {
 		return Candidate{}, false
 	}
+	now := f.now()
 	f.mu.Lock()
 	if f.failing != key {
 		f.failing, f.strikes = key, 0
 	}
 	f.strikes++
 	f.pending.Store(true)
-	if f.strikes < serverFailoverStrikes {
+	drops := f.dropLocked(key, now)
+	if f.strikes < serverFailoverStrikes && drops < serverDropLimit {
 		strikes := f.strikes
 		f.mu.Unlock()
-		logx.Debug("upstream server failed proxy=%s failures_in_a_row=%d err=%s", server.Addr, strikes, logx.Err(err))
+		logx.Debug("upstream server failed proxy=%s failures_in_a_row=%d failures_in_%s=%d err=%s",
+			server.Addr, strikes, serverDropWindow, drops, logx.Err(err))
 		return Candidate{}, false
 	}
-	now := f.now()
+	why := fmt.Sprintf("failed %d times in a row", f.strikes)
+	if f.strikes < serverFailoverStrikes {
+		why = fmt.Sprintf("lost its connection %d times in %s", drops, serverDropWindow)
+	}
 	f.failing, f.strikes = "", 0
 	f.pending.Store(false)
+	delete(f.drops, key)
 	if f.avoided == nil {
 		f.avoided = make(map[string]time.Time)
 	}
 	f.avoided[key] = now.Add(serverAvoidTime)
-	next, ok = nextServer(location, server, func(addr string) bool {
+	choices := append(append([]Candidate(nil), location...), fallback...)
+	next, ok = nextServer(choices, server, func(addr string) bool {
 		k, err := canonicalProxyAddr(addr)
 		return err == nil && f.avoidedLocked(k, now)
 	})
 	f.mu.Unlock()
 
 	if !ok {
-		logx.Warn("upstream server failed %d times in a row, and every other server of the location failed recently; staying on it proxy=%s err=%s",
-			serverFailoverStrikes, server.Addr, logx.Err(err))
+		logx.Warn("upstream server %s, and every other server failed recently; staying on it proxy=%s err=%s",
+			why, server.Addr, logx.Err(err))
 		return Candidate{}, false
 	}
-	logx.Info("upstream server failed %d times in a row; switching to another server of the location from=%s to=%s city=%q avoid_for=%s err=%s",
-		serverFailoverStrikes, server.Addr, next.Addr, next.CityNameOrUnknown(), serverAvoidTime, logx.Err(err))
+	if !inLocation(location, next.Addr) {
+		logx.Info("upstream server %s, and the location has no other; using another location's server for now from=%s to=%s country=%s avoid_for=%s err=%s",
+			why, server.Addr, next.Addr, next.CountryCodeOrUnknown(), serverAvoidTime, logx.Err(err))
+		return next, true
+	}
+	logx.Info("upstream server %s; switching to another server of the location from=%s to=%s city=%q avoid_for=%s err=%s",
+		why, server.Addr, next.Addr, next.CityNameOrUnknown(), serverAvoidTime, logx.Err(err))
 	if f.selectionFile != "" {
 		if err := SaveSelection(f.selectionFile, next); err != nil {
 			logx.Warn("saving proxy selection failed path=%s err=%s", f.selectionFile, logx.Err(err))
 		}
 	}
 	return next, true
+}
+
+// dropLocked records a failure of the server key at now and returns how
+// many it had within serverDropWindow, this one included.
+func (f *ServerFailover) dropLocked(key string, now time.Time) int {
+	if f.drops == nil {
+		f.drops = make(map[string][]time.Time)
+	}
+	recent := f.drops[key][:0]
+	for _, at := range f.drops[key] {
+		if now.Sub(at) < serverDropWindow {
+			recent = append(recent, at)
+		}
+	}
+	recent = append(recent, now)
+	f.drops[key] = recent
+	return len(recent)
+}
+
+// Instead returns the server to connect to in place of server, one of
+// location's, while server is avoided: another of the location's servers,
+// else a stand-in (fallback). ok is false when server is not avoided or
+// nothing else is left.
+func (f *ServerFailover) Instead(location, fallback []Candidate, server Candidate) (Candidate, bool) {
+	if f == nil || !f.Avoided(server.Addr) {
+		return Candidate{}, false
+	}
+	choices := append(append([]Candidate(nil), location...), fallback...)
+	return nextServer(choices, server, f.Avoided)
+}
+
+// inLocation reports whether addr is one of location's servers.
+func inLocation(location []Candidate, addr string) bool {
+	key, err := canonicalProxyAddr(addr)
+	if err != nil {
+		return false
+	}
+	for _, c := range location {
+		if k, err := canonicalProxyAddr(c.Addr); err == nil && k == key {
+			return true
+		}
+	}
+	return false
 }
 
 // nextServer picks the server to use instead of current: another server

@@ -386,3 +386,88 @@ func TestLoadRecoversFromACorruptFile(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateUpstreamProxy(t *testing.T) {
+	const listen = "127.0.0.1:10810"
+	for _, tc := range []struct {
+		name string
+		n    Network
+		ok   bool
+	}{
+		{"none", Network{}, true},
+		{"address", Network{UpstreamProxy: "127.0.0.1:10808"}, true},
+		{"name", Network{UpstreamProxy: "proxy.example:1080"}, true},
+		{"ipv6", Network{UpstreamProxy: "[2001:db8::1]:1080"}, true},
+		{"login", Network{UpstreamProxy: "10.0.0.1:1080", UpstreamProxyUsername: "u", UpstreamProxyPassword: "p"}, true},
+		// Another machine on this port is another proxy.
+		{"another machine's same port", Network{UpstreamProxy: "10.0.0.1:10810"}, true},
+		{"no port", Network{UpstreamProxy: "127.0.0.1"}, false},
+		{"bad port", Network{UpstreamProxy: "127.0.0.1:70000"}, false},
+		{"port zero", Network{UpstreamProxy: "127.0.0.1:0"}, false},
+		{"no host", Network{UpstreamProxy: ":1080"}, false},
+		{"username alone", Network{UpstreamProxy: "127.0.0.1:1080", UpstreamProxyUsername: "u"}, false},
+		{"password alone", Network{UpstreamProxy: "127.0.0.1:1080", UpstreamProxyPassword: "p"}, false},
+		{"long login", Network{UpstreamProxy: "127.0.0.1:1080", UpstreamProxyUsername: strings.Repeat("u", 256), UpstreamProxyPassword: "p"}, false},
+		{"its own port", Network{UpstreamProxyEnabled: true, UpstreamProxy: "127.0.0.1:10810"}, false},
+		{"its own port, by name", Network{UpstreamProxyEnabled: true, UpstreamProxy: "localhost:10810"}, false},
+		{"its own port, any address", Network{UpstreamProxyEnabled: true, UpstreamProxy: "0.0.0.0:10810"}, false},
+		// While off it blocks nothing, such as moving this program to that port.
+		{"its own port, off", Network{UpstreamProxy: "127.0.0.1:10810"}, true},
+		{"no port, off", Network{UpstreamProxy: "127.0.0.1"}, false},
+	} {
+		if err := ValidateUpstreamProxy(tc.n, listen); (err == nil) != tc.ok {
+			t.Errorf("%s: %v", tc.name, err)
+		}
+	}
+}
+
+func TestUpstreamProxyInUse(t *testing.T) {
+	n := Network{UpstreamProxy: "127.0.0.1:1080"}
+	if got := n.UpstreamProxyInUse(); got != "" {
+		t.Errorf("off: %q", got)
+	}
+	n.UpstreamProxyEnabled = true
+	if got := n.UpstreamProxyInUse(); got != "127.0.0.1:1080" {
+		t.Errorf("on: %q", got)
+	}
+}
+
+func TestSettleUpstreamProxy(t *testing.T) {
+	const a, b = "127.0.0.1:1080", "127.0.0.1:1081"
+	for _, tc := range []struct {
+		name       string
+		prev, next Network
+		on         bool
+	}{
+		{"filled in", Network{}, Network{UpstreamProxy: a}, true},
+		{"emptied", Network{UpstreamProxy: a, UpstreamProxyEnabled: true}, Network{UpstreamProxyEnabled: true}, false},
+		{"on without an address", Network{}, Network{UpstreamProxyEnabled: true}, false},
+		{"turned off", Network{UpstreamProxy: a, UpstreamProxyEnabled: true}, Network{UpstreamProxy: a}, false},
+		{"turned on", Network{UpstreamProxy: a}, Network{UpstreamProxy: a, UpstreamProxyEnabled: true}, true},
+		{"edited while off", Network{UpstreamProxy: a}, Network{UpstreamProxy: b}, false},
+		{"edited while on", Network{UpstreamProxy: a, UpstreamProxyEnabled: true}, Network{UpstreamProxy: b, UpstreamProxyEnabled: true}, true},
+	} {
+		if got := SettleUpstreamProxy(tc.prev, tc.next); got.UpstreamProxyEnabled != tc.on {
+			t.Errorf("%s: on = %v", tc.name, got.UpstreamProxyEnabled)
+		}
+	}
+	got := SettleUpstreamProxy(Network{}, Network{UpstreamProxy: " socks5://127.0.0.1:1080/ ", UpstreamProxyUsername: " u ", UpstreamProxyPassword: " p "})
+	if got.UpstreamProxy != a || got.UpstreamProxyUsername != "u" || got.UpstreamProxyPassword != "p" {
+		t.Errorf("not cleaned: %+v", got)
+	}
+}
+
+func TestCleanUpstreamProxy(t *testing.T) {
+	for in_, want := range map[string]string{
+		"":                         "",
+		"127.0.0.1:1080":           "127.0.0.1:1080",
+		"  127.0.0.1:1080\n":       "127.0.0.1:1080",
+		"127. 0.0.1 : 1080":        "127.0.0.1:1080",
+		"socks5://127.0.0.1:1080/": "127.0.0.1:1080",
+		" socks5h://[::1]:1080 ":   "[::1]:1080",
+	} {
+		if got := CleanUpstreamProxy(in_); got != want {
+			t.Errorf("%q: %q, want %q", in_, got, want)
+		}
+	}
+}

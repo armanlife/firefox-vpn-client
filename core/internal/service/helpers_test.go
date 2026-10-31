@@ -30,6 +30,7 @@ func init() {
 	networkNow = func() (string, bool) { return "", false }
 	// Nor may a failure check the real internet.
 	netcheck.Check = func(context.Context) netcheck.Result { return netcheck.Unknown }
+	netcheck.InsideVPN = func(context.Context) bool { return false }
 }
 
 type auditRoundTripper func(*http.Request) (*http.Response, error)

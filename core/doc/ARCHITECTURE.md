@@ -36,8 +36,9 @@ internal/securefile/        Atomic owner-only file writes
 internal/resolver/          DNS over HTTPS/TLS/plain for the program's own connections
 internal/egress/            binds the core's own sockets outside the TUN adapter while the TUN mode
                             runs (the default route besides the TUN, its DNS servers)
-internal/tun/               Android's TUN (tun2socks over gVisor) and FakeDNS, which the desktop
-                            TUN service shares
+internal/tun/               what the VPNs share: FakeDNS, the addresses that lead nowhere, and the
+                            way into the core's SOCKS5 proxy (the desktop TUN service's; Android's
+                            VPN runs app/android/hev-socks5-tunnel, the app's Tun2Socks.kt)
 internal/tunapi/            the core-to-TUN-service protocol: JSON lines over a channel only the users
                             who installed the service can use (a named pipe on Windows, a Unix
                             socket on Linux and macOS)
@@ -45,7 +46,7 @@ internal/tunservice/        the TUN service: serves tunapi, one TUN session at a
                             self-update, install and removal (Windows service, systemd, launchd),
                             DNS kept in the TUN (wfp on Windows, macOS' DNS settings), the
                             programs that bypass the VPN (each connection's program; their
-                            TCP and UDP sent directly)
+                            TCP and UDP sent directly), other UDP to the core on an association
 internal/tunstack/          sing-tun (the only importer): the adapter, routes (Linux: their own
                             table and rules), gVisor stack; build tag with_gvisor
 internal/wfp/               Windows Filtering Platform filters: DNS only through the TUN, IPv6 blocked
@@ -73,7 +74,7 @@ Each package's tests are white-box tests next to its files. A package exports on
 | Account store and policy | [store.go](../internal/accounts/store.go), [manager.go](../internal/accounts/manager.go), [password.go](../internal/accounts/password.go) | `Store`, `Manager`, `Policy`, `NoUsableAccountError`, `FormatUsage` | `accounts_test.go`, `password_test.go` |
 | DNS for the program's own connections | [resolver.go](../internal/resolver/resolver.go), [doh.go](../internal/resolver/doh.go), [network.go](../internal/service/network.go), [dnstest.go](../internal/service/dnstest.go) | `resolver.New`, `Resolver.Lookup`, `resolver.Dial`, `resolver.Set`, `configureDNS`, `Daemon.testDNS` | `resolver_test.go`, `service/dnstest_test.go` |
 | Config and data folder | [config.go](../internal/config/config.go) | `Config`, `Load`, `Save`, `DefaultDataDir` | `config_test.go` |
-| Flags, run modes, commands | [main.go](../cmd/firefox-vpn-core/main.go), [commands.go](../cmd/firefox-vpn-core/commands.go) | `runCommand`, `runConsole`, `runAddAccount`, `interactiveSignIn` | Checked by hand |
+| Flags, run modes, commands | [main.go](../cmd/firefox-vpn-core/main.go), [commands.go](../cmd/firefox-vpn-core/commands.go) | `runCommand`, `runConsole`, `runAddAccount`, `interactiveSignIn` | — |
 | Data paths, config loading | [paths.go](../internal/service/paths.go) | `service.ResolveDataPaths`, `DataPaths`, `LoadConfig`, `OpenAccounts`, `ReconcileAccountOrder` | `service/paths_test.go` |
 | Service supervisor | [daemon.go](../internal/service/daemon.go), [engine.go](../internal/service/engine.go), [listen.go](../internal/service/listen.go) | `Daemon.Run`, `superviseEngine`, `startEngine`, `accountsChanged`, `updateSettings`, `setStateCode`; `listenTCP`, `probeListen`, `AddressInUseError`, `IsAddressInUse` (a taken address, EADDRINUSE or WSAEADDRINUSE) | `service/dashboard_test.go`, `service/listen_test.go` |
 | Dashboard and API | [dashboard.go](../internal/service/dashboard.go), [dashboard_api.go](../internal/service/dashboard_api.go), [web/](../internal/service/web/index.html) | `dashboardServer.guard`, handlers | `service/dashboard_test.go` |
@@ -100,13 +101,13 @@ Each package's tests are white-box tests next to its files. A package exports on
 | Real delay (latency), fastest server | [proxy/ping.go](../internal/proxy/ping.go), [service/ping.go](../internal/service/ping.go) | `PingLocations`, `TunnelMeter`, `MergePings`, `FastestLocation`, `Daemon.PingAll`, `resolveFastestCountry` | `proxy/ping_test.go`, `service/ping_test.go` |
 | Terminal status screen | [console_ui.go](../internal/desktop/console_ui.go) | `desktop.RunConsole`, `consoleBackend` (`daemonBackend`, `apiBackend`), `normalizeKey`, `fitWidth` | `desktop/console_ui_test.go` |
 | Version | [version.go](../internal/version/version.go) | `version.Current`, `version.Newer` | `version/version_test.go` |
-| Tray icon | [tray.go](../internal/desktop/tray.go) (Windows, Linux), [trayicon.go](../internal/desktop/trayicon.go), [tray_other.go](../internal/desktop/tray_other.go) | `desktop.RunTray`, `trayApp.refresh`, `trayApp.startOwn`, `trayIcon` (the icons in `internal/desktop/tray`, made by `app/tool/app_icons.py`) | `desktop/trayicon_test.go`; menu checked by hand |
+| Tray icon | [tray.go](../internal/desktop/tray.go) (Windows, Linux), [trayicon.go](../internal/desktop/trayicon.go), [tray_other.go](../internal/desktop/tray_other.go) | `desktop.RunTray`, `trayApp.refresh`, `trayApp.startOwn`, `trayIcon` (the icons in `internal/desktop/tray`, made by `app/tool/app_icons.py`) | `desktop/trayicon_test.go` |
 | TUN mode, core side | [desktop/tun.go](../internal/desktop/tun.go), [service/tun.go](../internal/service/tun.go), [egress](../internal/egress/egress.go) | `tunSync` (`connect`, `start`, `stop`, `refreshService`, `syncPrograms`), `Daemon.OpenTunListener`, `TunWanted`, `SetTunStatus`, `TunPrograms`, `NoteRefusedUDP`, `egress.SetTun`, `egress.Dialer`, `egress.Control`, `egress.Supported` | `desktop/tun_test.go`, `service/tun_test.go`, `service/tunallow_test.go`, `egress/egress_windows_test.go`, `egress_linux_test.go`, `egress_darwin_test.go` |
 | TUN service | [cmd/firefox-vpn-tun](../cmd/firefox-vpn-tun/main.go), [tunservice](../internal/tunservice/server.go), [tunapi](../internal/tunapi/tunapi.go), [tunstack](../internal/tunstack/tunstack.go), [wfp](../internal/wfp/wfp_windows.go), [tun/fakedns.go](../internal/tun/fakedns.go) | `tunservice.Server`, `session`, `readSigned`, `applyUpdate`, `Install` (`register`: the Windows service, the systemd unit, the launchd job), `macDNS`; the programs that bypass the VPN: `session.takeUDP`, `directTCP`, `relay`, `ownerPath` ([owner_windows.go](../internal/tunservice/owner_windows.go), [owner_linux.go](../internal/tunservice/owner_linux.go)), `callLike`; `tunapi.Dial`, `Listen`, `Allowed`, `Hello`; `tunstack.Open`, `CleanupStale`, `PacketFlow`, `ResetFlows`; `wfp.Start`; `tun.NewDesktopFakeDNS` | `tunservice/*_test.go` (`programs_test.go`, `owner_*_test.go`; a real TUN: `e2e_test.go`, tags `e2e with_gvisor`, as root), `tunapi/*_test.go`, `tunstack_test.go` (tag `with_gvisor`), `wfp_windows_test.go`, `tun/fakedns_test.go` |
 | The app's updates | [update](../internal/update/update.go), [apply.go](../internal/update/apply.go), [service/update.go](../internal/service/update.go), [signing](../internal/signing/signing.go) | `update.Manager` (`Download`, `Install`), `update.Apply` (`swap`, `setInstalledVersion`), `update.Supported`, `Daemon.UpdateTransports`, `signing.Verify` | `update/*_test.go`, `service/update_test.go`, `signing_test.go` |
 | Desktop app mode (`-app`) and code shared with the tray | [app.go](../internal/desktop/app.go), [host.go](../internal/desktop/host.go), [endsession_windows.go](../internal/desktop/endsession_windows.go) | `desktop.RunApp`, `runHosted`, `watchParent`, `stdinIsPipe`, `watchEndSession` (the hidden window for `WM_ENDSESSION`), `ErrAlreadyRunning`, `ReportAppError` (the `app-error:` line and exit status), `newHostedDaemon`, `pollStatus`, `systemProxySync.follow`, `Daemon.RequireDashboard` | `desktop/app_test.go`, `desktop/endsession_windows_test.go`, `cmd/firefox-vpn-core/main_test.go`, `TestRequireDashboardRefusesDisabledDashboard` |
-| Console, notifications, single instance | [platform_windows.go](../internal/desktop/platform_windows.go), [platform_other.go](../internal/desktop/platform_other.go) | `StartedWithOwnConsole`, `DetachConsole`, `acquireSingleInstance`, `notify` (`notify-send` on Linux, nothing on Windows), `openBrowser` | None; checked by hand |
-| Linux service | [install-systemd.sh](../scripts/install-systemd.sh) (the `firefox-vpn` command), [install.sh](../../install.sh) | `cmd_install`, `write_unit`, `cmd_update`, `menu`; `install_server` | By hand in WSL ([TESTING.md](TESTING.md#tun-mode-and-app-updates-by-hand-and-as-root)) |
+| Console, notifications, single instance | [platform_windows.go](../internal/desktop/platform_windows.go), [platform_other.go](../internal/desktop/platform_other.go) | `StartedWithOwnConsole`, `DetachConsole`, `acquireSingleInstance`, `notify` (`notify-send` on Linux, nothing on Windows), `openBrowser` | — |
+| Linux service | [install-systemd.sh](../scripts/install-systemd.sh) (the `firefox-vpn` command), [install.sh](../../install.sh) | `cmd_install`, `write_unit`, `cmd_update`, `menu`; `install_server` | — |
 
 ## Traffic paths
 
@@ -127,7 +128,7 @@ flowchart LR
     Daemon --> Accounts
 ```
 
-The shared control-plane client serves FxA, Guardian, Remote Settings, the geo files, and flags; the user's own relay, `network.api_relay` (a Cloudflare Worker or a PHP file, [scripts/relay](../scripts/relay)) can carry its requests (`relayTransport`). H2/H3 sessions create their own data-plane connections. Fastly challenge handling applies to the account API only.
+The shared control-plane client serves FxA, Guardian, Remote Settings, the geo files, and flags; the user's own relay, `network.api_relay` (a Cloudflare Worker or a PHP file, [scripts/relay](../scripts/relay)) can carry its requests when Mozilla is not reached directly (`relayFallback` over `relayTransport`), with Encrypted Client Hello when `network.api_relay_ech` asks for it (`echDialer`, the key from `resolver.LookupECH`). H2/H3 sessions create their own data-plane connections. Fastly challenge handling applies to the account API only.
 
 ## Service lifecycle
 
@@ -165,7 +166,7 @@ These optional interfaces matter when adding an implementation: missing token up
 - Persist configuration and account metadata without persisting the ProxyPass; keep credentials only in `accounts/<id>/credentials.json`.
 - Keep all data in the data folder next to the executable (`user-data`); the only other location is the desktop app's data folder, used when the core sits beside the app.
 - The dashboard must stay usable while the proxy is stopped; do not make dashboard handlers depend on a running engine except the connection test.
-- No direct-dial fallback when Mozilla fails, UDP ASSOCIATE, or BIND exists, and the core changes no routes: the TUN mode's adapter, routes, and filters belong to the TUN service, and the core only binds its own sockets outside the TUN (`internal/egress`). The TUN service connects to the internet itself only for the programs the user set to bypass the VPN (`tun.programs`). Connections go directly only to destinations the opt-in routing rules name (`routing.enabled`, off by default); the connection test, the public IP check, and list downloads through the proxy always use Mozilla (`Controller`, not `RoutedOpener`).
+- No direct-dial fallback when Mozilla fails, or BIND, exists, and the core changes no routes: the TUN mode's adapter, routes, and filters belong to the TUN service, and the core only binds its own sockets outside the TUN (`internal/egress`). The TUN service connects to the internet itself only for the programs the user set to bypass the VPN (`tun.programs`). Connections go directly only to destinations the opt-in routing rules name (`routing.enabled`, off by default); the connection test, the public IP check, and list downloads through the proxy always use Mozilla (`Controller`, not `RoutedOpener`).
 - The proxy engine runs when the accounts allow it and it is not switched off (`POST /api/power`; the desktop app's `-app` core and the Android app start off, until the user connects). Running means listening: it contacts Mozilla (Remote Settings, Guardian, FxA, the upstream) only once something needs the upstream (first wake); the dashboard's location list (`GET /api/locations`) and sign-in are the other requests, made only when asked. The Windows system proxy is applied only by the tray, the app mode, or the status screen running the daemon itself, in the user's session (the other run modes only store the mode), in one of two modes: Set only while the proxy runs, with the previous setting restored afterwards, or Clear once when the user switches to it.
 
 Use the recipes in [CHANGE-GUIDE.md](CHANGE-GUIDE.md) to find the complete edit surface for a requested feature.

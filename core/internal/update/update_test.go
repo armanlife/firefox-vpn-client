@@ -589,3 +589,34 @@ func TestANewStartRemovesAHalfUnpackedVersion(t *testing.T) {
 		t.Fatal("the half-unpacked version stayed")
 	}
 }
+
+// The Android app's core downloads the APK of its processor, checked
+// against the signed list, and names the file for Android's installer; it
+// installs nothing itself, and a new start finds the file again.
+func TestAnAPKDownloadsForTheAppToInstall(t *testing.T) {
+	r := newRelease(t, "1.2.3")
+	apk := APK("arm64-v8a")("1.2.3")
+	r.files[apk] = []byte("PK apk 1.2.3")
+	r.files[APK("armeabi-v7a")("1.2.3")] = []byte("PK other 1.2.3")
+	r.sign()
+	r.serve(t)
+	dataDir := t.TempDir()
+	open := func() *Manager {
+		return New(Options{DataDir: dataDir, Current: "1.0.0", Asset: APK("arm64-v8a")})
+	}
+	m := open()
+	if err := m.Download("1.2.3"); err != nil {
+		t.Fatal(err)
+	}
+	s := waitState(t, m)
+	want := filepath.Join(dataDir, "update", "1.2.3", apk)
+	if s.State != StateReady || s.File != want || read(t, s.File) != "PK apk 1.2.3" {
+		t.Fatalf("%+v", s)
+	}
+	if err := m.Install(InstallRequest{Version: "1.2.3", PID: os.Getpid()}); err == nil {
+		t.Fatal("the core installed an APK")
+	}
+	if s := open().Status(); s.State != StateReady || s.File != want {
+		t.Fatalf("after a restart %+v", s)
+	}
+}

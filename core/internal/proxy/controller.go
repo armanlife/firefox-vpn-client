@@ -27,6 +27,8 @@ type managedSession struct {
 	afterRefusal bool
 	// server is the address of the proxy server the session is on.
 	server string
+	// reported is set once a tunnel's failure on the session was logged.
+	reported bool
 }
 
 type ControllerConfig struct {
@@ -50,6 +52,10 @@ type ControllerConfig struct {
 	// when Server keeps failing. Both are unset for a server set by hand.
 	Location []Candidate
 	Failover *ServerFailover
+	// Fallback, when set, lists the stand-ins for a location with no other
+	// server to fail over to (the recommended location), asked when the
+	// failover needs them.
+	Fallback func() []Candidate
 }
 
 type Controller struct {
@@ -67,10 +73,14 @@ type Controller struct {
 	// location and failover are ControllerConfig.Location and Failover.
 	location []Candidate
 	failover *ServerFailover
+	fallback func() []Candidate
 
 	sessionFactory func(token string) (proxySession, error)
 	refreshSession func() error
 	accounts       *AccountPool
+	// udp holds the connections that carry UDP (udp.go), opened when a client
+	// first sends some.
+	udp udpUpstream
 
 	// trafficSinceCheck counts tunnel bytes since the last quota check;
 	// crossing usageProbeBytes requests an early check on quotaCheckNow.
@@ -165,6 +175,7 @@ func NewController(cfg ControllerConfig) (*Controller, error) {
 		chosenLocation: cfg.ChosenLocation,
 		location:       cfg.Location,
 		failover:       cfg.Failover,
+		fallback:       cfg.Fallback,
 		quotaCheckNow:  make(chan struct{}, 1),
 		done:           make(chan struct{}),
 		usage:          cfg.Pass.Usage,
@@ -258,12 +269,31 @@ func (c *Controller) openTunnel(authority, clientKey string) (net.Conn, error) {
 			break
 		}
 
-		logx.Warn("upstream tunnel open failed; rebuilding proxy session attempt=%d max=%d err=%s", attempt+1, maxOpenTunnelRebuildRetries, logx.Err(lastErr))
+		// Every tunnel open when a session dies fails at once: the first
+		// tells, the others would repeat it.
+		if c.firstToReport(failedSession) {
+			logx.Warn("upstream tunnel open failed; rebuilding proxy session err=%s", logx.Err(lastErr))
+		} else {
+			logx.Debug("upstream tunnel open failed; rebuilding proxy session attempt=%d max=%d err=%s", attempt+1, maxOpenTunnelRebuildRetries, logx.Err(lastErr))
+		}
 		if err := c.rebuildSession(failedSession, cause); err != nil {
 			lastErr = fmt.Errorf("rebuilding upstream proxy session: %w", err)
 		}
 	}
 	return nil, lastErr
+}
+
+// firstToReport reports whether the caller is the first to report ms's
+// failure.
+func (c *Controller) firstToReport(ms *managedSession) bool {
+	if ms == nil {
+		return false
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	first := !ms.reported
+	ms.reported = true
+	return first
 }
 
 // refusedAgain reports a CONNECT 403 or 407 on a session whose pass was
@@ -405,6 +435,7 @@ func (c *Controller) Reconnect() error {
 	}
 	token, expiresAt := old.rawToken, old.expiresAt
 	c.mu.Unlock()
+	c.udp.reset()
 	session, err := c.sessionFactory(token)
 	if err != nil {
 		return err
@@ -449,7 +480,11 @@ func (c *Controller) failOver(from Candidate, err error) bool {
 	if c.failover == nil || err == nil || c.isClosed() {
 		return false
 	}
-	next, ok := c.failover.Failed(c.location, from, err)
+	var fallback []Candidate
+	if c.fallback != nil {
+		fallback = c.fallback()
+	}
+	next, ok := c.failover.Failed(c.location, fallback, from, err)
 	if !ok {
 		return false
 	}
@@ -465,6 +500,36 @@ func (c *Controller) failOver(from Candidate, err error) bool {
 	c.redialBackoff.reset()
 	if c.OnServerSwitched != nil {
 		c.OnServerSwitched(next)
+	}
+	return true
+}
+
+// returnToLocation moves the controller back to its location's server
+// once that is no longer avoided, when the failover took it to a stand-in
+// (Fallback). It reports whether it moved. renewMu is held.
+func (c *Controller) returnToLocation() bool {
+	if c.failover == nil || len(c.location) == 0 || c.isClosed() {
+		return false
+	}
+	from := c.currentServer()
+	if inLocation(c.location, from.Addr) {
+		return false
+	}
+	back, ok := pickInFirstCity(c.location, func(cand Candidate) bool { return !c.failover.Avoided(cand.Addr) })
+	if !ok {
+		return false
+	}
+	target, err := NormalizeURL(back.Addr)
+	if err != nil {
+		return false
+	}
+	c.mu.Lock()
+	c.server, c.proxyURL = back, target
+	c.mu.Unlock()
+	c.redialBackoff.reset()
+	logx.Info("returning to the location's own server, which failed earlier from=%s to=%s", from.Addr, back.Addr)
+	if c.OnServerSwitched != nil {
+		c.OnServerSwitched(back)
 	}
 	return true
 }
@@ -525,6 +590,8 @@ func (c *Controller) Close() error {
 		if c.done != nil {
 			close(c.done)
 		}
+
+		c.udp.close()
 
 		c.mu.Lock()
 		defer c.mu.Unlock()

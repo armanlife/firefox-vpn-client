@@ -335,12 +335,14 @@ func TestDirectUDPGoesOutAndComesBack(t *testing.T) {
 		return nil, errors.New("no such name")
 	}
 	t.Cleanup(func() { lookupDirect = old })
+	fakeOwners(t, map[uint16]string{1000: `C:\Games\Game.exe`})
 	s := testSession(t, "127.0.0.1:1")
+	s.setPrograms([]tunapi.Program{{Name: "game.exe"}})
 	reply, _ := s.dns.Answer(dnsQuery(t, "echo.example."))
 	fake := netip.AddrPortFrom(lastA(t, reply), echo.Port())
 	f := newFakePacketFlow()
 	ended := make(chan struct{})
-	go func() { s.relay(f); close(ended) }()
+	go func() { s.relay(port(1000), f); close(ended) }()
 	for _, c := range []struct {
 		send packet
 		want packet

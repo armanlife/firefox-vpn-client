@@ -1,2 +1,6 @@
 # Shell scripts run on Linux and macOS: LF in every checkout.
 *.sh text eol=lf
+
+# Copied as they are: a make file with CRLF breaks on Linux. Another project's
+# code: left out of GitHub's language count.
+app/android/hev-socks5-tunnel/** -text linguist-vendored

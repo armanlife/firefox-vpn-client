@@ -119,15 +119,21 @@ Android is a VPN: the core runs with the proxy off while the UI is open
 (settings and accounts work), and the home button, or the Quick Settings
 tile (`QuickTile.kt`), turns it on. `CoreService.kt` is then a VpnService:
 it asks for the VPN permission once, leaves the app itself out of the VPN
-(so the core's own connections go straight out), and hands the TUN device
-to the core (`mobile.StartTun`). The core's userspace stack
-(`core/internal/tun`, gVisor) sends every TCP connection through its own
-SOCKS5 proxy and answers DNS (UDP and TCP port 53) with fake addresses from
-198.18.0.0/15 that stand for names, so the proxy gets the name and routes
-by domain. Other UDP is refused (Mozilla's proxy carries TCP only), so
-apps fall back to TCP; so is TCP to a port Mozilla's proxy refuses (it
-accepts 80, 443, 8080, and 8443) unless the routing sends the destination
-directly: refused at once, never tried and never sent out directly.
+(so the core's own connections go straight out), and runs
+hev-socks5-tunnel, a C library in `android/hev-socks5-tunnel/` that Gradle
+builds with the app, on the TUN device (`Tun2Socks.kt`, with the configuration from
+`mobile.TunConfig`). It sends every TCP connection and UDP flow to a SOCKS5
+listener of the core's on loopback, with a login made for that run, and
+answers DNS sent to the VPN's server with fake addresses from 198.18.0.0/15
+that stand for names, so the proxy gets the name and routes by domain; DNS
+sent elsewhere goes to the proxy, which answers it with DNS over HTTPS. The
+core applies the VPN's rule (`Daemon.TunnelAllows`, `TunnelAllowsUDP`): TCP
+to a port Mozilla's proxy refuses (it accepts 80, 443, 8080, and 8443), and
+UDP to a port the VPN does not carry (QUIC among them), are refused unless
+the routing sends the destination directly: never tried and never sent out
+directly. The library accepts a TCP connection before the proxy answers, so
+an app sees a refusal as a reset just after it connected; refused UDP is
+dropped without a word, so an app's QUIC falls back to TCP after a moment.
 Settings, Routing, "Apps and the VPN" chooses which apps use it: all but
 the checked ones, or only the checked ones. In the first mode the apps
 on the routing region's list (hiddify/Android-GFW-Apps, GPL-3.0, so the
@@ -145,6 +151,9 @@ API answers only this app (the local token) and a browser the app signs in
 lists, the caches, and the per-run token are left out
 (`res/xml/backup_rules.xml`, `data_extraction_rules.xml`). Copying a data
 folder into the external files dir (`import/`) works in debug builds only.
+`MainActivity` removes the app's other cards from the recent apps when it
+starts: with the empty `taskAffinity`, a card left by Back stays beside a new
+task opened from the notification, the tile, the widget, or the installer.
 The phone's home page has its own dark design
 (`_PhoneHome`), and phones get a bottom navigation bar.
 

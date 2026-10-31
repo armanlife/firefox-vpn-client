@@ -26,6 +26,10 @@ type session struct {
 	filters io.Closer
 	dns     *tun.FakeDNS
 	dial    tun.Dialer
+	// associate opens a UDP association with the core, for the UDP it takes:
+	// udpPorts.
+	associate tun.UDPDialer
+	udpPorts  []tunapi.PortRange
 	// protocol is the protocol version the core speaks.
 	protocol int
 	// trusted pass the DNS filters: the service and the core.
@@ -87,10 +91,14 @@ func newSession(s *Server, owner *tunapi.Conn, client string, protocol int, m tu
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	sess := &session{
-		owner:    owner,
-		server:   s,
-		dns:      tun.NewDesktopFakeDNS(),
-		dial:     dial,
+		owner:  owner,
+		server: s,
+		dns:    tun.NewDesktopFakeDNS(),
+		dial:   dial,
+		associate: func(ctx context.Context) (*tun.UDPAssociation, error) {
+			return tun.SOCKS5Associate(ctx, m.Proxy, m.Username, m.Password)
+		},
+		udpPorts: m.UDPPorts,
 		protocol: protocol,
 		trusted:  []string{s.cfg.Self, client},
 		ctx:      ctx,

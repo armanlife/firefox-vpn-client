@@ -5,6 +5,7 @@ package config
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,10 +14,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
+	"github.com/armanlife/firefox-vpn-client/core/internal/hellosplit"
 	"github.com/armanlife/firefox-vpn-client/core/internal/resolver"
 	"github.com/armanlife/firefox-vpn-client/core/internal/routing"
 	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
@@ -79,6 +82,9 @@ type Tun struct {
 	// Programs skip the VPN while the TUN runs: the TUN service sends their
 	// traffic directly, outside it (Windows and Linux).
 	Programs []TunProgram `json:"programs"`
+	// QUIC carries apps' QUIC (UDP to port 443) through the VPN (the phone's
+	// too); by default it is refused, and apps fall back to TCP.
+	QUIC bool `json:"quic,omitempty"`
 }
 
 // TunProgram is a program that skips the VPN.
@@ -88,8 +94,8 @@ type TunProgram struct {
 	// or a pattern with * (any text) and ? (one character): steam* is every
 	// Steam program (tunapi.MatchProgram).
 	Name string `json:"name"`
-	// UDPOnly sends only its UDP directly (Mozilla does not carry UDP); its
-	// TCP still goes through the VPN.
+	// UDPOnly sends only its UDP directly; its TCP still goes through the
+	// VPN. For a call or a game on a UDP port Mozilla does not carry.
 	UDPOnly bool `json:"udp_only,omitempty"`
 	// Path is where the program was when it was chosen, for the settings
 	// to show; only Name decides, so a program that moved still matches.
@@ -233,8 +239,34 @@ type Network struct {
 	// relay: an https:// URL that takes the target in its url parameter
 	// (scripts/relay: a Cloudflare Worker or a PHP file). The VPN traffic
 	// never uses it.
-	APIRelay         string `json:"api_relay"`
-	GuardianEndpoint string `json:"guardian_endpoint"`
+	APIRelay string `json:"api_relay"`
+	// APIRelayECH hides the relay's name from the network with Encrypted
+	// Client Hello (TLS 1.3): "on" (or empty: with ECH when the relay's
+	// name has a key, otherwise without; a relay on Cloudflare, a Worker,
+	// has one), "require" (no request without ECH), or "off".
+	APIRelayECH string `json:"api_relay_ech"`
+	// APIRelayECHConfig is where the ECH key comes from: empty, the HTTPS
+	// DNS record of the relay's own name; a name, that name's record (for
+	// a relay on Cloudflare, any Cloudflare name, such as
+	// cloudflare-ech.com); or the key itself, an ECHConfigList in base64.
+	APIRelayECHConfig string `json:"api_relay_ech_config"`
+	GuardianEndpoint  string `json:"guardian_endpoint"`
+	// HelloSplit is how the TLS ClientHello of the connections to Mozilla
+	// and to the relay goes out, for a network that filters by server name:
+	// "off" (or empty: whole), "first-byte", or "sni" (cut inside the name).
+	HelloSplit string `json:"hello_split"`
+	// UpstreamProxy, when set, is the host:port of the user's own SOCKS5 proxy,
+	// such as a v2ray client on this device: every connection to Mozilla and to
+	// the control plane goes through it, with the names resolved there, for a
+	// network that blocks or slows Mozilla's servers. HTTP/3 is not used then:
+	// a SOCKS5 connection is TCP. UpstreamProxyUsername and
+	// UpstreamProxyPassword are its login, both or neither.
+	// UpstreamProxyEnabled uses it (UpstreamProxyInUse): while off, these stay
+	// set and the connections go directly.
+	UpstreamProxyEnabled  bool   `json:"upstream_proxy_enabled"`
+	UpstreamProxy         string `json:"upstream_proxy"`
+	UpstreamProxyUsername string `json:"upstream_proxy_username"`
+	UpstreamProxyPassword string `json:"upstream_proxy_password"`
 }
 
 // DNS chooses how this program resolves the host names it connects to
@@ -286,7 +318,9 @@ func Default() Config {
 			Listen:  DefaultDashboardListen,
 		},
 		Network: Network{
+			APIRelayECH:      RelayECHOn,
 			GuardianEndpoint: guardian.DefaultEndpoint,
+			HelloSplit:       hellosplit.Off,
 		},
 		DNS: DNS{
 			Servers:          append([]string(nil), DefaultDNSServers...),
@@ -398,6 +432,7 @@ func Load(path string) (cfg Config, created bool, err error) {
 		cfg.Proxy.AllowLocked = false
 		rewrite = true
 	}
+	cfg.Network.UpstreamProxy = CleanUpstreamProxy(cfg.Network.UpstreamProxy)
 	if cfg.Accounts.Order == nil {
 		cfg.Accounts.Order = []AccountRef{}
 	}
@@ -428,6 +463,70 @@ func Load(path string) (cfg Config, created bool, err error) {
 	return cfg, false, nil
 }
 
+// CleanUpstreamProxy is network.upstream_proxy as typed or pasted, without the
+// spaces and the scheme that may come with it.
+func CleanUpstreamProxy(address string) string {
+	address = strings.Join(strings.Fields(address), "")
+	if _, rest, ok := strings.Cut(address, "://"); ok {
+		address = rest
+	}
+	return strings.TrimSuffix(address, "/")
+}
+
+// UpstreamProxyInUse is the address of the upstream proxy while it is on; ""
+// connects directly.
+func (n Network) UpstreamProxyInUse() string {
+	if !n.UpstreamProxyEnabled {
+		return ""
+	}
+	return n.UpstreamProxy
+}
+
+// SettleUpstreamProxy is the upstream proxy as a client saved it over prev:
+// cleaned, on when an address comes where there was none, so that filling it
+// in is enough, and off without an address.
+func SettleUpstreamProxy(prev, next Network) Network {
+	next.UpstreamProxy = CleanUpstreamProxy(next.UpstreamProxy)
+	next.UpstreamProxyUsername = strings.TrimSpace(next.UpstreamProxyUsername)
+	next.UpstreamProxyPassword = strings.TrimSpace(next.UpstreamProxyPassword)
+	switch {
+	case next.UpstreamProxy == "":
+		next.UpstreamProxyEnabled = false
+	case prev.UpstreamProxy == "":
+		next.UpstreamProxyEnabled = true
+	}
+	return next
+}
+
+// ValidateUpstreamProxy checks network.upstream_proxy against proxy.listen:
+// empty (none), or the host:port of a SOCKS5 proxy that, while it is on, is not
+// this program's own port, which would send its connections back to itself.
+func ValidateUpstreamProxy(n Network, listen string) error {
+	if n.UpstreamProxy == "" {
+		return nil
+	}
+	host, port, err := net.SplitHostPort(n.UpstreamProxy)
+	if err != nil || host == "" {
+		return fmt.Errorf("%q is not host:port", n.UpstreamProxy)
+	}
+	if p, err := strconv.ParseUint(port, 10, 16); err != nil || p == 0 {
+		return fmt.Errorf("%q has no valid port", n.UpstreamProxy)
+	}
+	if (n.UpstreamProxyUsername == "") != (n.UpstreamProxyPassword == "") {
+		return errors.New("the username and the password go together")
+	}
+	if len(n.UpstreamProxyUsername) > 255 || len(n.UpstreamProxyPassword) > 255 {
+		return errors.New("SOCKS5 takes no username or password longer than 255 bytes")
+	}
+	ip := net.ParseIP(host)
+	if n.UpstreamProxyEnabled && (host == "localhost" || (ip != nil && (ip.IsLoopback() || ip.IsUnspecified()))) {
+		if _, own, err := net.SplitHostPort(listen); err == nil && own == port {
+			return fmt.Errorf("%s is this program's own proxy", n.UpstreamProxy)
+		}
+	}
+	return nil
+}
+
 // ValidateRelay checks an API relay URL: empty (none), or https:// with a
 // host. Plain http is refused: the sign-in and the account tokens cross
 // the relay.
@@ -444,6 +543,42 @@ func ValidateRelay(raw string) error {
 		return errors.New("must be an https:// URL (the sign-in and the account tokens cross it)")
 	}
 	return nil
+}
+
+// The network.api_relay_ech choices.
+const (
+	RelayECHOff     = "off"
+	RelayECHOn      = "on"
+	RelayECHRequire = "require"
+)
+
+// ParseECHSource reads network.api_relay_ech_config: empty (both results
+// empty: the relay's own name), a DNS name whose HTTPS record has the key,
+// or the key itself, an ECHConfigList in base64.
+func ParseECHSource(raw string) (name string, key []byte, err error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return "", nil, nil
+	}
+	if strings.Contains(raw, ".") && !strings.ContainsAny(raw, "/+=") {
+		name = strings.TrimSuffix(strings.ToLower(raw), ".")
+		for _, label := range strings.Split(name, ".") {
+			if label == "" || len(label) > 63 || strings.Trim(label, "abcdefghijklmnopqrstuvwxyz0123456789-_") != "" {
+				return "", nil, fmt.Errorf("%q is not a DNS name", raw)
+			}
+		}
+		return name, nil, nil
+	}
+	for _, enc := range []*base64.Encoding{base64.StdEncoding, base64.RawStdEncoding, base64.URLEncoding, base64.RawURLEncoding} {
+		if key, err = enc.DecodeString(raw); err == nil {
+			break
+		}
+	}
+	// An ECHConfigList is its own length, then the configs.
+	if err != nil || len(key) < 2 || int(key[0])<<8|int(key[1]) != len(key)-2 {
+		return "", nil, errors.New("neither a DNS name nor an ECH key (an ECHConfigList in base64)")
+	}
+	return "", key, nil
 }
 
 // Save writes cfg to path with owner-only permissions; the file can hold
@@ -514,6 +649,20 @@ func (c Config) Validate() error {
 	}
 	if err := ValidateRelay(c.Network.APIRelay); err != nil {
 		return fmt.Errorf("network.api_relay: %w", err)
+	}
+	switch c.Network.APIRelayECH {
+	case "", RelayECHOff, RelayECHOn, RelayECHRequire:
+	default:
+		return fmt.Errorf("network.api_relay_ech: %q is not off, on, or require", c.Network.APIRelayECH)
+	}
+	if _, _, err := ParseECHSource(c.Network.APIRelayECHConfig); err != nil {
+		return fmt.Errorf("network.api_relay_ech_config: %w", err)
+	}
+	if !hellosplit.Valid(c.Network.HelloSplit) {
+		return fmt.Errorf("network.hello_split: %q is not off, sni, or first-byte", c.Network.HelloSplit)
+	}
+	if err := ValidateUpstreamProxy(c.Network, c.Proxy.Listen); err != nil {
+		return fmt.Errorf("network.upstream_proxy: %w", err)
 	}
 	r := c.Routing
 	if err := routing.ValidateRegion(r.Region); err != nil {

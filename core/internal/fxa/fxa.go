@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
+	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
 )
 
 const (
@@ -153,7 +154,9 @@ func fxaDo(ctx context.Context, newRequest func() (*http.Request, error)) (*http
 		io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
 		resp.Body.Close()
 
+		logx.Info("the account server answered HTTP 406 (Fastly's bot check); solving its challenge attempt=%d", attempt)
 		if err := solveFastlyChallenge(ctx); err != nil {
+			logx.Warn("Fastly challenge failed attempt=%d err=%s", attempt, logx.Err(err))
 			return nil, fmt.Errorf("Fastly anti-bot challenge: %w", err)
 		}
 	}

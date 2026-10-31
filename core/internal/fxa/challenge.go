@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
+	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
 )
 
 const (
@@ -127,6 +128,7 @@ func solveFastlyChallenge(ctx context.Context) error {
 // already holds a valid challenge cookie fails because Fastly then serves
 // the real page instead of the challenge page.
 func solveChallengeOnHost(ctx context.Context, base string) error {
+	start := time.Now()
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return err
@@ -161,9 +163,13 @@ func solveChallengeOnHost(ctx context.Context, base string) error {
 		return err
 	}
 
+	// The kinds of challenge Fastly asked, for the log: how often each
+	// comes tells whether the solver keeps up.
+	var kinds []string
 	for round := 0; round < maxPostBackRounds; round++ {
 		answers := make([]interface{}, 0, len(challenges))
 		for _, ch := range challenges {
+			kinds = append(kinds, ch.Ty)
 			answer, err := answerChallenge(ctx, client, base+prefix, token, ch)
 			if err != nil {
 				return err
@@ -210,7 +216,12 @@ func solveChallengeOnHost(ctx context.Context, base string) error {
 			} else if stillChallenged {
 				return errChallengeNotAccepted
 			}
-			return installChallengeCookies(jar, pageURL)
+			if err := installChallengeCookies(jar, pageURL); err != nil {
+				return err
+			}
+			logx.Info("Fastly challenge solved host=%s challenges=%s rounds=%d took=%s",
+				strings.TrimPrefix(base, "https://"), strings.Join(kinds, ","), round+1, time.Since(start).Round(100*time.Millisecond))
+			return nil
 		}
 		if len(pbResp.Ch) == 0 || pbResp.Tok == "" {
 			return fmt.Errorf("unexpected post-back response: %s", truncate(string(data), 256))

@@ -47,6 +47,8 @@
     <symbol id="i-timer" viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61 1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42A8.962 8.962 0 0 0 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9a8.994 8.994 0 0 0 7.03-14.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></symbol>
     <symbol id="i-block" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9A7.902 7.902 0 0 1 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1A7.902 7.902 0 0 1 20 12c0 4.42-3.58 8-8 8z"/></symbol>
     <symbol id="i-lan" viewBox="0 0 24 24"><path d="M13 22h8v-7h-3v-4h-5V9h3V2H8v7h3v2H6v4H3v7h8v-7H8v-2h8v2h-3z"/></symbol>
+    <symbol id="i-lan" viewBox="0 0 24 24"><path d="M13 22h8v-7h-3v-4h-5V9h3V2H8v7h3v2H6v4H3v7h8v-7H8v-2h8v2h-3v7zM10 7V4h4v3h-4zM9 17v3H5v-3h4zm10 0v3h-4v-3h4z"/></symbol>
+    <symbol id="i-cut" viewBox="0 0 24 24"><path d="M9.64 7.64c.23-.5.36-1.05.36-1.64 0-2.21-1.79-4-4-4S2 3.79 2 6s1.79 4 4 4c.59 0 1.14-.13 1.64-.36L10 12l-2.36 2.36C7.14 14.13 6.59 14 6 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.59-.13-1.14-.36-1.64L12 14l7 7h3v-1L9.64 7.64zM6 8c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm0 12c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm6-7.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zM19 3l-6 6 2 2 7-7V3z"/></symbol>
     <symbol id="i-ethernet" viewBox="0 0 24 24"><path d="M7.77 6.76 6.23 5.48.82 12l5.41 6.52 1.54-1.28L3.42 12l4.35-5.24zM7 13h2v-2H7v2zm10-2h-2v2h2v-2zm-6 2h2v-2h-2v2zm6.77-7.52-1.54 1.28L20.58 12l-4.35 5.24 1.54 1.28L23.18 12l-5.41-6.52z"/></symbol>
     <symbol id="i-computer" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></symbol>
     <symbol id="i-search" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></symbol>
@@ -297,6 +299,9 @@
               <a href="#set-dns"><svg><use href="#i-dns"/></svg><span>DNS</span></a>
               <a href="#set-routing"><svg><use href="#i-route"/></svg><span>Routing</span></a>
               <a href="#set-accounts"><svg><use href="#i-accounts"/></svg><span>Accounts</span></a>
+              <a href="#set-blocked"><svg><use href="#i-lock"/></svg><span>If Mozilla is blocked</span></a>
+              <a href="#set-fragment"><svg><use href="#i-cut"/></svg><span>TLS fragmentation</span></a>
+              <a href="#set-upstream"><svg><use href="#i-lan"/></svg><span>Upstream proxy</span></a>
               <a href="#set-advanced"><svg><use href="#i-tune"/></svg><span>Advanced</span></a>
             </nav>
             <div class="settings-body">
@@ -570,6 +575,63 @@
                 </div>
               </fieldset>
 
+              <fieldset class="card" id="set-blocked">
+                <legend><svg><use href="#i-lock"/></svg>If Mozilla is blocked</legend>
+                <div class="set-list">
+                  <div class="set-row">
+                    <span class="set-ic"><svg><use href="#i-swap"/></svg></span>
+                    <span class="set-text"><label for="f-relay">Relay server</label><small>Your own Cloudflare Worker, or relay.php on your own host.<br>Used only when Mozilla doesn't answer directly: the sign-in, accounts, and server list go through it, not the VPN traffic.</small></span>
+                    <span class="set-ctl"><input id="f-relay" name="network.api_relay" spellcheck="false" placeholder="https://relay.NAME.workers.dev/?secret=…"></span>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="card" id="set-fragment">
+                <legend><svg><use href="#i-cut"/></svg>TLS fragmentation</legend>
+                <div class="set-list">
+                  <div class="set-row">
+                    <span class="set-ic"><svg><use href="#i-cut"/></svg></span>
+                    <span class="set-text"><label for="f-fragment">Fragmentation</label><small class="points"><span>Off: Normal TLS connection</span><span>First byte: Splits the TLS header at the first byte (0x16)</span><span>Server name (SNI): Splits the server name (SNI) across TCP packets</span></small></span>
+                    <span class="set-ctl">
+                      <select id="f-fragment" name="network.hello_split">
+                        <option value="off">Off</option>
+                        <option value="first-byte">First byte</option>
+                        <option value="sni">Server name (SNI)</option>
+                      </select>
+                    </span>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="card" id="set-upstream">
+                <legend><svg><use href="#i-lan"/></svg>Upstream proxy</legend>
+                <div class="set-list">
+                  <div class="set-row">
+                    <span class="set-ic"><svg><use href="#i-lan"/></svg></span>
+                    <span class="set-text"><label for="f-upstream-on">Use the upstream proxy</label><small>The connection to Mozilla goes through this proxy, for networks that block or slow Mozilla.<br>If the proxy runs on this device, leave it out of the VPN.</small></span>
+                    <span class="set-ctl"><label class="switch"><input type="checkbox" id="f-upstream-on" name="network.upstream_proxy_enabled"><span></span></label></span>
+                  </div>
+                  <div class="set-row">
+                    <span class="set-ic"><svg><use href="#i-lan"/></svg></span>
+                    <span class="set-text"><label for="upstream-host">SOCKS5 proxy address</label></span>
+                    <span class="set-ctl"><input id="upstream-host" spellcheck="false" autocapitalize="off" placeholder="127.0.0.1"></span>
+                  </div>
+                  <div class="set-row">
+                    <span class="set-ic"><svg><use href="#i-lan"/></svg></span>
+                    <span class="set-text"><label for="upstream-port">Port</label></span>
+                    <span class="set-ctl"><input id="upstream-port" class="port" inputmode="numeric" spellcheck="false" placeholder="1080"></span>
+                  </div>
+                  <div class="set-row">
+                    <span class="set-ic"><svg><use href="#i-key"/></svg></span>
+                    <span class="set-text"><span class="set-title">Login</span><small>Optional: set both, or neither.</small></span>
+                    <span class="set-ctl pair">
+                      <input name="network.upstream_proxy_username" autocomplete="off" placeholder="Username" aria-label="Upstream proxy username">
+                      <input name="network.upstream_proxy_password" class="secret" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="Password" aria-label="Upstream proxy password" data-reveal data-1p-ignore data-lpignore="true" data-bwignore>
+                    </span>
+                  </div>
+                </div>
+              </fieldset>
+
               <fieldset class="card" id="set-advanced">
                 <legend><svg><use href="#i-tune"/></svg>Advanced</legend>
                 <p class="set-intro">The defaults suit almost everyone.</p>
@@ -595,11 +657,6 @@
                     <span class="set-ic"><svg><use href="#i-accounts"/></svg></span>
                     <span class="set-text"><label for="f-max">Most connections at once</label><small>From applications to this proxy; 0 = no limit</small></span>
                     <span class="set-ctl"><input id="f-max" class="port" name="proxy.max_connections" type="number" min="0" data-int></span>
-                  </div>
-                  <div class="set-row">
-                    <span class="set-ic"><svg><use href="#i-swap"/></svg></span>
-                    <span class="set-text"><label for="f-relay">Relay for Mozilla's services</label><small>Only if your network blocks signing in to Mozilla: the address of a relay you set up yourself</small></span>
-                    <span class="set-ctl"><input id="f-relay" name="network.api_relay" spellcheck="false" placeholder="https://relay.NAME.workers.dev/?key=…"></span>
                   </div>
                 </div>
               </fieldset>
@@ -632,7 +689,7 @@
             </article>
 
             <article class="card help-card" id="help-ports">
-              <h3>Only ports 80, 443, 8080, and 8443</h3>
+              <h3>TCP: ports 80, 443, 8080, and 8443</h3>
               <p>Mozilla's proxy connects to the web ports <strong>80, 443, 8080, and 8443</strong> only. Every other port is refused by Mozilla's server, for example <code>http://203.0.113.5:9898/</code>, SSH (22), or mail (25, 465, 587, 993). This program cannot change that, with two exceptions: git over SSH to GitHub goes to GitHub's SSH server on port 443 by itself, and DNS (53) sent through the proxy is answered by this program, with DNS over HTTPS through Mozilla.</p>
               <ul>
                 <li>Serve your own site on one of the four ports (8080 and 8443 are the usual choices).</li>
@@ -641,8 +698,8 @@
             </article>
 
             <article class="card help-card" id="help-udp">
-              <h3>TCP only, no UDP</h3>
-              <p>Mozilla's proxy carries TCP connections. UDP does not go through it, so online games, voice and video calls in some applications, and other UDP traffic do not work through this proxy. Browsers are not affected: they use HTTP/2 over TCP when HTTP/3 is not available.</p>
+              <h3>UDP: ports 80, 443, 3478, 8080, 8443, and 49152-65534</h3>
+              <p>Calls and online games on other UDP ports do not work through this proxy. In the VPN, QUIC (UDP to port 443) is turned away on purpose: browsers use HTTP/2 over TCP instead.</p>
             </article>
 
             <article class="card help-card" id="help-loop">

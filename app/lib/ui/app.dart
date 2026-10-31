@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../app_settings.dart';
+import '../core/android_core.dart';
 import '../core/core_api.dart';
 import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
 import 'about_page.dart';
 import 'accounts_page.dart';
+import 'focus_ring.dart';
 import 'format.dart';
 import 'logs_page.dart';
 import 'mobile_shell.dart';
@@ -111,7 +113,11 @@ class VpnApp extends StatelessWidget {
         };
         return Theme(
           data: _theme(dark ? Brightness.dark : Brightness.light, locale),
-          child: child!,
+          // A clear ring around what a remote or the keyboard chose.
+          child: FocusRing(
+            atStart: Platform.isAndroid && AndroidCore.isTv,
+            child: child!,
+          ),
         );
       },
       home: Shell(core: core, settings: settings),
@@ -219,6 +225,10 @@ class _ShellState extends State<Shell> {
                       onOpenConnection: () => setState(() {
                         _page = _Page.settings;
                         _settingsOpening = SettingsSection.connection;
+                      }),
+                      onOpenUpstreamProxy: () => setState(() {
+                        _page = _Page.settings;
+                        _settingsOpening = SettingsSection.upstreamProxy;
                       }),
                     ),
                     _Page.servers => ServersPage(

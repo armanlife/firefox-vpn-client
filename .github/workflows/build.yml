@@ -185,11 +185,21 @@ jobs:
           printf '%s' "$KEYSTORE" | base64 -d > app/android/release.jks
           printf 'storeFile=../release.jks\nstorePassword=%s\nkeyAlias=release\nkeyPassword=%s\n' "$PASSWORD" "$PASSWORD" > app/android/key.properties
       - name: Build
+        env:
+          # The key updates are signed with: the core downloads only APKs of
+          # releases it signed, for the app to install (a TV's updates).
+          FIREFOX_VPN_SIGNING_KEY: ${{ secrets.FIREFOX_VPN_SIGNING_KEY }}
         run: |
           v='${{ needs.test.outputs.version }}'
           mkdir -p app/android/app/libs
+          flags="-s -w -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$v"
+          if [ -n "$FIREFOX_VPN_SIGNING_KEY" ]; then
+            flags="$flags -X github.com/armanlife/firefox-vpn-client/core/internal/signing.Key=$(cd core && go run ./tools/sign -public)"
+          else
+            echo "::warning::no release key: this Android core takes no updates"
+          fi
           (cd core && gomobile bind -target=android -androidapi 24 -trimpath \
-            -ldflags "-s -w -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$v" \
+            -ldflags "$flags" \
             -o ../app/android/app/libs/core.aar ./mobile)
           cd app
           flutter pub get

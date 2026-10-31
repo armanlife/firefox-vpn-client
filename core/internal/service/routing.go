@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,6 +20,7 @@ import (
 	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
 	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
 	"github.com/armanlife/firefox-vpn-client/core/internal/routing"
+	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
 )
 
 // listDownloadTimeout bounds downloading both routing lists.
@@ -110,17 +113,70 @@ func (d *Daemon) DirectApps() []string {
 }
 
 // TunnelAllows reports whether the VPN (the phone's, or the computer's TUN
-// mode) sends a connection to host:port to the proxy: a port Mozilla's
-// proxy carries (and GitHub's SSH, which goes to its HTTPS port), or a
-// destination the routing sends directly (any port). Others are refused at
-// once rather than tried: Mozilla would refuse them, and they must not go
-// out directly.
+// mode) sends a connection to host:port to the proxy: DNS, which the proxy
+// answers itself; a port Mozilla's proxy carries (and GitHub's SSH, which goes
+// to its HTTPS port); or a destination the routing sends directly (any port).
+// Others are refused at once rather than tried: Mozilla would refuse them, and
+// they must not go out directly. So are the addresses that lead nowhere
+// (tunnelDeadEnd), so that the app asks for the name again.
 func (d *Daemon) TunnelAllows(host, port string) bool {
+	if port == proxy.DNSPort {
+		return true
+	}
+	if ip, err := netip.ParseAddr(host); err == nil && tunnelDeadEnd(ip) {
+		return false
+	}
 	if proxy.Carried(host, port) {
 		return true
 	}
 	r := d.currentRouter()
 	return r != nil && r.Decide(context.Background(), host, nil) == routing.Direct
+}
+
+// tunnelDeadEnd reports an address that leads nowhere through the VPN: the VPN
+// interface's own, a filtering DNS's answer from before the VPN started, or a
+// fake address forgotten since (its name is gone with a restart).
+func tunnelDeadEnd(ip netip.Addr) bool {
+	return tun.IsVPNAddress(ip) || tun.IsFilterAddress(ip) || tun.IsFake(ip)
+}
+
+// TunnelAllowsUDP reports whether the VPN sends UDP to host:port to the proxy:
+// DNS, which the proxy answers itself; a port the VPN carries (VPNUDPPorts); or
+// a destination the routing sends directly. An address that is not on the
+// internet (the local network, multicast) never is, nor one that leads nowhere.
+func (d *Daemon) TunnelAllowsUDP(host, port string) bool {
+	if port == proxy.DNSPort {
+		return true
+	}
+	if ip, err := netip.ParseAddr(host); err == nil {
+		ip = ip.Unmap()
+		if tunnelDeadEnd(ip) || !ip.IsGlobalUnicast() || ip.IsPrivate() {
+			return false
+		}
+	}
+	if n, err := strconv.ParseUint(port, 10, 16); err == nil {
+		for _, r := range d.VPNUDPPorts() {
+			if uint16(n) >= r.From && uint16(n) <= r.To {
+				return true
+			}
+		}
+	}
+	r := d.currentRouter()
+	return r != nil && r.Decide(context.Background(), host, nil) == routing.Direct
+}
+
+// VPNUDPPorts are the UDP ports the VPN (the phone's, or the computer's TUN
+// mode) carries: those Mozilla's proxy does, without QUIC (443) unless
+// tun.quic. Refused, apps' QUIC falls back to TCP (at once on the computer,
+// which answers with an ICMP unreachable, and after a moment on the phone, whose
+// stack drops the packets), whose tunnels are a little faster, keep a call's
+// packets off a download's connection, and tell the app at once when the network cuts the connection.
+func (d *Daemon) VPNUDPPorts() []proxy.PortRange {
+	ports := proxy.UDPPorts()
+	if d.config().Tun.QUIC {
+		return ports
+	}
+	return slices.DeleteFunc(ports, func(r proxy.PortRange) bool { return r.From == 443 && r.To == 443 })
 }
 
 func (d *Daemon) currentRouter() *routing.Router {

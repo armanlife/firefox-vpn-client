@@ -1,10 +1,8 @@
-// Package tun carries a phone's traffic through the proxy: Android's
-// VpnService hands the core a TUN device, a userspace TCP/IP stack (gVisor)
-// takes its packets apart, and every TCP connection goes out through the
-// core's own SOCKS5 proxy, so routing, accounts, and Mozilla's tunnel apply
-// as for any proxy client. DNS is answered here with fake addresses that
-// stand for names (FakeDNS), so the proxy gets the name, not an address.
-// Other UDP is refused: Mozilla's proxy carries TCP only.
+// Package tun has what the VPN modes share: the addresses that stand for names
+// (FakeDNS on the desktop; on the phone hev-socks5-tunnel hands them out from
+// the same range), the addresses that lead nowhere through the VPN, and the
+// way into the core's SOCKS5 proxy, through which every connection goes, so
+// that routing, accounts, and Mozilla's tunnel apply as for any proxy client.
 package tun
 
 import (
@@ -41,12 +39,6 @@ type FakeDNS struct {
 	fixed map[string][]netip.Addr
 }
 
-// NewFakeDNS is the phone's: the whole range (its VPN interface's own
-// addresses are elsewhere, vpnNet).
-func NewFakeDNS() *FakeDNS {
-	return newFakeDNS(1, 1<<(32-fakeRange.Bits())) // not the network address
-}
-
 // DesktopNet holds the desktop TUN adapter's own addresses: the first four
 // of fakeRange, which no app on a computer can be using either (WSL and
 // Docker take their networks from 172.16.0.0/12, where the phone's are).
@@ -80,6 +72,11 @@ func newFakeDNS(first, size uint32) *FakeDNS {
 
 // IsFake reports whether addr is in the range FakeDNS hands out.
 func IsFake(addr netip.Addr) bool { return fakeRange.Contains(addr.Unmap()) }
+
+// FakeNet is that range as a network and a netmask.
+func FakeNet() (network, netmask string) {
+	return fakeRange.Addr().String(), net.IP(net.CIDRMask(fakeRange.Bits(), 32)).String()
+}
 
 // Name returns the name a fake address stands for.
 func (f *FakeDNS) Name(addr netip.Addr) (string, bool) {
@@ -196,13 +193,13 @@ func (f *FakeDNS) Target(dst netip.AddrPort) (target string, ok bool) {
 	return net.JoinHostPort(name, strconv.Itoa(int(dst.Port()))), true
 }
 
-// vpnNet holds the VPN interface's own addresses (CoreService.kt): its
+// vpnNet holds the phone's VPN interface's own addresses (CoreService.kt): its
 // DNS server is one of them. Nothing else listens there.
 var vpnNet = netip.MustParsePrefix("172.19.0.0/30")
 
 // filterNets hold the addresses Iran's filtering DNS gives for blocked
 // names. An app may have cached one from before the VPN started; through
-// the VPN the name resolves properly (FakeDNS, then Mozilla), so a
+// the VPN the name resolves properly (fake address, then Mozilla), so a
 // connection to one is refused at once, and the app asks again.
 var filterNets = []netip.Prefix{
 	netip.MustParsePrefix("10.10.34.0/24"),

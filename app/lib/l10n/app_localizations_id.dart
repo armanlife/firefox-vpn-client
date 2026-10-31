@@ -158,8 +158,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get addAccount => 'Tambah akun';
 
   @override
-  String lowQuotaNotice(String left, String size) {
-    return 'Kuota akun saat ini hampir habis (sisa $left). Tambahkan akun lain untuk mendapat $size lagi.';
+  String lowQuotaNotice(String size) {
+    return 'Kuota akun ini hampir habis. Tambahkan akun lain untuk mendapat $size lagi.';
   }
 
   @override
@@ -167,6 +167,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get noAccountsHint => 'Tambahkan Firefox Account untuk terhubung.';
+
+  @override
+  String get delayTestFailed =>
+      'Tidak dapat mengukur jeda server. Periksa internet Anda.';
 
   @override
   String get createAccountTitle => 'Belum punya Firefox Account?';
@@ -303,6 +307,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get close => 'Tutup';
+
+  @override
+  String get noBrowserTitle => 'Tidak ada browser di perangkat ini';
+
+  @override
+  String get noBrowserText => 'Buka alamat ini di ponsel atau komputer Anda:';
 
   @override
   String get cancel => 'Batal';
@@ -644,8 +654,7 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get noticeCommand =>
-      'Sebuah aplikasi mencoba memakai UDP (game, panggilan suara dan video). Proxy Mozilla hanya mendukung TCP, jadi koneksi ini tidak bisa lewat.';
+  String get noticeCommand => 'Jenis koneksi ini tidak didukung oleh VPN.';
 
   @override
   String noticeTimes(int count, String time) {
@@ -836,6 +845,69 @@ class AppLocalizationsId extends AppLocalizations {
   String get sectionAdvanced => 'Lanjutan';
 
   @override
+  String get tlsFragment => 'Fragmentasi TLS';
+
+  @override
+  String get tlsFragmentOff => 'Nonaktif';
+
+  @override
+  String get tlsFragmentFirstByte => 'Byte pertama';
+
+  @override
+  String get tlsFragmentSni => 'Nama server (SNI)';
+
+  @override
+  String get tlsFragmentFirstByteHint =>
+      'Memisahkan header TLS pada byte pertama (0x16)';
+
+  @override
+  String get tlsFragmentSniHint =>
+      'Membagi nama server (SNI) ke beberapa paket TCP';
+
+  @override
+  String get tlsFragmentOffHint => 'Koneksi TLS biasa';
+
+  @override
+  String get sectionBypass => 'Jika Mozilla diblokir';
+
+  @override
+  String get apiRelay => 'Server relay';
+
+  @override
+  String get apiRelayHint =>
+      'Cloudflare Worker milik Anda, atau relay.php di hosting Anda sendiri.\nHanya dipakai saat Mozilla tidak menjawab langsung: proses masuk, akun, dan daftar server melewatinya, bukan lalu lintas VPN.';
+
+  @override
+  String get upstreamProxy => 'Proxy upstream';
+
+  @override
+  String get upstreamProxyOn => 'Proxy upstream aktif';
+
+  @override
+  String get upstreamProxyAddress => 'Alamat proxy SOCKS5';
+
+  @override
+  String get upstreamProxyPort => 'Port';
+
+  @override
+  String get upstreamProxyHint =>
+      'Koneksi ke Mozilla melewati proxy ini, untuk jaringan yang memblokir atau memperlambat Mozilla.\nJika proxy berjalan di perangkat ini, keluarkan dari VPN.';
+
+  @override
+  String get upstreamProxyInvalid =>
+      'Masukkan alamat proxy, misalnya 127.0.0.1.';
+
+  @override
+  String get upstreamProxyInvalidPort => 'Masukkan port dari 1 sampai 65535.';
+
+  @override
+  String get upstreamProxyOwn =>
+      'Itu proxy milik aplikasi ini. Masukkan yang lain.';
+
+  @override
+  String get apiRelayInvalid => 'Harus berupa alamat https://.';
+
+  @override
   String get listenAddress => 'Akses proxy';
 
   @override
@@ -963,6 +1035,10 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get updateAllowInstall =>
+      'Izinkan Firefox VPN memasang aplikasi, lalu tekan «Perbarui» lagi.';
+
+  @override
   String updateInstalling(String version) {
     return 'Memasang versi $version. Aplikasi akan tertutup lalu terbuka lagi.';
   }
@@ -983,11 +1059,14 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get autoUpdate => 'Perbarui otomatis';
+  String get sectionUpdates => 'Pembaruan';
 
   @override
-  String get autoUpdateHint =>
-      'Versi baru diunduh di latar belakang dan dipasang saat aplikasi dibuka berikutnya.';
+  String get inAppUpdates => 'Perbarui di aplikasi';
+
+  @override
+  String get inAppUpdatesHint =>
+      'Versi baru diunduh di latar belakang dan penginstal Android terbuka.\nMati: tombol Unduh membuka browser.';
 
   @override
   String get repoNotSet => 'Repositori GitHub belum diatur.';
@@ -1017,6 +1096,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get groupApp => 'Aplikasi';
 
   @override
+  String get groupServersAccounts => 'Server dan akun';
+
+  @override
+  String get groupNetwork => 'Jaringan';
+
+  @override
   String get stateOff => 'Tidak terhubung';
 
   @override
@@ -1024,6 +1109,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get tapToDisconnectPhone => 'Ketuk untuk memutus koneksi';
+
+  @override
+  String get tapToConnectTv => 'Tekan OK untuk terhubung';
+
+  @override
+  String get tapToDisconnectTv => 'Tekan OK untuk memutus koneksi';
 
   @override
   String lanAddress(String address) {
@@ -1059,7 +1150,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get failUnreachable =>
-      'Server Mozilla diblokir di internet ini. Coba koneksi internet lain.';
+      'Tidak dapat menjangkau server Mozilla. Coba koneksi internet lain.';
+
+  @override
+  String get failUpstreamProxy =>
+      'Tidak dapat menjangkau Mozilla melalui proxy upstream. Pastikan proxy berjalan.';
+
+  @override
+  String get failInsideVpn =>
+      'Internet ini sudah melewati VPN. Matikan VPN tersebut.';
 
   @override
   String get failRefused =>
@@ -1391,19 +1490,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String udpNoticeBody(String program) {
-    return '$program mencoba melakukan panggilan atau bermain online, tetapi dalam mode TUN lalu lintas itu (UDP) tidak bisa lewat VPN.';
+    return 'Lalu lintas UDP $program tidak lewat VPN.';
   }
-
-  @override
-  String get udpNoticeAction => 'Kirim UDP-nya langsung';
 
   @override
   String get dontShowAgain => 'Jangan tampilkan lagi';
-
-  @override
-  String udpDirectAdded(String program) {
-    return '$program: UDP-nya kini terhubung langsung.';
-  }
 
   @override
   String get addRunningProgram => 'Dari program yang berjalan';

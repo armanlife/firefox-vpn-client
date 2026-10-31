@@ -14,10 +14,6 @@ import (
 // Dialer opens a connection to target ("host:port") through the proxy.
 type Dialer func(ctx context.Context, target string) (net.Conn, error)
 
-// Allow reports whether a connection to host:port is sent to the proxy at
-// all; one it refuses is reset at once, without being tried.
-type Allow func(host, port string) bool
-
 // dialTimeout bounds connecting through the proxy, which may first wake
 // and connect to Mozilla.
 const dialTimeout = 30 * time.Second

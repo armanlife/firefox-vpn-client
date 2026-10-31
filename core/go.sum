@@ -83,5 +83,3 @@ golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated h1:1h2MnaIAIXISqTF
 golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated/go.mod h1:RVAQXBGNv1ib0J382/DPCRS/BPnsGebyM1Gj5VSDpG8=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
-gvisor.dev/gvisor v0.0.0-20261014183808-7e3f1b18dc2d h1:mkfVNpxjefnyhJ/4tALhuiXEk483JO5cWgDMIbUv49A=
-gvisor.dev/gvisor v0.0.0-20261014183808-7e3f1b18dc2d/go.mod h1:pK/dapF5Bf3KGW7/kd5CI5IC4lYh9FMFY1qETAIGLXk=

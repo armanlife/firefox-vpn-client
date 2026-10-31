@@ -13,7 +13,8 @@ import 'package:firefox_vpn/core/updates.dart';
 import 'package:firefox_vpn/desktop/close_dialog.dart';
 import 'package:firefox_vpn/l10n/app_localizations.dart';
 import 'package:firefox_vpn/ui/app.dart';
-import 'package:firefox_vpn/ui/settings_page.dart' show pickProgramFile;
+import 'package:firefox_vpn/ui/settings_page.dart'
+    show SettingsGroup, pickProgramFile;
 import 'package:firefox_vpn/ui/signin_dialog.dart';
 import 'package:firefox_vpn/ui/widgets.dart';
 
@@ -57,6 +58,9 @@ class FakeApi implements CoreApi {
 
   /// Why the last connect was given up (`connect_failure`).
   String connectFailure = '';
+
+  /// The status's `upstream_proxy`: its address while it is on.
+  String upstreamProxy = '';
 
   /// The status's `exit_mismatch`, as the core would send it.
   Map<String, Object?>? exitMismatch;
@@ -124,6 +128,7 @@ class FakeApi implements CoreApi {
     if (tunSupported && tun != null) 'tun': tun,
     if (update != null) 'update': update,
     if (noNetwork) 'no_network': true,
+    if (upstreamProxy.isNotEmpty) 'upstream_proxy': upstreamProxy,
     'proxy': recommended
         ? {
             'listen': '127.0.0.1:10810',
@@ -1050,6 +1055,552 @@ void main() {
     core.dispose();
   });
 
+  testWidgets('the phone lists General first, then the groups', (tester) async {
+    stillMotion(tester);
+    tester.view.physicalSize = const Size(400, 1500);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final api = FakeApi()..systemProxySupported = false;
+    final core = CoreController(
+      () async => api,
+      pollInterval: const Duration(hours: 1),
+    );
+    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+    core.start();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+
+    final tops = [
+      for (final name in [
+        'General',
+        'Servers and accounts',
+        'Servers',
+        'Accounts',
+        'Network',
+        'Connection',
+        'Routing',
+        'DNS',
+        'If Mozilla is blocked',
+        'Relay server',
+        'TLS fragmentation',
+        'Upstream proxy',
+        'App',
+        'Logs',
+        'About',
+      ])
+        tester.getTopLeft(find.text(name)).dy,
+    ];
+    expect(tops, [...tops]..sort());
+
+    // The relay server has a row of its own, and is not under Connection too.
+    await tester.tap(find.text('Relay server'));
+    await tester.pumpAndSettle();
+    final field = find.widgetWithText(TextField, 'Relay server');
+    expect(field, findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Connection'));
+    await tester.pumpAndSettle();
+    expect(field, findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  testWidgets('the accounts page has the switching with a second account', (
+    tester,
+  ) async {
+    stillMotion(tester);
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final api = FakeApi();
+    final core = CoreController(
+      () async => api,
+      pollInterval: const Duration(hours: 1),
+    );
+    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+    core.start();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Accounts').first);
+    await tester.pumpAndSettle();
+
+    final row = find.text('Account switching');
+    expect(row, findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.ancestor(of: row, matching: find.byType(ListTile)),
+        matching: find.textContaining('90%'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    final field = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextField),
+    );
+    expect(tester.widget<TextField>(field).controller!.text, '90');
+    await tester.enterText(field, '0');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('from 1 to 100'), findsOneWidget);
+    expect(api.config['accounts'], isNull);
+    await tester.enterText(field, '70');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    final accounts = api.config['accounts'] as Map<String, Object?>;
+    expect(accounts['switch_threshold_percent'], 70);
+
+    // One account: nothing to switch to.
+    api.accountsJson.removeLast();
+    await core.refresh(accountsToo: true);
+    await tester.pumpAndSettle();
+    expect(row, findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  testWidgets('a computer lists the settings in the same groups', (
+    tester,
+  ) async {
+    stillMotion(tester);
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final api = FakeApi();
+    final core = CoreController(
+      () async => api,
+      pollInterval: const Duration(hours: 1),
+    );
+    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+    core.start();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+
+    final list = find.byType(SettingsGroup);
+    expect(list, findsNWidgets(4));
+    String texts(int i) => tester
+        .widgetList<Text>(
+          find.descendant(of: list.at(i), matching: find.byType(Text)),
+        )
+        .map((t) => t.data)
+        .join(', ');
+    expect(texts(0), 'General');
+    expect(texts(1), 'Network, Connection, Routing, DNS');
+    expect(
+      texts(2),
+      'If Mozilla is blocked, Relay server, TLS fragmentation, '
+      'Upstream proxy',
+    );
+    expect(texts(3), 'App, Advanced');
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  testWidgets('the relay server is under If Mozilla is blocked', (
+    tester,
+  ) async {
+    stillMotion(tester);
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final api = FakeApi();
+    final core = CoreController(
+      () async => api,
+      pollInterval: const Duration(hours: 1),
+    );
+    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+    core.start();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Relay server'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('If Mozilla is blocked'), findsOneWidget);
+    final field = find.widgetWithText(TextField, 'Relay server');
+    // Save goes under the field on a computer too: long addresses need the width.
+    final save = find.widgetWithText(FilledButton, 'Save');
+    expect(tester.getRect(save).top, greaterThan(tester.getRect(field).bottom));
+    expect(tester.getRect(field).width, greaterThan(600));
+    await tester.enterText(field, 'http://relay.example');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(find.text('Must be an https:// address.'), findsOneWidget);
+    await tester.enterText(field, 'https://relay.example/?secret=k');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    final network = api.config['network'] as Map<String, Object?>;
+    expect(network['api_relay'], 'https://relay.example/?secret=k');
+
+    // ECH works by itself: there is nothing to choose.
+    expect(find.textContaining('ECH'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  testWidgets('TLS fragmentation is in the list of settings', (tester) async {
+    stillMotion(tester);
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final api = FakeApi();
+    final core = CoreController(
+      () async => api,
+      pollInterval: const Duration(hours: 1),
+    );
+    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+    core.start();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('TLS fragmentation'));
+    await tester.pumpAndSettle();
+
+    // Off by default.
+    bool selected(String label) =>
+        tester
+            .widget<RadioGroup<String>>(find.byType(RadioGroup<String>).last)
+            .groupValue ==
+        label;
+    expect(selected('off'), isTrue);
+    expect(find.text('Normal TLS connection'), findsOneWidget);
+    expect(
+      find.text('Splits the TLS header at the first byte (0x16)'),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Splits the server name (SNI) across TCP packets'),
+      findsOneWidget,
+    );
+    final sni = find.text('Server name (SNI)');
+    await tester.ensureVisible(sni);
+    await tester.pumpAndSettle();
+    await tester.tap(sni);
+    await tester.pumpAndSettle();
+    expect(
+      (api.config['network'] as Map<String, Object?>)['hello_split'],
+      'sni',
+    );
+    expect(selected('sni'), isTrue);
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  testWidgets('the upstream proxy is in the list of settings', (tester) async {
+    stillMotion(tester);
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final api = FakeApi()
+      ..config = {
+        'proxy': {'listen': '127.0.0.1:10810'},
+      };
+    final core = CoreController(
+      () async => api,
+      pollInterval: const Duration(hours: 1),
+    );
+    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+    core.start();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Upstream proxy'));
+    await tester.pumpAndSettle();
+
+    final address = find.widgetWithText(TextField, 'SOCKS5 proxy address');
+    final port = find.widgetWithText(TextField, 'Port');
+    final username = find.widgetWithText(TextField, 'Proxy username');
+    final password = find.widgetWithText(TextField, 'Proxy password');
+    final save = find.widgetWithText(FilledButton, 'Save');
+    Future<void> enter(Finder field, String text) async {
+      await tester.enterText(field, text);
+      await tester.pump();
+    }
+
+    Future<void> submit() async {
+      await tester.ensureVisible(save);
+      await tester.pumpAndSettle();
+      await tester.tap(save);
+      await tester.pumpAndSettle();
+    }
+
+    Map<String, Object?> network() =>
+        api.config['network'] as Map<String, Object?>? ?? const {};
+    String text(Finder field) =>
+        tester.widget<TextField>(field).controller!.text;
+
+    // What the core would refuse is said here.
+    await enter(address, '127.0.0.1');
+    await submit();
+    expect(find.text('Enter a port from 1 to 65535.'), findsOneWidget);
+    expect(network()['upstream_proxy'], isNull);
+    await enter(address, '');
+    await enter(port, '1080');
+    await submit();
+    expect(
+      find.text("Enter the proxy's address, such as 127.0.0.1."),
+      findsOneWidget,
+    );
+    await enter(address, '127.0.0.1');
+    await enter(port, '10810');
+    await submit();
+    expect(
+      find.text("That's this app's own proxy. Enter another one."),
+      findsOneWidget,
+    );
+    expect(network()['upstream_proxy'], isNull);
+
+    // A paste: spaces inside it and a port with the address go by themselves.
+    await enter(address, ' 127. 0.0.1:10808 ');
+    expect(text(address), '127.0.0.1:10808');
+    await enter(port, '');
+    await enter(username, ' u ');
+    await submit();
+    expect(text(port), '10808');
+    expect(text(address), '127.0.0.1');
+    expect(find.text('Fill in both, or leave both empty.'), findsOneWidget);
+    expect(network()['upstream_proxy'], isNull);
+
+    await enter(password, ' p ');
+    await submit();
+    expect(network()['upstream_proxy'], '127.0.0.1:10808');
+    expect(network()['upstream_proxy_username'], 'u');
+    expect(network()['upstream_proxy_password'], 'p');
+
+    // A failed save leaves a field's caret where it was.
+    final portField = tester.widget<TextField>(port).controller!;
+    portField.selection = const TextSelection.collapsed(offset: 2);
+    await enter(password, '');
+    await submit();
+    expect(find.text('Fill in both, or leave both empty.'), findsOneWidget);
+    expect(portField.selection.baseOffset, 2);
+    await enter(password, 'p');
+
+    // An address of IPv6, and a scheme.
+    await enter(address, 'socks5://[2001:db8::1]:1080/');
+    await submit();
+    expect(network()['upstream_proxy'], '[2001:db8::1]:1080');
+    expect(text(address), '2001:db8::1');
+    expect(text(port), '1080');
+
+    // Empty again: directly.
+    await enter(address, '');
+    await enter(port, '');
+    await enter(username, '');
+    await enter(password, '');
+    await submit();
+    expect(network()['upstream_proxy'], '');
+
+    // Turning it on needs an address; the switch stays off without one.
+    final toggle = find.byType(Switch);
+    Future<void> flip() async {
+      await tester.ensureVisible(toggle);
+      await tester.pumpAndSettle();
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+    }
+
+    await flip();
+    expect(
+      find.text("Enter the proxy's address, such as 127.0.0.1."),
+      findsOneWidget,
+    );
+    expect(find.text('Enter a port from 1 to 65535.'), findsOneWidget);
+    expect(network()['upstream_proxy_enabled'], isNot(true));
+    expect(tester.widget<Switch>(toggle).value, isFalse);
+
+    // On with what is filled in.
+    await enter(address, '127.0.0.1');
+    await enter(port, '1080');
+    await flip();
+    expect(network()['upstream_proxy_enabled'], isTrue);
+    expect(network()['upstream_proxy'], '127.0.0.1:1080');
+    expect(tester.widget<Switch>(toggle).value, isTrue);
+
+    // Off keeps everything, on screen and in the settings.
+    await flip();
+    expect(network()['upstream_proxy_enabled'], isFalse);
+    expect(network()['upstream_proxy'], '127.0.0.1:1080');
+    expect(text(address), '127.0.0.1');
+    expect(text(port), '1080');
+    expect(tester.widget<Switch>(toggle).value, isFalse);
+
+    // Saved while off, it stays off; on again needs no typing.
+    await enter(port, '1081');
+    await submit();
+    expect(network()['upstream_proxy_enabled'], isFalse);
+    expect(network()['upstream_proxy'], '127.0.0.1:1081');
+    await flip();
+    expect(network()['upstream_proxy_enabled'], isTrue);
+    expect(network()['upstream_proxy'], '127.0.0.1:1081');
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  testWidgets(
+    'in Persian the upstream proxy still reads as an address, then a port',
+    (tester) async {
+      stillMotion(tester);
+      tester.view.physicalSize = const Size(1200, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      final api = FakeApi();
+      final core = CoreController(
+        () async => api,
+        pollInterval: const Duration(hours: 1),
+      );
+      final settings = AppSettings()..language = 'fa';
+      await tester.pumpWidget(VpnApp(core: core, settings: settings));
+      core.start();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('تنظیمات').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('پروکسی بالادستی'));
+      await tester.pumpAndSettle();
+      final address = find.widgetWithText(TextField, 'آدرس پروکسی SOCKS5');
+      final port = find.widgetWithText(TextField, 'پورت');
+      expect(tester.getCenter(address).dx, lessThan(tester.getCenter(port).dx));
+      for (final field in [address, port]) {
+        final widget = tester.widget<TextField>(field);
+        expect(widget.textAlign, TextAlign.left);
+        expect(widget.textDirection, TextDirection.ltr);
+      }
+
+      // Tab goes from the address to the port, not back over the page's order.
+      bool focused(Finder field) => tester
+          .widget<EditableText>(
+            find.descendant(of: field, matching: find.byType(EditableText)),
+          )
+          .focusNode
+          .hasFocus;
+      await tester.tap(address);
+      await tester.pump();
+      expect(focused(address), isTrue);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(focused(port), isTrue);
+
+      await tester.pumpWidget(const SizedBox());
+      core.dispose();
+    },
+  );
+
+  testWidgets('the home page says while the upstream proxy is on', (
+    tester,
+  ) async {
+    stillMotion(tester);
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final api = FakeApi();
+    final core = CoreController(
+      () async => api,
+      pollInterval: const Duration(hours: 1),
+    );
+    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+    core.start();
+    await tester.pumpAndSettle();
+    final mark = find.text('Upstream proxy is on');
+    expect(mark, findsNothing);
+
+    api.upstreamProxy = '127.0.0.1:1080';
+    await core.refresh();
+    await tester.pumpAndSettle();
+    expect(mark, findsOneWidget);
+
+    // Disconnected too.
+    api.on = false;
+    await core.refresh();
+    await tester.pumpAndSettle();
+    expect(mark, findsOneWidget);
+
+    // The failure's own button says it then.
+    api
+      ..on = true
+      ..online = false
+      ..testErrorCode = 'upstream_proxy';
+    await core.refresh();
+    await core.runTest();
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(TextButton, 'Upstream proxy'), findsOneWidget);
+    expect(mark, findsNothing);
+
+    // It opens the setting.
+    api
+      ..online = true
+      ..testErrorCode = '';
+    await core.runTest();
+    await tester.pumpAndSettle();
+    await tester.tap(mark);
+    await tester.pumpAndSettle();
+    expect(
+      find.widgetWithText(TextField, 'SOCKS5 proxy address'),
+      findsOneWidget,
+    );
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  testWidgets('a failure through the upstream proxy names it', (tester) async {
+    final l = await AppLocalizations.delegate.load(const Locale('en'));
+    expect(failureCodeText(l, Failure.upstreamProxy), l.failUpstreamProxy);
+    expect(l.failUpstreamProxy, contains('upstream proxy'));
+  });
+
+  testWidgets('without an account the servers page says to add one', (
+    tester,
+  ) async {
+    stillMotion(tester);
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final api = FakeApi()..hasAccounts = false;
+    final core = CoreController(
+      () async => api,
+      pollInterval: const Duration(hours: 1),
+    );
+    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+    core.start();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Servers'));
+    await tester.pumpAndSettle();
+    // No delay test, which would fail without an account; the notice
+    // with its button instead, and the locations still to choose from.
+    expect(api.pings, 0);
+    expect(find.text('No accounts yet'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Add account'), findsOneWidget);
+    expect(find.text('Netherlands'), findsOneWidget);
+    final test = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Test real delay'),
+    );
+    expect(test.onPressed, isNull);
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
   testWidgets('a refused location offers the recommended one', (tester) async {
     stillMotion(tester);
     tester.view.physicalSize = const Size(1200, 900);
@@ -1238,23 +1789,24 @@ void main() {
     // The proxy login: one form, both fields saved together.
     await tester.tap(find.text('Proxy login'));
     await tester.pumpAndSettle();
-    expect(find.text('Save'), findsOneWidget);
+    // Its form's Save, before the Worker's at the end of the page.
+    final save = find.widgetWithText(FilledButton, 'Save').first;
     await tester.enterText(
       find.widgetWithText(TextField, 'Proxy username'),
       'user',
     );
-    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Save'));
+    await tester.ensureVisible(save);
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.tap(save);
     await tester.pumpAndSettle();
     expect(find.text('Fill in both, or leave both empty.'), findsOneWidget);
     await tester.enterText(
       find.widgetWithText(TextField, 'Proxy password'),
       'secret',
     );
-    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Save'));
+    await tester.ensureVisible(save);
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.tap(save);
     await tester.pumpAndSettle();
     final proxy = api.config['proxy'] as Map<String, Object?>;
     expect((proxy['username'], proxy['password']), ('user', 'secret'));
@@ -1273,7 +1825,12 @@ void main() {
     expect(find.text('DNS'), findsOneWidget);
 
     // The accounts page says where to make an account.
-    await tester.tap(find.text('Accounts'));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationRail),
+        matching: find.text('Accounts'),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text("Don't have a Firefox Account?"), findsOneWidget);
     expect(find.text('accounts.firefox.com'), findsOneWidget);
@@ -1316,19 +1873,20 @@ void main() {
     expect(find.text('alice@example.com'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.text('Account switching'), findsOneWidget);
+    expect(find.text('Servers and accounts'), findsOneWidget);
 
     // Back on the Settings tab goes Home rather than out of the app.
     final popped = await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(popped, isTrue);
-    expect(find.text('Account switching'), findsNothing);
+    expect(find.text('Servers and accounts'), findsNothing);
     expect(find.text('Data used'), findsOneWidget);
 
     // Logs cleared stay cleared when the page opens again.
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Logs'), 200);
+    await tester.ensureVisible(find.text('Logs'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Logs'));
     await tester.pumpAndSettle();
     expect(find.textContaining('proxy started'), findsOneWidget);
@@ -1376,8 +1934,8 @@ void main() {
     expect((control.center.dy - label.center.dy).abs(), lessThan(24));
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('تعویض خودکار حساب'), 200);
-    await tester.tap(find.text('تعویض خودکار حساب'));
+    await tester.scrollUntilVisible(find.text('سرور رله'), 200);
+    await tester.tap(find.text('سرور رله'));
     await tester.pumpAndSettle();
     // A text setting's Save goes under its field, which keeps the width.
     final field = tester.getRect(find.byType(TextField).first);
@@ -1525,7 +2083,7 @@ void main() {
 
     final notice = find.textContaining('running out of data');
     expect(notice, findsOneWidget);
-    expect(find.textContaining('3 GB'), findsOneWidget);
+    expect(find.textContaining('3 GB'), findsNothing);
     expect(find.textContaining('50 GB'), findsOneWidget);
 
     // Gone after a minute.
@@ -1710,7 +2268,6 @@ void main() {
       WidgetTester tester, {
       Map<String, Object?>? update,
       List<String> args = const [],
-      bool autoUpdate = true,
       Release? found,
     }) async {
       stillMotion(tester);
@@ -1722,7 +2279,7 @@ void main() {
         () async => api,
         pollInterval: const Duration(hours: 1),
       );
-      final settings = AppSettings()..autoUpdate = autoUpdate;
+      final settings = AppSettings();
       Updates.start(core, settings, args: args);
       Updates.available.value = found;
       await tester.pumpWidget(VpnApp(core: core, settings: settings));
@@ -1751,20 +2308,16 @@ void main() {
       await done(tester, core);
     });
 
-    testWidgets('Update downloads the version, then installs it and quits', (
+    testWidgets('a version found downloads by itself; Update installs it', (
       tester,
     ) async {
       final (api, core, _) = await pumpUpdates(
         tester,
         update: {'state': 'idle'},
-        autoUpdate: false,
         found: const Release('9.9.9', page),
       );
       var quit = 0;
       Updates.quitApp = () async => quit++;
-      expect(find.text('Version 9.9.9 is available.'), findsOneWidget);
-      await tester.tap(find.text('Update'));
-      await tester.pump();
       await tester.pump();
       expect(api.downloads, ['9.9.9']);
       expect(find.text('Downloading version 9.9.9…'), findsOneWidget);
@@ -1772,9 +2325,15 @@ void main() {
         find.byType(LinearProgressIndicator),
       );
       expect(bar.value, closeTo(0.3, 0.001));
-      // Downloaded: it installs at once, as asked, and the app quits.
+      // Downloaded: it waits for the next start, or for Update, which
+      // installs it at once, and the app quits.
       api.update = {'state': 'ready', 'version': '9.9.9'};
       await core.refresh();
+      await tester.pump();
+      expect(api.installs, isEmpty);
+      expect(find.text('Version 9.9.9 is ready to install.'), findsOneWidget);
+      await tester.tap(find.text('Update'));
+      await tester.pump();
       await tester.pump();
       expect(api.installs.single.$1, '9.9.9');
       expect(api.installs.single.$2, isEmpty);
@@ -1837,27 +2396,7 @@ void main() {
       await done(tester, core);
     });
 
-    testWidgets('without automatic updates nothing installs by itself', (
-      tester,
-    ) async {
-      final (api, core, _) = await pumpUpdates(
-        tester,
-        update: {'state': 'ready', 'version': '9.9.9'},
-        autoUpdate: false,
-        found: const Release('9.9.9', page),
-      );
-      expect(api.installs, isEmpty);
-      expect(find.text('Version 9.9.9 is ready to install.'), findsOneWidget);
-      // Nor does a version found download.
-      Updates.found(const Release('9.9.10', page));
-      await tester.pump();
-      expect(api.downloads, isEmpty);
-      await done(tester, core);
-    });
-
-    testWidgets('with automatic updates a version found downloads once', (
-      tester,
-    ) async {
+    testWidgets('a version found downloads once by itself', (tester) async {
       final (api, core, _) = await pumpUpdates(
         tester,
         update: {'state': 'idle'},
@@ -2210,7 +2749,9 @@ void main() {
       await done(tester, core);
     }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
 
-    testWidgets('a refused call offers to send it directly', (tester) async {
+    testWidgets('a refused call names the program and offers nothing else', (
+      tester,
+    ) async {
       final settings = AppSettings();
       final (api, core, _) = await pumpTun(
         tester,
@@ -2221,30 +2762,20 @@ void main() {
           'installed': true,
           'programs_supported': true,
           'refused_udp': 'Telegram.exe',
-          'refused_udp_path': r'C:\Apps\Telegram.exe',
         },
       );
       final card = find.textContaining(
-        "tried to make a call or play online, but in TUN mode that traffic (UDP) can't go through the VPN.",
+        "'s UDP traffic can't go through the VPN.",
       );
       expect(card, findsOneWidget);
       expect(
         tester.widget<Text>(card).data,
-        startsWith('\u2066Telegram\u2069 tried'),
+        startsWith("\u2066Telegram\u2069's UDP"),
       );
-      await tester.tap(find.text('Send its UDP directly'));
-      await tester.pumpAndSettle();
-      expect((api.config['tun'] as Map)['programs'], [
-        {
-          'name': 'Telegram.exe',
-          'udp_only': true,
-          'path': r'C:\Apps\Telegram.exe',
-        },
-      ]);
-      expect(
-        find.textContaining('its UDP now connects directly.'),
-        findsOneWidget,
-      );
+      // Sending it directly is chosen in the TUN settings, not with a tap here.
+      expect(find.text('Send its UDP directly'), findsNothing);
+      expect(find.byType(FilledButton), findsNothing);
+      expect(api.config['tun'], isNull);
 
       // Another program, and the notice turned off.
       api.tun = {...api.tun!, 'refused_udp': 'Discord.exe'};

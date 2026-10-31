@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/armanlife/firefox-vpn-client/core/internal/config"
+	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
 	"github.com/armanlife/firefox-vpn-client/core/internal/service"
 	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
 	"github.com/armanlife/firefox-vpn-client/core/internal/version"
@@ -31,6 +32,7 @@ func (h *fakeHost) TunPrograms() []config.TunProgram {
 	defer h.mu.Unlock()
 	return slices.Clone(h.programs)
 }
+func (h *fakeHost) VPNUDPPorts() []proxy.PortRange { return []proxy.PortRange{{From: 3478, To: 3478}} }
 func (h *fakeHost) setPrograms(p ...config.TunProgram) {
 	h.mu.Lock()
 	h.programs = p

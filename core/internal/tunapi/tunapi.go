@@ -15,7 +15,8 @@
 // remove any installed service.
 //
 // Protocol 2 added the programs that skip the VPN (open's Programs, and
-// programs to change them while the TUN runs) and udp_refused.
+// programs to change them while the TUN runs) and udp_refused. Protocol 3
+// added open's UDPPorts: the UDP the core takes, on the proxy's UDP ASSOCIATE.
 package tunapi
 
 import (
@@ -32,7 +33,7 @@ import (
 // it still speaks. A change that an older peer would misread raises
 // Protocol; dropping support for an old peer raises MinProtocol.
 const (
-	Protocol    = 2
+	Protocol    = 3
 	MinProtocol = 1
 )
 
@@ -112,6 +113,9 @@ type Message struct {
 	Programs []Program `json:"programs,omitempty"`
 	// Program (udp_refused) is the program's executable file name.
 	Program string `json:"program,omitempty"`
+	// UDPPorts (open) are the UDP destination ports the service sends to the
+	// core, on the SOCKS5 server's UDP ASSOCIATE; it refuses UDP to others.
+	UDPPorts []PortRange `json:"udp_ports,omitempty"`
 	// Code and Message (error, failed) say why.
 	Code    string `json:"code,omitempty"`
 	Message string `json:"message,omitempty"`
@@ -124,6 +128,12 @@ type Program struct {
 	// UDPOnly: only its UDP (calls, games) skips the VPN; its TCP still goes
 	// to the core.
 	UDPOnly bool `json:"udp_only,omitempty"`
+}
+
+// PortRange is a range of ports, both ends included.
+type PortRange struct {
+	From uint16 `json:"from"`
+	To   uint16 `json:"to"`
 }
 
 // Interface identifies the TUN adapter, so the core can keep its own

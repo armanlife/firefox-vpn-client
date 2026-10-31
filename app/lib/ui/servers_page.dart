@@ -8,6 +8,7 @@ import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
 import 'format.dart';
+import 'signin_dialog.dart';
 import 'widgets.dart';
 
 /// The server list, one choice in one list: Recommended and Fastest, which
@@ -40,6 +41,10 @@ class _ServersPageState extends State<ServersPage> {
 
   CoreController get _core => widget.core;
 
+  /// No account yet: the delays cannot be measured (Mozilla's servers
+  /// answer only an account's pass), so the page says to add one instead.
+  bool get _noAccounts => _core.status?.totalAccounts == 0;
+
   @override
   void initState() {
     super.initState();
@@ -61,7 +66,8 @@ class _ServersPageState extends State<ServersPage> {
       // Delays measured a while ago, or never: measured again at once (the
       // core does it also while the proxy is off).
       final at = _pingedAt;
-      if (at == null || DateTime.now().difference(at) > _pingStale) {
+      if (!_noAccounts &&
+          (at == null || DateTime.now().difference(at) > _pingStale)) {
         unawaited(_test());
       }
     } on CoreApiException catch (e) {
@@ -109,8 +115,9 @@ class _ServersPageState extends State<ServersPage> {
         final answered = result.locations.where((loc) => loc.answered).length;
         _summary = l.delaySummary(answered, result.locations.length);
       });
-    } on CoreApiException catch (e) {
-      if (mounted) showError(context, e.message);
+    } on CoreApiException {
+      // The core's own words are for the log; the user gets what to do.
+      if (mounted) showError(context, l.delayTestFailed);
     } on CoreUnavailable catch (e) {
       if (mounted) showError(context, describeProblem(l, e));
     } finally {
@@ -152,10 +159,15 @@ class _ServersPageState extends State<ServersPage> {
     final delayLine =
         _summary ??
         (_pingedAt == null ? null : l.testedAgo(formatAgo(l, _pingedAt!)));
+    final noAccounts = _noAccounts;
     return ListView(
       padding: pagePadding(context),
       children: [
         PageTitle(l.navServers),
+        if (noAccounts) ...[
+          NoAccountsPanel(onAdd: () => showSignInDialog(context, _core)),
+          const SizedBox(height: 12),
+        ],
         _SectionHeader(title: l.autoSection),
         _ChoiceCard(
           children: [
@@ -184,7 +196,9 @@ class _ServersPageState extends State<ServersPage> {
         _SectionHeader(
           title: l.locationsSection,
           action: TextButton.icon(
-            onPressed: !_testing && _locations != null ? _test : null,
+            onPressed: !_testing && _locations != null && !noAccounts
+                ? _test
+                : null,
             icon: _testing
                 ? const SizedBox.square(
                     dimension: 16,

@@ -160,8 +160,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addAccount => 'Добавить аккаунт';
 
   @override
-  String lowQuotaNotice(String left, String size) {
-    return 'Трафик текущего аккаунта заканчивается (осталось $left). Добавьте ещё один аккаунт — это ещё $size.';
+  String lowQuotaNotice(String size) {
+    return 'Трафик этого аккаунта заканчивается. Добавьте ещё один аккаунт — это ещё $size.';
   }
 
   @override
@@ -169,6 +169,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noAccountsHint => 'Добавьте аккаунт Firefox, чтобы подключиться.';
+
+  @override
+  String get delayTestFailed =>
+      'Не удалось измерить задержку серверов. Проверьте интернет.';
 
   @override
   String get createAccountTitle => 'Нет Firefox Account?';
@@ -306,6 +310,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get close => 'Закрыть';
+
+  @override
+  String get noBrowserTitle => 'На этом устройстве нет браузера';
+
+  @override
+  String get noBrowserText => 'Откройте этот адрес на телефоне или компьютере:';
 
   @override
   String get cancel => 'Отмена';
@@ -647,8 +657,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get noticeCommand =>
-      'Приложение запросило UDP (игры, голосовые и видеозвонки). Прокси Mozilla передаёт только TCP, поэтому такой трафик не проходит.';
+  String get noticeCommand => 'Этот тип подключения не поддерживается VPN.';
 
   @override
   String noticeTimes(int count, String time) {
@@ -838,6 +847,69 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sectionAdvanced => 'Дополнительно';
 
   @override
+  String get tlsFragment => 'Фрагментация TLS';
+
+  @override
+  String get tlsFragmentOff => 'Выключено';
+
+  @override
+  String get tlsFragmentFirstByte => 'Первый байт';
+
+  @override
+  String get tlsFragmentSni => 'Имя сервера (SNI)';
+
+  @override
+  String get tlsFragmentFirstByteHint =>
+      'Разделяет заголовок TLS на первом байте (0x16)';
+
+  @override
+  String get tlsFragmentSniHint =>
+      'Разбивает имя сервера (SNI) на несколько TCP-пакетов';
+
+  @override
+  String get tlsFragmentOffHint => 'Обычное подключение TLS';
+
+  @override
+  String get sectionBypass => 'Если Mozilla заблокирована';
+
+  @override
+  String get apiRelay => 'Сервер-ретранслятор';
+
+  @override
+  String get apiRelayHint =>
+      'Ваш собственный Cloudflare Worker или relay.php на вашем хостинге.\nИспользуется, только когда Mozilla не отвечает напрямую: через него идут вход, аккаунты и список серверов, а не трафик VPN.';
+
+  @override
+  String get upstreamProxy => 'Вышестоящий прокси';
+
+  @override
+  String get upstreamProxyOn => 'Вышестоящий прокси включён';
+
+  @override
+  String get upstreamProxyAddress => 'Адрес прокси SOCKS5';
+
+  @override
+  String get upstreamProxyPort => 'Порт';
+
+  @override
+  String get upstreamProxyHint =>
+      'Подключение к Mozilla идёт через этот прокси: для сетей, которые блокируют или замедляют Mozilla.\nЕсли прокси работает на этом устройстве, исключите его из VPN.';
+
+  @override
+  String get upstreamProxyInvalid =>
+      'Введите адрес прокси, например 127.0.0.1.';
+
+  @override
+  String get upstreamProxyInvalidPort => 'Введите порт от 1 до 65535.';
+
+  @override
+  String get upstreamProxyOwn =>
+      'Это прокси самого приложения. Введите другой.';
+
+  @override
+  String get apiRelayInvalid => 'Должен быть адрес https://.';
+
+  @override
   String get listenAddress => 'Доступ к прокси';
 
   @override
@@ -965,6 +1037,10 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get updateAllowInstall =>
+      'Разрешите Firefox VPN устанавливать приложения и снова нажмите «Обновить».';
+
+  @override
   String updateInstalling(String version) {
     return 'Установка версии $version. Приложение закроется и откроется снова.';
   }
@@ -985,11 +1061,14 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get autoUpdate => 'Обновлять автоматически';
+  String get sectionUpdates => 'Обновления';
 
   @override
-  String get autoUpdateHint =>
-      'Новые версии загружаются в фоне и устанавливаются при следующем запуске приложения.';
+  String get inAppUpdates => 'Обновлять в приложении';
+
+  @override
+  String get inAppUpdatesHint =>
+      'Новые версии загружаются в фоне, и открывается установщик Android.\nВыключено: кнопка «Скачать» открывает браузер.';
 
   @override
   String get repoNotSet => 'Репозиторий GitHub ещё не указан.';
@@ -1019,6 +1098,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get groupApp => 'Приложение';
 
   @override
+  String get groupServersAccounts => 'Серверы и аккаунты';
+
+  @override
+  String get groupNetwork => 'Сеть';
+
+  @override
   String get stateOff => 'Отключено';
 
   @override
@@ -1026,6 +1111,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tapToDisconnectPhone => 'Нажмите, чтобы отключиться';
+
+  @override
+  String get tapToConnectTv => 'Нажмите OK, чтобы подключиться';
+
+  @override
+  String get tapToDisconnectTv => 'Нажмите OK, чтобы отключиться';
 
   @override
   String lanAddress(String address) {
@@ -1061,7 +1152,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get failUnreachable =>
-      'Серверы Mozilla заблокированы в этой сети. Попробуйте другое подключение к интернету.';
+      'Не удалось связаться с серверами Mozilla. Попробуйте другое подключение к интернету.';
+
+  @override
+  String get failUpstreamProxy =>
+      'Не удалось связаться с Mozilla через вышестоящий прокси. Проверьте, что он работает.';
+
+  @override
+  String get failInsideVpn =>
+      'Этот интернет уже идёт через VPN. Отключите его.';
 
   @override
   String get failRefused =>
@@ -1398,19 +1497,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String udpNoticeBody(String program) {
-    return 'Программа $program пыталась позвонить или поиграть онлайн, но в режиме TUN этот трафик (UDP) не может идти через VPN.';
+    return 'UDP-трафик программы $program не идёт через VPN.';
   }
-
-  @override
-  String get udpNoticeAction => 'Пустить её UDP напрямую';
 
   @override
   String get dontShowAgain => 'Больше не показывать';
-
-  @override
-  String udpDirectAdded(String program) {
-    return '$program: UDP теперь идёт напрямую.';
-  }
 
   @override
   String get addRunningProgram => 'Из запущенных программ';

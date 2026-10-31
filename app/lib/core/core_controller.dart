@@ -68,6 +68,10 @@ class CoreController extends ChangeNotifier {
   bool switchingProxy = false;
   bool testing = false;
 
+  /// The app is on the screen (main.dart): what it does for the user to see
+  /// waits while it is not.
+  bool onScreen = true;
+
   /// The latest connection test, ours or the core's automatic one.
   ConnectionTest? get lastTest => _test ?? status?.lastTest;
   ConnectionTest? _test;
@@ -126,6 +130,7 @@ class CoreController extends ChangeNotifier {
       if (turnOn != null || next.systemProxySupported) {
         _retestUnconfirmed(next);
       }
+      _refreshDelay(next);
       if (_test != null &&
           next.lastTest?.at != null &&
           _test!.at != null &&
@@ -258,6 +263,7 @@ class CoreController extends ChangeNotifier {
   /// next connection at once instead of waiting after a failure. At most
   /// every few seconds.
   Future<void> retryNow() async {
+    _cameToFront = true;
     final now = DateTime.now();
     if (_retriedAt != null && now.difference(_retriedAt!) < _retryGap) return;
     _retriedAt = now;
@@ -434,6 +440,41 @@ class CoreController extends ChangeNotifier {
     _retestDelay = doubled > _retestMax ? _retestMax : doubled;
     unawaited(runTest().catchError((Object _) {}));
   }
+
+  /// The delay on the home page is one moment's, and stays until the next
+  /// test: one that is high may be a passing queue, such as the apps' rush
+  /// when the VPN comes on, so it is measured again while the app is on the
+  /// screen; another one when the app comes back to the front.
+  void _refreshDelay(CoreStatus s) {
+    final looked = _cameToFront;
+    _cameToFront = false;
+    final test = lastTest;
+    final at = test?.at;
+    if (!onScreen || _measuringDelay || testing || switchingProxy) return;
+    if (at == null || !s.confirmedBy(test)) return;
+    final age = DateTime.now().difference(at);
+    final due = test!.responseMs >= delayGoodMs
+        ? age >= _highDelayAgain
+        : looked && age >= _oldDelay;
+    if (!due) return;
+    _measuringDelay = true;
+    unawaited(_measureDelay());
+  }
+
+  Future<void> _measureDelay() async {
+    try {
+      await _require().delay();
+    } on Exception {
+      // The next poll says what is wrong.
+    } finally {
+      _measuringDelay = false;
+    }
+  }
+
+  bool _cameToFront = false;
+  bool _measuringDelay = false;
+  static const _highDelayAgain = Duration(seconds: 10);
+  static const _oldDelay = Duration(minutes: 1);
 
   CoreApi _require() {
     final api = _api;

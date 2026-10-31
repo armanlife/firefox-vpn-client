@@ -172,10 +172,10 @@ cmd_install() {
 latest_version() {
   local url=""
   if command -v curl >/dev/null 2>&1; then
-    url="$(curl -fsSI -o /dev/null -w '%{redirect_url}' --max-time 20 "$RELEASES_URL/latest" 2>/dev/null || true)"
+    url="$(curl -fsSI -o /dev/null -w '%{redirect_url}' --connect-timeout 15 --max-time 30 "$RELEASES_URL/latest" 2>/dev/null || true)"
   elif command -v wget >/dev/null 2>&1; then
     # wget names the address twice, the second time with " [following]".
-    url="$(wget -S --spider --max-redirect=0 -T 20 "$RELEASES_URL/latest" 2>&1 |
+    url="$(wget -S --spider --max-redirect=0 -T 30 "$RELEASES_URL/latest" 2>&1 |
       sed -n 's/^ *[Ll]ocation: *\([^ ]*\).*/\1/p' | tr -d '\r' | head -n 1 || true)"
   fi
   case "$url" in
@@ -205,10 +205,12 @@ cmd_update() {
   else
     printf '  GitHub did not say which version is the newest; updating anyway\n'
   fi
+  # A GitHub address that does not answer is left after a few seconds, not
+  # two minutes (install.sh's fetch).
   if command -v curl >/dev/null 2>&1; then
-    script="$(curl -fsSL --retry 3 "$INSTALLER_URL")" || script=""
+    script="$(curl -fsSL --connect-timeout 15 --retry 3 "$INSTALLER_URL")" || script=""
   elif command -v wget >/dev/null 2>&1; then
-    script="$(wget -qO- "$INSTALLER_URL")" || script=""
+    script="$(wget -qO- --connect-timeout=15 "$INSTALLER_URL")" || script=""
   fi
   [ -n "$script" ] || { done_fail "Could not download the installer: $INSTALLER_URL"; return 1; }
   local -a vars=(INSTALL_DIR="$INSTALL_DIR" SERVICE_NAME="$SERVICE_NAME" SERVICE_USER="$SERVICE_USER")

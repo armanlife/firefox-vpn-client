@@ -14,10 +14,10 @@ import (
 // service finds the program behind an app's new connection by its address
 // on the adapter (findProgram: the system's table of sockets), and sends a
 // chosen program's traffic directly, outside the TUN (egress), instead of to
-// the core: its TCP and UDP, or its UDP alone. Mozilla carries no UDP, so
-// every other program's UDP is refused; a refused call or game is told to
-// the core once per program (tellRefused), so the app can offer to send it
-// directly.
+// the core: its TCP and UDP, or its UDP alone. Other programs' UDP goes through
+// the VPN on the ports Mozilla carries (udp.go) and is refused on the others; a
+// refused call or game is told to the core once per program (tellRefused), so
+// the app can offer to send it directly.
 
 // programSet is the programs that skip the VPN: by lower-case file name,
 // each to whether only its UDP skips it, and the patterns (with * or ?) in
@@ -156,26 +156,10 @@ func (s *session) directTCP(source netip.AddrPort) bool {
 	return false
 }
 
-// takeUDP decides on a port's first UDP packet to dst: it is taken (sent
-// directly) when its program skips the VPN, except QUIC (port 443) of a
-// program whose UDP alone skips it, which is refused so that it falls back
-// to TCP through the VPN; everything else is refused, and a call or a game
-// told to the core.
+// takeUDP decides on a port's first UDP packet to dst: it starts a flow when
+// it goes anywhere (udpRoute).
 func (s *session) takeUDP(source, dst netip.AddrPort) bool {
-	set := s.programSet()
-	call := callLike(dst)
-	if set.size() == 0 && !call {
-		return false
-	}
-	path := s.owners.udp(source)
-	name := programName(path)
-	if udpOnly, ok := set.lookup(name); ok {
-		return !udpOnly || dst.Port() != 443
-	}
-	if call && name != "" && !tunapi.SystemProgram(path) {
-		s.tellRefused(name, path)
-	}
-	return false
+	return s.udpRoute(source, dst) != udpRefused
 }
 
 // callLike reports whether UDP to dst looks like a call or a game: to an
@@ -209,7 +193,7 @@ func (s *session) tellRefused(name, path string) {
 	}
 	s.told[key] = true
 	s.toldMu.Unlock()
-	logx.Info("TUN: UDP of program=%s refused (Mozilla carries no UDP)", name)
+	logx.Info("TUN: UDP of program=%s refused (Mozilla does not carry its port)", name)
 	// Off the packet path: the core may be slow to read.
 	go func() { _ = s.owner.Send(tunapi.Message{Type: tunapi.TypeUDPRefused, Program: name, Path: path}) }()
 }

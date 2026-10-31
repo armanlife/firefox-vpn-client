@@ -123,7 +123,12 @@ The proxy turns on by itself. Use the panel only on your own network (no HTTPS).
 - **Browser or system proxy:** HTTP proxy, also for HTTPS.
 - **Device with no place for a password** (Android Wi-Fi, TV): remove the proxy login in the panel (**Settings → Local proxy → Login**).
 
-Only TCP to the ports 80, 443, 8080, and 8443 goes through (no calls or games over UDP).
+What goes through:
+
+- **TCP:** ports 80, 443, 8080, and 8443.
+- **UDP (SOCKS5 only):** ports 80, 443, 3478, 8080, 8443, and 49152-65534.
+
+Calls and games on other ports do not work.
 
 ## 6. The whole network, with PassWall2
 
@@ -135,7 +140,7 @@ With [PassWall2](https://github.com/Openwrt-Passwall/openwrt-passwall2) on the r
 4. **DNS → Remote DNS Protocol: DoH** (`https://1.1.1.1/dns-query`).
 5. Make your routing rules in PassWall2 (for example, your country's sites direct).
 
-UDP still does not go through Mozilla. Menu names differ a little between versions.
+UDP goes through only on the ports in step 5. Menu names differ a little between versions.
 
 ## Update and remove
 

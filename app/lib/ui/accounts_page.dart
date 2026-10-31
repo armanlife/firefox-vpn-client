@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../core/core_api.dart';
 import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
-import '../platform.dart';
 import 'format.dart';
 import 'signin_dialog.dart';
 import 'widgets.dart';
@@ -37,38 +37,8 @@ class AccountsPage extends StatelessWidget {
         if (core.accounts == null)
           const Center(child: CircularProgressIndicator())
         else if (list.isEmpty)
-          Panel(
-            // Across the whole panel, so its middle is the panel's.
-            child: SizedBox(
-              width: double.infinity,
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  Icon(
-                    Icons.group_add_outlined,
-                    size: 40,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l.noAccounts,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l.noAccountsHint,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ),
-            ),
-          )
-        else
+          const NoAccountsPanel()
+        else ...[
           for (var i = 0; i < list.length; i++) ...[
             if (i > 0) const SizedBox(height: 12),
             _AccountCard(
@@ -79,6 +49,12 @@ class AccountsPage extends StatelessWidget {
               last: i == list.length - 1,
             ),
           ],
+          // Nothing to switch to with one account.
+          if (list.length > 1) ...[
+            const SizedBox(height: 12),
+            _AccountSwitching(core: core, percent: threshold),
+          ],
+        ],
         // More accounts, more data: each has its own month's allowance,
         // and the app moves to the next one by itself.
         const SizedBox(height: 12),
@@ -106,6 +82,118 @@ class AccountsPage extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         const _CreateAccountGuide(),
+      ],
+    );
+  }
+}
+
+/// How much of an account's data is used before the next one takes over
+/// (accounts.switch_threshold_percent): one row, since few people change it.
+class _AccountSwitching extends StatelessWidget {
+  const _AccountSwitching({required this.core, required this.percent});
+
+  final CoreController core;
+  final double percent;
+
+  Future<void> _change(BuildContext context) async {
+    final value = await showDialog<int>(
+      context: context,
+      builder: (_) => _SwitchThresholdDialog(percent: percent.round()),
+    );
+    if (value == null || !context.mounted) return;
+    await runShowingErrors(
+      context,
+      () => core.editSettings((config) {
+        final accounts = switch (config['accounts']) {
+          final Map<String, Object?> m => m,
+          _ => config['accounts'] = <String, Object?>{},
+        };
+        accounts['switch_threshold_percent'] = value;
+      }),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    clipBehavior: Clip.antiAlias,
+    child: ListTile(
+      leading: const Icon(Icons.swap_horiz_rounded),
+      title: Text(AppLocalizations.of(context).sectionAccounts),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            ltr('${percent.round()}%'),
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(width: 4),
+          // Mirrors itself in right-to-left languages.
+          const Icon(Icons.chevron_right_rounded),
+        ],
+      ),
+      onTap: () => _change(context),
+    ),
+  );
+}
+
+class _SwitchThresholdDialog extends StatefulWidget {
+  const _SwitchThresholdDialog({required this.percent});
+
+  final int percent;
+
+  @override
+  State<_SwitchThresholdDialog> createState() => _SwitchThresholdDialogState();
+}
+
+class _SwitchThresholdDialogState extends State<_SwitchThresholdDialog> {
+  late final _field = TextEditingController(text: '${widget.percent}');
+  String? _error;
+
+  @override
+  void dispose() {
+    _field.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final value = int.tryParse(_field.text);
+    if (value == null || value < 1 || value > 100) {
+      setState(
+        () => _error = AppLocalizations.of(context).numberInvalid(1, 100),
+      );
+      return;
+    }
+    Navigator.pop(context, value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(l.switchThreshold),
+      content: TextField(
+        controller: _field,
+        autofocus: true,
+        textDirection: TextDirection.ltr,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        decoration: InputDecoration(
+          suffixText: '%',
+          helperText: l.switchThresholdHint,
+          helperMaxLines: 3,
+          errorText: _error,
+          border: const OutlineInputBorder(),
+        ),
+        onChanged: (_) => setState(() => _error = null),
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l.cancel),
+        ),
+        FilledButton(onPressed: _submit, child: Text(l.save)),
       ],
     );
   }
@@ -179,7 +267,7 @@ class _CreateAccountGuide extends StatelessWidget {
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                   ),
-                  onPressed: () => openUrl(firefoxAccountSignUpUrl),
+                  onPressed: () => openLink(context, firefoxAccountSignUpUrl),
                   icon: const Icon(Icons.open_in_new_rounded, size: 18),
                   // The address reads left to right in every language.
                   label: Text(

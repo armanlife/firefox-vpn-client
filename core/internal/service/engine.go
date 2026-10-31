@@ -91,14 +91,14 @@ func (d *Daemon) startEngine() (*proxyEngine, error) {
 		upstream: proxy.ControllerConfig{
 			Guardian:   cfg.Network.GuardianEndpoint,
 			Timeout:    connectTimeout,
-			UseH3:      cfg.Proxy.Transport == "h3",
+			UseH3:      engineTransport(cfg) == "h3",
 			Sessions:   cfg.Proxy.UpstreamConnections,
 			StatusFile: d.paths.Status,
 			Accounts:   d.pool,
 		},
 		statusFile: d.paths.Status,
 		listener:   ln,
-		transport:  cfg.Proxy.Transport,
+		transport:  engineTransport(cfg),
 		startedAt:  time.Now(),
 	}
 	engine.selected, engine.selectionSource = d.expectedSelection(cfg)
@@ -119,12 +119,12 @@ func (d *Daemon) startEngine() (*proxyEngine, error) {
 	tunSOCKS.Auth = proxy.SOCKSCredentials(tunUser, tunPassword)
 	tunSOCKS.Notices = d.notices
 	tunSOCKS.Conns, tunSOCKS.Inbound, tunSOCKS.Transport = d.conns, "tun", engine.currentTransport
-	tunSOCKS.Allow = d.TunnelAllows
+	tunSOCKS.Allow, tunSOCKS.AllowUDP = d.TunnelAllows, d.TunnelAllowsUDP
 	engine.tunSOCKS = tunSOCKS
 	if err := proxy.WriteIdleStatus(engine.statusFile, proxy.StatusSleeping); err != nil {
 		logx.Warn("writing status file failed path=%s err=%s", engine.statusFile, logx.Err(err))
 	}
-	logx.Info("SOCKS5 proxy started listen=%s transport=%s; it connects to Mozilla when a connection needs it", ln.Addr().String(), cfg.Proxy.Transport)
+	logx.Info("SOCKS5 proxy started listen=%s transport=%s; it connects to Mozilla when a connection needs it", ln.Addr().String(), engine.transport)
 	return engine, nil
 }
 
@@ -196,8 +196,22 @@ func (d *Daemon) connectEngine(e *proxyEngine) (*proxy.Controller, error) {
 	if err != nil {
 		return nil, fmt.Errorf("selecting proxy: %w", err)
 	}
+	// The recommended location has a single server; while that is
+	// avoided, another location's stands in.
+	var fallback func() []proxy.Candidate
+	standIn := false
+	if server == "" && country == "" {
+		fallback = d.recommendedFallback
+		if next, ok := d.failover.Instead(proxy.LocationCandidates(countries, country), fallback(), selected); ok {
+			logx.Info("the recommended location's server failed recently; connecting to another location's for now from=%s to=%s country=%s",
+				selected.Addr, next.Addr, next.CountryCodeOrUnknown())
+			selected, fromState, standIn = next, false, true
+		}
+	}
 	selectionSource := "single_available_location"
 	switch {
+	case standIn:
+		selectionSource = "server_failover"
 	case server != "":
 		selectionSource = "configured_proxy"
 	case fromState:
@@ -224,6 +238,7 @@ func (d *Daemon) connectEngine(e *proxyEngine) (*proxy.Controller, error) {
 		// location when it keeps failing.
 		upstream.Location = proxy.LocationCandidates(countries, country)
 		upstream.Failover = d.failover
+		upstream.Fallback = fallback
 	}
 	withPass := upstream
 	withPass.Auth, withPass.Pass = auth, pass
@@ -242,12 +257,14 @@ func (d *Daemon) connectEngine(e *proxyEngine) (*proxy.Controller, error) {
 		// A server that keeps failing to connect gives way to another of
 		// the location, saved as the persisted choice that the next wake
 		// selects.
-		if next, ok := upstream.Failover.Failed(upstream.Location, selected, err); ok {
+		if next, ok := upstream.Failover.Failed(upstream.Location, fallbackList(upstream.Fallback), selected, err); ok {
 			e.serverSwitched(next)
 		}
 		return nil, fmt.Errorf("establishing upstream proxy session: %w", err)
 	}
-	if server == "" {
+	// A stand-in is not saved: the recommended location accepts any
+	// persisted server, and would keep it.
+	if server == "" && !standIn {
 		if err := proxy.SaveSelection(d.paths.Selection, selected); err != nil {
 			logx.Warn("saving proxy selection failed path=%s err=%s", d.paths.Selection, logx.Err(err))
 		}
@@ -258,7 +275,7 @@ func (d *Daemon) connectEngine(e *proxyEngine) (*proxy.Controller, error) {
 	e.idle.mu.Unlock()
 
 	logx.Info("connected to Mozilla upstream=%s account=%s proxy_pass_exp=%s transport=%s upstream_conns=%d",
-		selected.Addr, logx.Email(d.pool.ActiveName()), pass.ExpiresAt().Format(time.RFC3339), cfg.Proxy.Transport, cfg.Proxy.UpstreamConnections)
+		selected.Addr, logx.Email(d.pool.ActiveName()), pass.ExpiresAt().Format(time.RFC3339), engineTransport(cfg), cfg.Proxy.UpstreamConnections)
 	logx.Info("upstream selected configured_country=%q configured_country_code=%s proxy=%s selection_source=%s upstream_session_establish_latency=%s",
 		selected.CountryNameOrUnknown(), selected.CountryCodeOrUnknown(), selected.Addr, selectionSource, time.Since(sessionStart).Round(time.Millisecond))
 	return controller, nil
@@ -285,12 +302,71 @@ func (d *Daemon) reconnectEngine(e *proxyEngine) (*proxy.Controller, error) {
 	cfg.Auth, cfg.Pass = auth, pass
 	controller, err := proxy.NewController(cfg)
 	if err != nil {
-		if next, ok := cfg.Failover.Failed(cfg.Location, cfg.Server, err); ok {
+		if next, ok := cfg.Failover.Failed(cfg.Location, fallbackList(cfg.Fallback), cfg.Server, err); ok {
 			e.serverSwitched(next)
 		}
 		return nil, err
 	}
 	return controller, nil
+}
+
+// fallbackList is the stand-ins fallback lists, none without it.
+func fallbackList(fallback func() []proxy.Candidate) []proxy.Candidate {
+	if fallback == nil {
+		return nil
+	}
+	return fallback()
+}
+
+// recommendedFallbackCountries are the locations that stand in for the
+// recommended location after those of recommendedFallback's measurements:
+// near the exits the recommended location gives from Iran and Europe.
+var recommendedFallbackCountries = []string{"NL", "DE", "BE", "FR", "GB", "AT"}
+
+// recommendedFallbackLocations is how many locations stand in for the
+// recommended one: a network that cuts every server's connection should
+// not move the upstream around the world.
+const recommendedFallbackLocations = 3
+
+// recommendedFallback lists the servers that stand in for the recommended
+// location while its single server keeps failing: those of the country its
+// traffic left from (the last exit check), then of the fastest locations
+// last measured, then of recommendedFallbackCountries, for at most
+// recommendedFallbackLocations locations.
+func (d *Daemon) recommendedFallback() []proxy.Candidate {
+	d.mu.Lock()
+	countries := d.countries
+	var codes []string
+	if d.exit != nil {
+		codes = append(codes, d.exit.CountryCode)
+	}
+	for _, p := range d.pings {
+		if p.OK() && !p.Recommended {
+			codes = append(codes, p.Code)
+		}
+	}
+	d.mu.Unlock()
+	codes = append(codes, recommendedFallbackCountries...)
+
+	var out []proxy.Candidate
+	seen := make(map[string]bool)
+	locations := 0
+	for _, code := range codes {
+		code = strings.ToUpper(strings.TrimSpace(code))
+		if len(code) != 2 || code == serverlist.RecommendedCountryCode || seen[code] {
+			continue
+		}
+		seen[code] = true
+		servers := proxy.LocationCandidates(countries, code)
+		if len(servers) == 0 {
+			continue
+		}
+		out = append(out, servers...)
+		if locations++; locations == recommendedFallbackLocations {
+			break
+		}
+	}
+	return out
 }
 
 // serverSwitched makes next, where the failover moved the upstream, the
@@ -431,6 +507,15 @@ func (d *Daemon) firefoxVersion() string {
 	d.ffVersion, d.ffVersionAt = version, time.Now()
 	d.mu.Unlock()
 	return version
+}
+
+// engineTransport is proxy.transport, or "h2" through an upstream proxy: a
+// SOCKS5 connection is TCP, and QUIC is not.
+func engineTransport(cfg config.Config) string {
+	if cfg.Network.UpstreamProxyInUse() != "" {
+		return "h2"
+	}
+	return cfg.Proxy.Transport
 }
 
 // currentTransport is the transport the engine uses: proxy.transport, or

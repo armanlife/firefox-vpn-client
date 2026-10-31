@@ -7,7 +7,9 @@ import '../core/models.dart';
 import '../core/ports.dart';
 import '../core/remote_flags.dart';
 import '../l10n/app_localizations.dart';
+import '../platform.dart';
 import 'country_names.dart';
+import 'format.dart';
 import 'local_country_names.dart';
 
 /// Where a Firefox Account is made: Mozilla's site.
@@ -114,7 +116,7 @@ String describeProblem(AppLocalizations l, CoreUnavailable e) =>
 
 /// The color of a real delay: green when quick, amber when slow, red when
 /// very slow.
-Color delayColor(int ms) => ms < 400
+Color delayColor(int ms) => ms < delayGoodMs
     ? StatusColors.good
     : ms < 1000
     ? StatusColors.busy
@@ -256,6 +258,8 @@ String failureCodeText(AppLocalizations l, String code) {
   return switch (code) {
     Failure.noNetwork => l.failNoInternet,
     Failure.unreachable => l.failUnreachable,
+    Failure.upstreamProxy => l.failUpstreamProxy,
+    Failure.insideVpn => l.failInsideVpn,
     Failure.refused => l.failRefused,
     Failure.locationRefused => l.failLocationRefused,
     Failure.signIn => l.failSignIn,
@@ -748,4 +752,94 @@ class LabeledSwitch extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Opens the web page [url]; on a device without a browser (a TV), says
+/// to open it on a phone or a computer, with the address to read. Not for
+/// the dashboard's link, which holds a sign-in and works on this device
+/// only.
+Future<void> openLink(BuildContext context, String url) async {
+  if (await openUrl(url) || !context.mounted) return;
+  final l = AppLocalizations.of(context);
+  final theme = Theme.of(context);
+  await showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l.noBrowserTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.noBrowserText),
+          const SizedBox(height: 12),
+          SelectableText(
+            ltr(url),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          autofocus: true,
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l.close),
+        ),
+      ],
+    ),
+  );
+}
+
+/// No account yet: a large notice, with Add account where the page has no
+/// such button of its own ([onAdd]).
+class NoAccountsPanel extends StatelessWidget {
+  const NoAccountsPanel({super.key, this.onAdd});
+
+  final VoidCallback? onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Panel(
+      // Across the whole panel, so its middle is the panel's.
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Icon(
+              Icons.group_add_outlined,
+              size: 40,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l.noAccounts,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l.noAccountsHint,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (onAdd != null) ...[
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add_rounded),
+                label: Text(l.addAccount),
+              ),
+            ],
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
 }

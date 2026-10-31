@@ -139,10 +139,6 @@ func addrStrings(res resolver.Result) []string {
 	return out
 }
 
-// iranBlockPageV6 holds the IPv6 addresses of Iran's filtering page
-// (its IPv4 ones, 10.10.34.34-36, are private).
-var iranBlockPageV6 = netip.MustParsePrefix("2001:4188:2:600:10:10:34:0/112")
-
 // anyBlockPage reports whether a public name resolved to an address that
 // cannot be its real one: a filtering network's answer.
 func anyBlockPage(addrs []string) bool {
@@ -151,8 +147,7 @@ func anyBlockPage(addrs []string) bool {
 		if err != nil {
 			continue
 		}
-		a = a.Unmap()
-		if a.IsPrivate() || a.IsLoopback() || a.IsUnspecified() || a.IsLinkLocalUnicast() || iranBlockPageV6.Contains(a) {
+		if resolver.IsBlockPage(a) {
 			return true
 		}
 	}

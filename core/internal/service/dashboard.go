@@ -208,6 +208,7 @@ func (s *dashboardServer) handler() http.Handler {
 
 	mux.HandleFunc("GET /api/status", s.handleStatus)
 	mux.HandleFunc("POST /api/test", s.handleConnectionTest)
+	mux.HandleFunc("POST /api/delay", s.handleDelay)
 	mux.HandleFunc("POST /api/proxy/restart", s.handleProxyRestart)
 	mux.HandleFunc("POST /api/system-proxy", s.handleSystemProxy)
 	mux.HandleFunc("POST /api/power", s.handlePower)

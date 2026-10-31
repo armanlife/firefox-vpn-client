@@ -520,6 +520,7 @@ function renderStatus() {
       s.exit ? ipChip(s.exit) : null,
     ].filter(Boolean));
   }
+  if (s.upstream_proxy) chips.append(el("span", { class: "chip ok", title: `Connections to Mozilla go through ${s.upstream_proxy}` }, icon("lan"), "Upstream proxy on"));
   $("#run-test").disabled = phase !== "running" || state.testing;
   $("#power span").textContent = phase === "off" ? "Turn on" : "Turn off";
   $("#power").classList.toggle("primary", phase === "off");
@@ -588,7 +589,7 @@ function renderStatus() {
 // closing hides it until the next refusal of the same kind.
 const NOTICE_TEXT = {
   port: (n) => [`Mozilla's proxy refused port ${n.detail}`, "It connects to ports 80, 443, 8080, and 8443 only; sites on other ports do not open through it.", "help-ports"],
-  command: (n) => [`An application asked for ${n.detail}`, "Mozilla's proxy carries TCP connections only; games, calls, and other UDP traffic do not go through it.", "help-udp"],
+  command: (n) => [`An application asked for ${n.detail}`, "This type of connection isn't supported by the VPN.", "help-udp"],
   loop: () => ["This program's own connections come back to it", "Another program sends this program's traffic into its proxy, so nothing connects: in PassWall2, turn Localhost Proxy off.", "help-loop"],
 };
 
@@ -1607,6 +1608,7 @@ async function loadSettings() {
   hideSecrets(form);
   fillListen("proxy", settings.config.proxy.listen);
   fillListen("dash", settings.config.dashboard.listen);
+  fillUpstreamProxy(settings.config.network && settings.config.network.upstream_proxy);
   renderLocationSelect(settings.config.proxy);
   renderDNSFields(settings.config.dns && settings.config.dns.servers);
   fillRoutingFields(settings.config.routing || {});
@@ -1639,6 +1641,32 @@ function fillListen(prefix, listen) {
   $(`#${prefix}-port`).value = port;
 }
 
+// The upstream proxy is edited as an address and a port.
+function fillUpstreamProxy(address) {
+  const [host, port] = address ? splitHostPort(address) : ["", ""];
+  $("#upstream-host").value = host;
+  $("#upstream-port").value = port;
+  requireUpstreamProxy();
+}
+
+// On needs an address; off keeps what is filled in.
+function requireUpstreamProxy() {
+  const on = $("#f-upstream-on").checked;
+  $("#upstream-host").required = on;
+  $("#upstream-port").required = on;
+}
+
+// What a paste may bring goes by itself: spaces, a scheme, the port with the
+// address. The core refuses a missing half.
+function upstreamProxyFromForm() {
+  const host = $("#upstream-host").value.replace(/\s/g, "").replace(/^.*:\/\//, "").replace(/\/$/, "");
+  const port = $("#upstream-port").value.replace(/\s/g, "");
+  // With its port already: one colon, or one after IPv6's brackets.
+  if (/^[^:]+:[^:]*$/.test(host) || /^\[.*\]:/.test(host)) return host;
+  const bare = host.replace(/^\[|\]$/g, "");
+  return bare || port ? hostPort(bare, port) : "";
+}
+
 function listenFromForm(prefix) {
   return hostPort($(`#${prefix}-host`).value, $(`#${prefix}-port`).value.trim());
 }
@@ -1657,6 +1685,8 @@ function collectSettings() {
   }
   config.proxy.listen = listenFromForm("proxy");
   config.dashboard.listen = listenFromForm("dash");
+  config.network = config.network || {};
+  config.network.upstream_proxy = upstreamProxyFromForm();
   config.dns = config.dns || {};
   config.dns.servers = dnsServersFromForm();
   routingFromForm(config);
@@ -1674,6 +1704,7 @@ function updateDirty() {
   $("#settings-form").classList.toggle("dirty", dirty);
 }
 
+$("#f-upstream-on").addEventListener("change", requireUpstreamProxy);
 $("#settings-form").addEventListener("input", updateDirty);
 $("#settings-form").addEventListener("change", updateDirty);
 $("#settings-discard").addEventListener("click", () => loadSettings().catch(reportError));

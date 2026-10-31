@@ -158,8 +158,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get addAccount => 'افزودن حساب';
 
   @override
-  String lowQuotaNotice(String left, String size) {
-    return 'حجم حساب فعلی رو به اتمام است ($left مانده). با افزودن یک حساب دیگر، $size حجم دیگر خواهید داشت.';
+  String lowQuotaNotice(String size) {
+    return 'حجم این حساب رو به اتمام است. با افزودن یک حساب دیگر، $size حجم بیشتر خواهید داشت.';
   }
 
   @override
@@ -167,6 +167,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get noAccountsHint => 'برای اتصال یک Firefox Account اضافه کنید.';
+
+  @override
+  String get delayTestFailed =>
+      'تأخیر سرورها اندازه‌گیری نشد. اینترنت را بررسی کنید.';
 
   @override
   String get createAccountTitle => 'حساب Firefox ندارید؟';
@@ -304,6 +308,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get close => 'بستن';
+
+  @override
+  String get noBrowserTitle => 'این دستگاه مرورگر ندارد';
+
+  @override
+  String get noBrowserText => 'این آدرس را روی گوشی یا کامپیوتر باز کنید:';
 
   @override
   String get cancel => 'انصراف';
@@ -487,7 +497,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get routingDirectHint =>
-      'سایت‌ها و IPهای کشور انتخاب‌شده از VPN عبور نمی‌کنند: سریع‌تر باز می‌شوند و از حجم کم نمی‌کنند.';
+      'سایت‌ها و IP های کشور انتخاب‌شده از VPN عبور نمی‌کنند: سریع‌تر باز می‌شوند و از حجم کم نمی‌کنند.';
 
   @override
   String get region => 'کشور';
@@ -619,7 +629,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String routingSuggestBody(String country) {
-    return 'سایت‌ها و IPهای $country مستقیم و بدون VPN باز می‌شوند. بعداً در بخش مسیریابی قابل تغییر است.';
+    return 'سایت‌ها و IP های $country مستقیم و بدون VPN باز می‌شوند. بعداً در بخش مسیریابی قابل تغییر است.';
   }
 
   @override
@@ -643,8 +653,7 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get noticeCommand =>
-      'یک برنامه UDP خواست (بازی‌ها، تماس صوتی و تصویری). پروکسی Mozilla فقط TCP را منتقل می‌کند، پس این ترافیک عبور نمی‌کند.';
+  String get noticeCommand => 'این نوع اتصال در VPN پشتیبانی نمی‌شود.';
 
   @override
   String noticeTimes(int count, String time) {
@@ -833,6 +842,67 @@ class AppLocalizationsFa extends AppLocalizations {
   String get sectionAdvanced => 'پیشرفته';
 
   @override
+  String get tlsFragment => 'فرگمنت TLS';
+
+  @override
+  String get tlsFragmentOff => 'غیرفعال';
+
+  @override
+  String get tlsFragmentFirstByte => 'بایت اول';
+
+  @override
+  String get tlsFragmentSni => 'نام سرور (SNI)';
+
+  @override
+  String get tlsFragmentFirstByteHint => 'جدا شدن هدر TLS از بایت اول (0x16)';
+
+  @override
+  String get tlsFragmentSniHint => 'تقسیم نام سرور (SNI) بین چند بسته TCP';
+
+  @override
+  String get tlsFragmentOffHint => 'اتصال عادی TLS';
+
+  @override
+  String get sectionBypass => 'اگر موزیلا مسدود است';
+
+  @override
+  String get apiRelay => 'سرور رله';
+
+  @override
+  String get apiRelayHint =>
+      'Cloudflare Worker خودتان، یا فایل relay.php روی هاست خودتان.\nفقط وقتی موزیلا مستقیم جواب ندهد استفاده می‌شود: لاگین، حساب‌ها و لیست سرورها از آن عبور می‌کنند، نه ترافیک VPN.';
+
+  @override
+  String get upstreamProxy => 'پروکسی بالادستی';
+
+  @override
+  String get upstreamProxyOn => 'پروکسی بالادستی روشن است';
+
+  @override
+  String get upstreamProxyAddress => 'آدرس پروکسی SOCKS5';
+
+  @override
+  String get upstreamProxyPort => 'پورت';
+
+  @override
+  String get upstreamProxyHint =>
+      'اتصال به موزیلا از این پروکسی عبور می‌کند؛ برای شبکه‌هایی که موزیلا را مسدود یا کند می‌کنند.\nاگر پروکسی روی همین دستگاه است، آن را از VPN خارج کنید.';
+
+  @override
+  String get upstreamProxyInvalid =>
+      'آدرس پروکسی را وارد کنید؛ مثلاً 127.0.0.1.';
+
+  @override
+  String get upstreamProxyInvalidPort => 'پورتی بین 1 تا 65535 وارد کنید.';
+
+  @override
+  String get upstreamProxyOwn =>
+      'این پروکسی خود همین برنامه است. پروکسی دیگری وارد کنید.';
+
+  @override
+  String get apiRelayInvalid => 'باید یک آدرس https:// باشد.';
+
+  @override
   String get listenAddress => 'دسترسی به پروکسی';
 
   @override
@@ -960,6 +1030,10 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
+  String get updateAllowInstall =>
+      'به Firefox VPN اجازه نصب برنامه بدهید و دوباره «به‌روزرسانی» را بزنید.';
+
+  @override
   String updateInstalling(String version) {
     return 'در حال نصب نسخه $version؛ برنامه بسته و دوباره باز می‌شود.';
   }
@@ -980,11 +1054,14 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get autoUpdate => 'به‌روزرسانی خودکار';
+  String get sectionUpdates => 'به‌روزرسانی‌ها';
 
   @override
-  String get autoUpdateHint =>
-      'نسخه جدید در پس‌زمینه دانلود می‌شود و دفعه بعد که برنامه باز شود، نصب می‌شود.';
+  String get inAppUpdates => 'به‌روزرسانی داخل برنامه';
+
+  @override
+  String get inAppUpdatesHint =>
+      'نسخه جدید در پس‌زمینه دانلود می‌شود و صفحه نصب اندروید باز می‌شود.\nخاموش: دکمه دانلود مرورگر را باز می‌کند.';
 
   @override
   String get repoNotSet => 'آدرس مخزن گیت‌هاب هنوز تنظیم نشده است.';
@@ -1014,6 +1091,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get groupApp => 'برنامه';
 
   @override
+  String get groupServersAccounts => 'سرور و حساب';
+
+  @override
+  String get groupNetwork => 'شبکه';
+
+  @override
   String get stateOff => 'قطع';
 
   @override
@@ -1021,6 +1104,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get tapToDisconnectPhone => 'برای قطع اتصال ضربه بزنید';
+
+  @override
+  String get tapToConnectTv => 'برای اتصال OK را بزنید';
+
+  @override
+  String get tapToDisconnectTv => 'برای قطع اتصال OK را بزنید';
 
   @override
   String lanAddress(String address) {
@@ -1056,7 +1145,15 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get failUnreachable =>
-      'سرورهای Mozilla روی این اینترنت فیلتر هستند. اینترنت دیگری را امتحان کنید.';
+      'اتصال به سرورهای Mozilla برقرار نشد. اینترنت دیگری را امتحان کنید.';
+
+  @override
+  String get failUpstreamProxy =>
+      'اتصال به Mozilla از طریق پروکسی بالادستی برقرار نشد. روشن بودن پروکسی را بررسی کنید.';
+
+  @override
+  String get failInsideVpn =>
+      'این اینترنت از قبل از یک VPN عبور می‌کند. آن را خاموش کنید.';
 
   @override
   String get failRefused =>
@@ -1385,19 +1482,11 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String udpNoticeBody(String program) {
-    return 'برنامه $program می‌خواست تماس بگیرد یا آنلاین بازی کند، ولی در حالت TUN این ترافیک (UDP) از VPN عبور نمی‌کند.';
+    return 'ترافیک UDP برنامه $program از VPN عبور نمی‌کند.';
   }
-
-  @override
-  String get udpNoticeAction => 'ترافیک UDP آن مستقیم برود';
 
   @override
   String get dontShowAgain => 'دیگر نشان نده';
-
-  @override
-  String udpDirectAdded(String program) {
-    return 'ترافیک UDP برنامه $program از این به بعد مستقیم وصل می‌شود.';
-  }
 
   @override
   String get addRunningProgram => 'از برنامه‌های در حال اجرا';

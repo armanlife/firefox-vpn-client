@@ -296,7 +296,7 @@ func TestSocksServerNotesUDPRequest(t *testing.T) {
 	if _, err := io.ReadFull(client, reply[:2]); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := client.Write([]byte{socksVersion5, 0x03, 0x00, socksAtypIPv4}); err != nil {
+	if _, err := client.Write([]byte{socksVersion5, 0x03, 0x00, socksAtypIPv4, 0, 0, 0, 0, 0, 0}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := io.ReadFull(client, reply[:10]); err != nil {

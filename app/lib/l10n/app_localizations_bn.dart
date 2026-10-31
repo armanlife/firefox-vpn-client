@@ -158,8 +158,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get addAccount => 'অ্যাকাউন্ট যোগ করুন';
 
   @override
-  String lowQuotaNotice(String left, String size) {
-    return 'বর্তমান অ্যাকাউন্টের ডেটা প্রায় শেষ ($left বাকি)। আরেকটি অ্যাকাউন্ট যোগ করলে আরও $size পাবেন।';
+  String lowQuotaNotice(String size) {
+    return 'এই অ্যাকাউন্টের ডেটা প্রায় শেষ। আরেকটি অ্যাকাউন্ট যোগ করলে আরও $size পাবেন।';
   }
 
   @override
@@ -167,6 +167,10 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get noAccountsHint => 'সংযোগ করতে একটি Firefox Account যোগ করুন।';
+
+  @override
+  String get delayTestFailed =>
+      'সার্ভারগুলোর বিলম্ব মাপা যায়নি। ইন্টারনেট পরীক্ষা করুন।';
 
   @override
   String get createAccountTitle => 'Firefox Account নেই?';
@@ -304,6 +308,12 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get close => 'বন্ধ';
+
+  @override
+  String get noBrowserTitle => 'এই ডিভাইসে কোনো ব্রাউজার নেই';
+
+  @override
+  String get noBrowserText => 'এই ঠিকানাটি আপনার ফোন বা কম্পিউটারে খুলুন:';
 
   @override
   String get cancel => 'বাতিল';
@@ -645,8 +655,7 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
-  String get noticeCommand =>
-      'একটি অ্যাপ UDP ব্যবহার করতে চেয়েছে (গেম, ভয়েস ও ভিডিও কল)। Mozilla-র প্রক্সি শুধু TCP সমর্থন করে, তাই এই ট্রাফিক যেতে পারে না।';
+  String get noticeCommand => 'এই ধরনের সংযোগ VPN-এ সমর্থিত নয়।';
 
   @override
   String noticeTimes(int count, String time) {
@@ -836,6 +845,67 @@ class AppLocalizationsBn extends AppLocalizations {
   String get sectionAdvanced => 'উন্নত';
 
   @override
+  String get tlsFragment => 'TLS ফ্র্যাগমেন্টেশন';
+
+  @override
+  String get tlsFragmentOff => 'বন্ধ';
+
+  @override
+  String get tlsFragmentFirstByte => 'প্রথম বাইট';
+
+  @override
+  String get tlsFragmentSni => 'সার্ভারের নাম (SNI)';
+
+  @override
+  String get tlsFragmentFirstByteHint => 'প্রথম বাইটে TLS হেডার ভাগ করে (0x16)';
+
+  @override
+  String get tlsFragmentSniHint =>
+      'সার্ভারের নাম (SNI) কয়েকটি TCP প্যাকেটে ভাগ করে';
+
+  @override
+  String get tlsFragmentOffHint => 'সাধারণ TLS সংযোগ';
+
+  @override
+  String get sectionBypass => 'Mozilla অবরুদ্ধ থাকলে';
+
+  @override
+  String get apiRelay => 'রিলে সার্ভার';
+
+  @override
+  String get apiRelayHint =>
+      'আপনার নিজের Cloudflare Worker, অথবা আপনার হোস্টে relay.php।\nশুধু Mozilla সরাসরি উত্তর না দিলে ব্যবহৃত হয়: সাইন-ইন, অ্যাকাউন্ট ও সার্ভার তালিকা এর মধ্য দিয়ে যায়, VPN ট্রাফিক নয়।';
+
+  @override
+  String get upstreamProxy => 'আপস্ট্রিম প্রক্সি';
+
+  @override
+  String get upstreamProxyOn => 'আপস্ট্রিম প্রক্সি চালু আছে';
+
+  @override
+  String get upstreamProxyAddress => 'SOCKS5 প্রক্সির ঠিকানা';
+
+  @override
+  String get upstreamProxyPort => 'পোর্ট';
+
+  @override
+  String get upstreamProxyHint =>
+      'Mozilla-র সংযোগ এই প্রক্সির মধ্য দিয়ে যায়; যেসব নেটওয়ার্ক Mozilla অবরুদ্ধ বা ধীর করে তাদের জন্য।\nপ্রক্সি এই ডিভাইসে চললে সেটিকে VPN-এর বাইরে রাখুন।';
+
+  @override
+  String get upstreamProxyInvalid => 'প্রক্সির ঠিকানা লিখুন, যেমন 127.0.0.1।';
+
+  @override
+  String get upstreamProxyInvalidPort =>
+      '1 থেকে 65535-এর মধ্যে একটি পোর্ট লিখুন।';
+
+  @override
+  String get upstreamProxyOwn => 'এটি এই অ্যাপেরই প্রক্সি। অন্য একটি লিখুন।';
+
+  @override
+  String get apiRelayInvalid => 'একটি https:// ঠিকানা হতে হবে।';
+
+  @override
   String get listenAddress => 'প্রক্সি অ্যাক্সেস';
 
   @override
@@ -963,6 +1033,10 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
+  String get updateAllowInstall =>
+      'Firefox VPN-কে অ্যাপ ইনস্টল করার অনুমতি দিন, তারপর আবার «আপডেট করুন» চাপুন।';
+
+  @override
   String updateInstalling(String version) {
     return 'সংস্করণ $version ইনস্টল হচ্ছে। অ্যাপটি বন্ধ হয়ে আবার খুলবে।';
   }
@@ -983,11 +1057,14 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
-  String get autoUpdate => 'স্বয়ংক্রিয়ভাবে আপডেট করুন';
+  String get sectionUpdates => 'আপডেট';
 
   @override
-  String get autoUpdateHint =>
-      'নতুন সংস্করণ ব্যাকগ্রাউন্ডে ডাউনলোড হয় এবং পরের বার অ্যাপ খুললে ইনস্টল হয়।';
+  String get inAppUpdates => 'অ্যাপের ভেতরে আপডেট';
+
+  @override
+  String get inAppUpdatesHint =>
+      'নতুন সংস্করণ পটভূমিতে ডাউনলোড হয় এবং Android-এর ইনস্টলার খোলে।\nবন্ধ থাকলে: ডাউনলোড বোতাম ব্রাউজার খোলে।';
 
   @override
   String get repoNotSet => 'GitHub রিপোজিটরি এখনও সেট করা হয়নি।';
@@ -1017,6 +1094,12 @@ class AppLocalizationsBn extends AppLocalizations {
   String get groupApp => 'অ্যাপ';
 
   @override
+  String get groupServersAccounts => 'সার্ভার ও অ্যাকাউন্ট';
+
+  @override
+  String get groupNetwork => 'নেটওয়ার্ক';
+
+  @override
   String get stateOff => 'সংযোগ বিচ্ছিন্ন';
 
   @override
@@ -1024,6 +1107,12 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get tapToDisconnectPhone => 'সংযোগ বিচ্ছিন্ন করতে ট্যাপ করুন';
+
+  @override
+  String get tapToConnectTv => 'সংযোগ করতে OK চাপুন';
+
+  @override
+  String get tapToDisconnectTv => 'সংযোগ বিচ্ছিন্ন করতে OK চাপুন';
 
   @override
   String lanAddress(String address) {
@@ -1059,7 +1148,15 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get failUnreachable =>
-      'এই ইন্টারনেটে Mozilla-র সার্ভার ব্লক করা আছে। অন্য ইন্টারনেট সংযোগ চেষ্টা করুন।';
+      'Mozilla-র সার্ভারে পৌঁছানো যায়নি। অন্য ইন্টারনেট সংযোগ ব্যবহার করে দেখুন।';
+
+  @override
+  String get failUpstreamProxy =>
+      'আপস্ট্রিম প্রক্সির মাধ্যমে Mozilla-য় পৌঁছানো যায়নি। প্রক্সিটি চালু আছে কি না দেখুন।';
+
+  @override
+  String get failInsideVpn =>
+      'এই ইন্টারনেট আগে থেকেই একটি VPN দিয়ে যায়। সেটি বন্ধ করুন।';
 
   @override
   String get failRefused =>
@@ -1390,19 +1487,11 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String udpNoticeBody(String program) {
-    return '$program কল করতে বা অনলাইনে খেলতে চেয়েছিল, কিন্তু TUN মোডে এই ট্রাফিক (UDP) VPN দিয়ে যেতে পারে না।';
+    return '$program-এর UDP ট্রাফিক VPN দিয়ে যায় না।';
   }
-
-  @override
-  String get udpNoticeAction => 'এর UDP সরাসরি পাঠান';
 
   @override
   String get dontShowAgain => 'আর দেখাবেন না';
-
-  @override
-  String udpDirectAdded(String program) {
-    return '$program: এর UDP এখন সরাসরি সংযোগ করে।';
-  }
 
   @override
   String get addRunningProgram => 'চলমান প্রোগ্রাম থেকে';

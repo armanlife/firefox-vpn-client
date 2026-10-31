@@ -430,6 +430,18 @@ func TestConnectionTestMeasuresTunnelRequest(t *testing.T) {
 	}
 }
 
+// A new delay replaces the times of the last test, and only those.
+func TestWithDelayKeepsTheRestOfTheTest(t *testing.T) {
+	last := proxy.ConnectionTestResult{At: time.Unix(1, 0), OK: true, ResponseMS: 4000, TotalMS: 5000, ExitIPv4: "192.0.2.1", ExitCountry: "NL"}
+	got := withDelay(last, proxy.ConnectionTestResult{At: time.Unix(2, 0), OK: true, ResponseMS: 150, TotalMS: 400})
+	if got.ResponseMS != 150 || got.TotalMS != 400 || !got.At.Equal(time.Unix(2, 0)) {
+		t.Fatalf("times not replaced: %+v", got)
+	}
+	if got.ExitIPv4 != "192.0.2.1" || got.ExitCountry != "NL" || !got.OK {
+		t.Fatalf("the rest changed: %+v", got)
+	}
+}
+
 // A session lasts as long as a browser keeps a cookie, survives a restart
 // of the dashboard, and ends with a new password, a sign-out, or tampering.
 func TestDashboardSessionsLastAndEnd(t *testing.T) {

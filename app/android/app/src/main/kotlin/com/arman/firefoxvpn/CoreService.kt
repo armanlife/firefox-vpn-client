@@ -29,9 +29,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * this process. While the UI is open it runs with the proxy off, so the
  * settings and the accounts work. Turned on (the app's button, the Quick
  * Settings tile), this service keeps the core running in the foreground.
- * In VPN mode it is also the phone's VPN: it hands the core the VPN's TUN
- * device, so every app's TCP traffic goes through the proxy; the app
- * itself is left out of the VPN, so the core's own connections go straight
+ * In VPN mode it is also the phone's VPN: it runs hev-socks5-tunnel on the
+ * VPN's TUN device (Tun2Socks), which sends every app's traffic to the core; the
+ * app itself is left out of the VPN, so the core's own connections go straight
  * out. In proxy mode there is no VPN: only apps set up to use the local
  * proxy (127.0.0.1 and the proxy port) go through it. The notification's
  * Stop action turns it off.
@@ -76,6 +76,13 @@ class CoreService : VpnService() {
             // a minute): the VPN and its notification go too.
             if (!mobile.Mobile.isOn()) {
                 Log.w(TAG, "the connect was given up; turning the VPN off")
+                turnOff(this@CoreService)
+                return
+            }
+            // It could not start: without it the VPN would hold the phone's
+            // traffic and carry none of it.
+            if (Tun2Socks.ended()) {
+                Log.e(TAG, "the VPN's tunnel ended; turning the VPN off")
                 turnOff(this@CoreService)
                 return
             }
@@ -216,7 +223,7 @@ class CoreService : VpnService() {
                 if (usesVpn(this)) {
                     if (!startTunnel()) turnOff(this)
                 } else {
-                    mobile.Mobile.stopTun()
+                    stopTunnel()
                 }
             }
             return START_STICKY
@@ -253,7 +260,7 @@ class CoreService : VpnService() {
         // A notification posted at the last moment goes too.
         getSystemService(NotificationManager::class.java).cancel(NOTIFICATION_ID)
         stopWatchingNetwork()
-        mobile.Mobile.stopTun()
+        stopTunnel()
         on = false
         connected = false
         QuickTile.refresh(this)
@@ -261,7 +268,7 @@ class CoreService : VpnService() {
         super.onDestroy()
     }
 
-    /** Sets up the VPN interface and gives its device to the core. */
+    /** Sets up the VPN interface and runs the tunnel to the core on its device. */
     private fun startTunnel(): Boolean {
         if (prepare(this) != null) {
             // No permission (revoked since): the app asks again.
@@ -269,22 +276,27 @@ class CoreService : VpnService() {
             return false
         }
         return try {
+            val config = mobile.Mobile.tunConfig(MTU)
             val builder = Builder()
                 .setSession(getString(R.string.app_name))
                 .setMtu(MTU)
                 .addAddress("172.19.0.1", 30)
                 .addRoute("0.0.0.0", 0)
-                // The core answers DNS sent to any address.
+                // The tunnel answers DNS sent here (core/mobile), with
+                // addresses that stand for names.
                 .addDnsServer("172.19.0.2")
                 .addAddress("fdfe:dcba:9876::1", 126)
                 .addRoute("::", 0)
             applyApps(builder)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) builder.setMetered(false)
             val tun = builder.establish() ?: return false
-            mobile.Mobile.startTun(tun.detachFd())
+            if (!Tun2Socks.start(config, tun)) {
+                Log.e(TAG, "the VPN's tunnel did not start")
+                return false
+            }
             tunnelUpAt = System.currentTimeMillis()
             true
-        } catch (e: Exception) {
+        } catch (e: Throwable) { // An Error too: the native library may not load.
             Log.e(TAG, "the VPN did not start", e)
             Toast.makeText(this, e.message ?: e.toString(), Toast.LENGTH_LONG).show()
             false
@@ -569,7 +581,7 @@ class CoreService : VpnService() {
                 .map { String(Character.toChars(0x1F1E6 + (it - 'A'))) }
                 .joinToString("")
 
-        /** The VPN interface's MTU; the core's stack uses the same. */
+        /** The VPN interface's MTU, which the tunnel gets too. */
         private const val MTU = 1500
 
         /** The core was last told that no network is connected. */
@@ -615,12 +627,16 @@ class CoreService : VpnService() {
             ConnectWidget.updateAll(context)
         }
 
+        /** Ends the VPN's tunnel and its device, and the core's side of it. */
+        private fun stopTunnel() {
+            Tun2Socks.stop()
+            mobile.Mobile.stopTun()
+        }
+
         /** Turns the VPN and the proxy off; the core keeps its API. */
         fun turnOff(context: Context) {
-            if (mobile.Mobile.running()) {
-                mobile.Mobile.stopTun()
-                mobile.Mobile.setOn(false)
-            }
+            stopTunnel()
+            if (mobile.Mobile.running()) mobile.Mobile.setOn(false)
             on = false
             connected = false
             context.stopService(Intent(context, CoreService::class.java))
@@ -674,6 +690,7 @@ class CoreService : VpnService() {
 
         @Synchronized
         fun stopCore() {
+            Tun2Socks.stop()
             if (mobile.Mobile.running()) mobile.Mobile.stop()
         }
     }

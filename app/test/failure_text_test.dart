@@ -47,6 +47,14 @@ void main() {
       l.failUnreachable,
     );
     expect(
+      failureText(
+        l,
+        null,
+        failedTest(error: 'x', code: Failure.insideVpn),
+      ).text,
+      l.failInsideVpn,
+    );
+    expect(
       failureText(l, null, failedTest(error: 'odd', code: Failure.other)).text,
       l.failOther,
     );
@@ -102,6 +110,7 @@ void main() {
         for (final code in [
           Failure.noNetwork,
           Failure.unreachable,
+          Failure.insideVpn,
           Failure.refused,
           Failure.locationRefused,
           Failure.signIn,

@@ -348,8 +348,8 @@ abstract class AppLocalizations {
   /// No description provided for @lowQuotaNotice.
   ///
   /// In en, this message translates to:
-  /// **'The current account is running out of data ({left} left). Add another account to get {size} more.'**
-  String lowQuotaNotice(String left, String size);
+  /// **'This account is running out of data. Add another account to get {size} more.'**
+  String lowQuotaNotice(String size);
 
   /// No description provided for @noAccounts.
   ///
@@ -362,6 +362,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add a Firefox Account to connect.'**
   String get noAccountsHint;
+
+  /// No description provided for @delayTestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t measure the servers\' delay. Check your internet.'**
+  String get delayTestFailed;
 
   /// No description provided for @createAccountTitle.
   ///
@@ -602,6 +608,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get close;
+
+  /// No description provided for @noBrowserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No browser on this device'**
+  String get noBrowserTitle;
+
+  /// No description provided for @noBrowserText.
+  ///
+  /// In en, this message translates to:
+  /// **'Open this address on your phone or computer:'**
+  String get noBrowserText;
 
   /// No description provided for @cancel.
   ///
@@ -1212,7 +1230,7 @@ abstract class AppLocalizations {
   /// No description provided for @noticeCommand.
   ///
   /// In en, this message translates to:
-  /// **'An app asked for UDP (games, voice and video calls). Mozilla\'s proxy carries TCP only, so it cannot go through.'**
+  /// **'This type of connection isn\'t supported by the VPN.'**
   String get noticeCommand;
 
   /// No description provided for @noticeTimes.
@@ -1557,6 +1575,120 @@ abstract class AppLocalizations {
   /// **'Advanced'**
   String get sectionAdvanced;
 
+  /// No description provided for @tlsFragment.
+  ///
+  /// In en, this message translates to:
+  /// **'TLS fragmentation'**
+  String get tlsFragment;
+
+  /// No description provided for @tlsFragmentOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get tlsFragmentOff;
+
+  /// No description provided for @tlsFragmentFirstByte.
+  ///
+  /// In en, this message translates to:
+  /// **'First byte'**
+  String get tlsFragmentFirstByte;
+
+  /// No description provided for @tlsFragmentSni.
+  ///
+  /// In en, this message translates to:
+  /// **'Server name (SNI)'**
+  String get tlsFragmentSni;
+
+  /// No description provided for @tlsFragmentFirstByteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Splits the TLS header at the first byte (0x16)'**
+  String get tlsFragmentFirstByteHint;
+
+  /// No description provided for @tlsFragmentSniHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Splits the server name (SNI) across TCP packets'**
+  String get tlsFragmentSniHint;
+
+  /// No description provided for @tlsFragmentOffHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal TLS connection'**
+  String get tlsFragmentOffHint;
+
+  /// No description provided for @sectionBypass.
+  ///
+  /// In en, this message translates to:
+  /// **'If Mozilla is blocked'**
+  String get sectionBypass;
+
+  /// No description provided for @apiRelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Relay server'**
+  String get apiRelay;
+
+  /// No description provided for @apiRelayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own Cloudflare Worker, or relay.php on your own host.\nUsed only when Mozilla doesn\'t answer directly: the sign-in, accounts, and server list go through it, not the VPN traffic.'**
+  String get apiRelayHint;
+
+  /// No description provided for @upstreamProxy.
+  ///
+  /// In en, this message translates to:
+  /// **'Upstream proxy'**
+  String get upstreamProxy;
+
+  /// No description provided for @upstreamProxyOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Upstream proxy is on'**
+  String get upstreamProxyOn;
+
+  /// No description provided for @upstreamProxyAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'SOCKS5 proxy address'**
+  String get upstreamProxyAddress;
+
+  /// No description provided for @upstreamProxyPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get upstreamProxyPort;
+
+  /// No description provided for @upstreamProxyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection to Mozilla goes through this proxy, for networks that block or slow Mozilla.\nIf the proxy runs on this device, leave it out of the VPN.'**
+  String get upstreamProxyHint;
+
+  /// No description provided for @upstreamProxyInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the proxy\'s address, such as 127.0.0.1.'**
+  String get upstreamProxyInvalid;
+
+  /// No description provided for @upstreamProxyInvalidPort.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a port from 1 to 65535.'**
+  String get upstreamProxyInvalidPort;
+
+  /// No description provided for @upstreamProxyOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s this app\'s own proxy. Enter another one.'**
+  String get upstreamProxyOwn;
+
+  /// No description provided for @apiRelayInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Must be an https:// address.'**
+  String get apiRelayInvalid;
+
   /// No description provided for @listenAddress.
   ///
   /// In en, this message translates to:
@@ -1779,6 +1911,12 @@ abstract class AppLocalizations {
   /// **'Version {version} is ready to install.'**
   String updateReady(String version);
 
+  /// No description provided for @updateAllowInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Firefox VPN to install apps, then press Update again.'**
+  String get updateAllowInstall;
+
   /// No description provided for @updateInstalling.
   ///
   /// In en, this message translates to:
@@ -1803,17 +1941,23 @@ abstract class AppLocalizations {
   /// **'The update to version {version} didn\'t finish, so the app went back to the previous version.'**
   String updateRolledBack(String version);
 
-  /// No description provided for @autoUpdate.
+  /// No description provided for @sectionUpdates.
   ///
   /// In en, this message translates to:
-  /// **'Update automatically'**
-  String get autoUpdate;
+  /// **'Updates'**
+  String get sectionUpdates;
 
-  /// No description provided for @autoUpdateHint.
+  /// No description provided for @inAppUpdates.
   ///
   /// In en, this message translates to:
-  /// **'New versions download in the background and install the next time the app opens.'**
-  String get autoUpdateHint;
+  /// **'Update in the app'**
+  String get inAppUpdates;
+
+  /// No description provided for @inAppUpdatesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New versions download in the background and Android\'s installer opens.\nOff: the Download button opens the browser.'**
+  String get inAppUpdatesHint;
 
   /// No description provided for @repoNotSet.
   ///
@@ -1869,6 +2013,18 @@ abstract class AppLocalizations {
   /// **'App'**
   String get groupApp;
 
+  /// No description provided for @groupServersAccounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Servers and accounts'**
+  String get groupServersAccounts;
+
+  /// No description provided for @groupNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network'**
+  String get groupNetwork;
+
   /// No description provided for @stateOff.
   ///
   /// In en, this message translates to:
@@ -1886,6 +2042,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to disconnect'**
   String get tapToDisconnectPhone;
+
+  /// Under the switch on a TV, worked with a remote: its middle button is OK.
+  ///
+  /// In en, this message translates to:
+  /// **'Press OK to connect'**
+  String get tapToConnectTv;
+
+  /// No description provided for @tapToDisconnectTv.
+  ///
+  /// In en, this message translates to:
+  /// **'Press OK to disconnect'**
+  String get tapToDisconnectTv;
 
   /// No description provided for @lanAddress.
   ///
@@ -1944,8 +2112,20 @@ abstract class AppLocalizations {
   /// No description provided for @failUnreachable.
   ///
   /// In en, this message translates to:
-  /// **'Mozilla\'s servers are blocked on this internet. Try another internet connection.'**
+  /// **'Couldn\'t reach Mozilla\'s servers. Try another internet connection.'**
   String get failUnreachable;
+
+  /// No description provided for @failUpstreamProxy.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach Mozilla through your upstream proxy. Check that it\'s running.'**
+  String get failUpstreamProxy;
+
+  /// No description provided for @failInsideVpn.
+  ///
+  /// In en, this message translates to:
+  /// **'This internet already goes through a VPN. Turn it off.'**
+  String get failInsideVpn;
 
   /// No description provided for @failRefused.
   ///
@@ -2478,26 +2658,14 @@ abstract class AppLocalizations {
   /// A card on the home page in TUN mode when a program's UDP was refused.
   ///
   /// In en, this message translates to:
-  /// **'{program} tried to make a call or play online, but in TUN mode that traffic (UDP) can\'t go through the VPN.'**
+  /// **'{program}\'s UDP traffic can\'t go through the VPN.'**
   String udpNoticeBody(String program);
-
-  /// No description provided for @udpNoticeAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Send its UDP directly'**
-  String get udpNoticeAction;
 
   /// No description provided for @dontShowAgain.
   ///
   /// In en, this message translates to:
   /// **'Don\'t show again'**
   String get dontShowAgain;
-
-  /// No description provided for @udpDirectAdded.
-  ///
-  /// In en, this message translates to:
-  /// **'{program}: its UDP now connects directly.'**
-  String udpDirectAdded(String program);
 
   /// TUN settings, Add program: the first of three ways (then a file, then a name).
   ///

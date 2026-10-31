@@ -16,10 +16,13 @@ import (
 	"net"
 	"net/netip"
 	"net/url"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"golang.org/x/net/proxy"
 
 	"github.com/armanlife/firefox-vpn-client/core/internal/egress"
 )
@@ -31,22 +34,50 @@ const (
 	// defaultTTL applies to answers whose TTL is unknown (DoT and plain DNS
 	// through Go's resolver).
 	defaultTTL = 5 * time.Minute
+	// systemAfter is how long the servers have alone before the system is
+	// asked too: where a network blocks them they never answer, and its own
+	// DNS answers at once.
+	systemAfter = time.Second
+	// serversDownFor is how long, after the servers all failed, the system
+	// is asked at once.
+	serversDownFor = time.Minute
+	// systemTTL keeps a system answer briefly: the servers may work again.
+	systemTTL = time.Minute
 )
+
+// iranBlockPageV6 holds the IPv6 addresses of Iran's filtering page (its IPv4
+// ones, 10.10.34.34-36, are private).
+var iranBlockPageV6 = netip.MustParsePrefix("2001:4188:2:600:10:10:34:0/112")
+
+// IsBlockPage reports whether a public name resolving to addr cannot be its
+// real address: a filtering network's answer.
+func IsBlockPage(addr netip.Addr) bool {
+	addr = addr.Unmap()
+	return addr.IsPrivate() || addr.IsLoopback() || addr.IsUnspecified() || addr.IsLinkLocalUnicast() || iranBlockPageV6.Contains(addr)
+}
 
 // server answers queries for one configured DNS server.
 type server interface {
 	lookup(ctx context.Context, host string) ([]netip.Addr, time.Duration, error)
+	// exchange sends a DNS message and returns the reply as it is.
+	exchange(ctx context.Context, msg []byte) ([]byte, error)
 	String() string
 }
 
 // Resolver looks names up through its servers concurrently, uses the first
-// answer, caches it, and optionally falls back to the system resolver.
+// answer, caches it, and optionally asks the system resolver too when they are
+// slow or fail.
 type Resolver struct {
 	servers  []server
 	fallback bool
+	// system is the system resolver.
+	system func(ctx context.Context, host string) (Result, error)
 
 	mu    sync.Mutex
 	cache map[string]cacheEntry
+	// serversFailed is when the servers last all failed; zero once they
+	// answer again.
+	serversFailed time.Time
 }
 
 type cacheEntry struct {
@@ -63,7 +94,7 @@ type cacheEntry struct {
 //
 // No servers means the system resolver.
 func New(specs []string, fallbackToSystem bool) (*Resolver, error) {
-	r := &Resolver{fallback: fallbackToSystem, cache: make(map[string]cacheEntry)}
+	r := &Resolver{fallback: fallbackToSystem, system: systemLookup, cache: make(map[string]cacheEntry)}
 	for _, spec := range specs {
 		spec = strings.TrimSpace(spec)
 		if spec == "" {
@@ -187,20 +218,113 @@ func (r *Resolver) Lookup(ctx context.Context, host string) (Result, error) {
 	}
 	r.mu.Unlock()
 
-	result, ttl, err := r.race(ctx, host)
-	if err == nil {
-		r.mu.Lock()
-		r.cache[host] = cacheEntry{addrs: result.Addrs, source: result.Source, expires: time.Now().Add(clampTTL(ttl))}
-		r.mu.Unlock()
-		return result, nil
+	if r.fallback {
+		return r.lookupWithSystem(ctx, host)
 	}
-	if r.fallback && ctx.Err() == nil {
-		if sys, sysErr := systemLookup(ctx, host); sysErr == nil {
-			sys.Source = "system (fallback)"
-			return sys, nil
+	result, ttl, err := r.race(ctx, host)
+	if err != nil {
+		return Result{}, err
+	}
+	r.remember(host, result, clampTTL(ttl))
+	return result, nil
+}
+
+func (r *Resolver) remember(host string, result Result, ttl time.Duration) {
+	r.mu.Lock()
+	r.cache[host] = cacheEntry{addrs: result.Addrs, source: result.Source, expires: time.Now().Add(ttl)}
+	r.mu.Unlock()
+}
+
+// lookupWithSystem takes the servers' answer, or the system's once they have
+// had systemAfter (no wait while they are known to be failing). A block page
+// from the system is used only when the servers fail: on a filtering network
+// only they can give the real address.
+func (r *Resolver) lookupWithSystem(ctx context.Context, host string) (Result, error) {
+	type answer struct {
+		result Result
+		err    error
+	}
+	servers := make(chan answer, 1)
+	go func() {
+		// On its own time: though the system answers first, this still tells
+		// whether the servers work, and caches their better answer.
+		result, ttl, err := r.race(context.WithoutCancel(ctx), host)
+		r.mu.Lock()
+		if err != nil {
+			r.serversFailed = time.Now()
+		} else {
+			r.serversFailed = time.Time{}
+			r.cache[host] = cacheEntry{addrs: result.Addrs, source: result.Source, expires: time.Now().Add(clampTTL(ttl))}
+		}
+		r.mu.Unlock()
+		servers <- answer{result, err}
+	}()
+
+	wait := systemAfter
+	r.mu.Lock()
+	if !r.serversFailed.IsZero() && time.Since(r.serversFailed) < serversDownFor {
+		wait = 0
+	}
+	r.mu.Unlock()
+	timer := time.NewTimer(wait)
+	defer timer.Stop()
+
+	system := make(chan answer, 1)
+	asked := false
+	askSystem := func() {
+		if asked {
+			return
+		}
+		asked = true
+		go func() {
+			result, err := r.system(ctx, host)
+			result.Source = "system (fallback)"
+			system <- answer{result, err}
+		}()
+	}
+	var serversErr error
+	var blockPage *Result
+	systemDone := false
+	for {
+		select {
+		case a := <-servers:
+			servers = nil
+			if a.err == nil {
+				return a.result, nil
+			}
+			serversErr = a.err
+			if blockPage != nil {
+				return *blockPage, nil
+			}
+			if systemDone {
+				return Result{}, serversErr
+			}
+			askSystem()
+		case <-timer.C:
+			askSystem()
+		case a := <-system:
+			systemDone = true
+			if a.err != nil {
+				if serversErr != nil {
+					return Result{}, serversErr
+				}
+				continue
+			}
+			if !slices.ContainsFunc(a.result.Addrs, IsBlockPage) {
+				r.remember(host, a.result, systemTTL)
+				return a.result, nil
+			}
+			if serversErr != nil {
+				return a.result, nil
+			}
+			blockPage = &a.result
+		case <-ctx.Done():
+			if serversErr != nil {
+				return Result{}, serversErr
+			}
+			return Result{}, fmt.Errorf("resolving %s: %w", host, ctx.Err())
 		}
 	}
-	return Result{}, err
 }
 
 // race queries every server at once and returns the first answer.
@@ -269,8 +393,30 @@ func systemLookup(ctx context.Context, host string) (Result, error) {
 // DialContext resolves the host of address and connects to its addresses
 // in turn.
 func (r *Resolver) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
+	return r.dial(ctx, 0, network, address)
+}
+
+// DialWithin is DialContext with wait as the limit for connecting, after the
+// name is known. The name has its own time, every server's and then the
+// system's, so a name the servers are slow to give does not read as a server
+// that cannot be reached.
+func (r *Resolver) DialWithin(ctx context.Context, wait time.Duration, network, address string) (net.Conn, error) {
+	return r.dial(ctx, wait, network, address)
+}
+
+// dial connects within wait after the name is known; 0 means ctx alone limits
+// it.
+func (r *Resolver) dial(ctx context.Context, wait time.Duration, network, address string) (net.Conn, error) {
 	d := egress.Dialer(0)
+	limit := func() (context.Context, context.CancelFunc) {
+		if wait <= 0 {
+			return ctx, func() {}
+		}
+		return context.WithTimeout(ctx, wait)
+	}
 	if r.System() {
+		ctx, cancel := limit()
+		defer cancel()
 		return d.DialContext(ctx, network, address)
 	}
 	host, port, err := net.SplitHostPort(address)
@@ -281,6 +427,8 @@ func (r *Resolver) DialContext(ctx context.Context, network, address string) (ne
 	if err != nil {
 		return nil, err
 	}
+	ctx, cancel := limit()
+	defer cancel()
 	var lastErr error
 	for _, addr := range orderAddrs(result.Addrs) {
 		conn, err := d.DialContext(ctx, network, net.JoinHostPort(addr.String(), port))
@@ -322,9 +470,75 @@ func Set(r *Resolver) { current.Store(r) }
 // Current returns the installed resolver (nil means the system resolver).
 func Current() *Resolver { return current.Load() }
 
-// Dial connects through the installed resolver.
+// Dial connects through the upstream proxy when one is set, otherwise through
+// the installed resolver.
 func Dial(ctx context.Context, network, address string) (net.Conn, error) {
+	if p := upstream.Load(); p != nil {
+		return p.dial.DialContext(ctx, network, address)
+	}
 	return Current().DialContext(ctx, network, address)
+}
+
+// DialWithin is Dial with wait as the limit for connecting, after the name is
+// known. Through the upstream proxy only ctx limits it: the proxy reaches the
+// server in its own time, and a slow way there is what it is for.
+func DialWithin(ctx context.Context, wait time.Duration, network, address string) (net.Conn, error) {
+	if p := upstream.Load(); p != nil {
+		return p.dial.DialContext(ctx, network, address)
+	}
+	return Current().DialWithin(ctx, wait, network, address)
+}
+
+// upstreamProxy is the user's own SOCKS5 proxy (network.upstream_proxy).
+type upstreamProxy struct {
+	address string
+	dial    proxy.ContextDialer
+}
+
+var upstream atomic.Pointer[upstreamProxy]
+
+// proxyForward opens the connection to the upstream proxy itself: a name
+// through the installed resolver, and outside a running TUN.
+type proxyForward struct{}
+
+func (proxyForward) Dial(network, address string) (net.Conn, error) {
+	return Current().DialContext(context.Background(), network, address)
+}
+
+func (proxyForward) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
+	return Current().DialContext(ctx, network, address)
+}
+
+// SetUpstreamProxy sends the connections of Dial and DialWithin through the
+// SOCKS5 proxy at address from now on, with the login if username is set; the
+// proxy resolves the names they ask for. An empty address connects directly.
+func SetUpstreamProxy(address, username, password string) error {
+	if address == "" {
+		upstream.Store(nil)
+		return nil
+	}
+	var auth *proxy.Auth
+	if username != "" {
+		auth = &proxy.Auth{User: username, Password: password}
+	}
+	d, err := proxy.SOCKS5("tcp", address, auth, proxyForward{})
+	if err != nil {
+		return err
+	}
+	dial, ok := d.(proxy.ContextDialer)
+	if !ok {
+		return errors.New("the SOCKS5 dialer cannot take a context")
+	}
+	upstream.Store(&upstreamProxy{address: address, dial: dial})
+	return nil
+}
+
+// UpstreamProxy is the address of the upstream proxy in use; "" for none.
+func UpstreamProxy() string {
+	if p := upstream.Load(); p != nil {
+		return p.address
+	}
+	return ""
 }
 
 // LookupNetIP resolves host through the installed resolver, IPv4 first.
@@ -345,33 +559,36 @@ type streamServer struct {
 
 func newStreamServer(kind, host, port string) *streamServer {
 	s := &streamServer{kind: kind, host: host, port: port}
-	addr := net.JoinHostPort(host, port)
 	s.r = &net.Resolver{PreferGo: true, Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
-		d := egress.Dialer(0)
-		switch kind {
-		case "tls":
-			// A TLS connection is a stream, so Go's resolver uses TCP
-			// framing on it, which is what DNS over TLS expects.
-			raw, err := d.DialContext(ctx, "tcp", addr)
-			if err != nil {
-				return nil, err
-			}
-			conn := tls.Client(raw, &tls.Config{ServerName: host, MinVersion: tls.VersionTLS12})
-			if err := conn.HandshakeContext(ctx); err != nil {
-				_ = raw.Close()
-				return nil, err
-			}
-			return conn, nil
-		case "tcp":
-			return d.DialContext(ctx, "tcp", addr)
-		}
 		// Go's resolver retries over TCP for a truncated UDP answer.
-		if strings.HasPrefix(network, "tcp") {
-			return d.DialContext(ctx, "tcp", addr)
+		if kind == "udp" && !strings.HasPrefix(network, "tcp") {
+			return s.dial(ctx, "udp")
 		}
-		return d.DialContext(ctx, "udp", addr)
+		return s.dial(ctx, "tcp")
 	}}
 	return s
+}
+
+// dial connects to the server over UDP, or over a stream: TCP, or TLS for
+// DNS over TLS.
+func (s *streamServer) dial(ctx context.Context, network string) (net.Conn, error) {
+	d := egress.Dialer(0)
+	addr := net.JoinHostPort(s.host, s.port)
+	if network == "udp" {
+		return d.DialContext(ctx, "udp", addr)
+	}
+	raw, err := d.DialContext(ctx, "tcp", addr)
+	if err != nil || s.kind != "tls" {
+		return raw, err
+	}
+	// A TLS connection is a stream, so Go's resolver uses TCP framing on
+	// it, which is what DNS over TLS expects.
+	conn := tls.Client(raw, &tls.Config{ServerName: s.host, MinVersion: tls.VersionTLS12})
+	if err := conn.HandshakeContext(ctx); err != nil {
+		_ = raw.Close()
+		return nil, err
+	}
+	return conn, nil
 }
 
 func (s *streamServer) lookup(ctx context.Context, host string) ([]netip.Addr, time.Duration, error) {

@@ -9,7 +9,10 @@ import (
 	"time"
 )
 
-const defaultTunnelWriteBufSize = 1 << 20
+// defaultTunnelWriteBufSize is one HTTP/2 flow-control window: the transport
+// takes the request body no faster than the window grants, so a larger
+// buffer does not raise the speed and costs memory per tunnel.
+const defaultTunnelWriteBufSize = 64 << 10
 
 var errTunnelDeadline = errors.New("deadlines are not supported for HTTP CONNECT tunnel streams")
 

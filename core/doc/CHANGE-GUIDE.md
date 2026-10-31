@@ -8,7 +8,7 @@ Use this guide after the [development workflow](DEVELOPMENT.md). It maps common 
 2. Find the owning source and nearest tests with the [architecture map](ARCHITECTURE.md).
 3. Read the relevant [authentication](AUTHENTICATION.md), [session](SESSIONS.md), [multi-account](MULTI-ACCOUNT.md), [dashboard](DASHBOARD.md), or [configuration](CONFIGURATION.md) contract.
 4. Identify which resources, callers, stored fields, and dashboard views can be affected.
-5. Implement the scoped behavior and verify it using [TESTING.md](TESTING.md).
+5. Implement the scoped behavior and verify it with the tests.
 6. Update the owning document and report the result with its limits.
 
 Prefer symbol searches to hardcoded line ranges:
@@ -131,7 +131,7 @@ Sources: core side `internal/desktop/tun.go` (`tunSync`: dial, hello, update an 
 - Keep cleanup tied to the core's connection to the service, the WFP session dynamic, and the open-then-route order (the core binds and reconnects before routes exist). What a crash of the service leaves (Linux's rules, macOS' DNS settings) is undone when it starts again: note anything new it changes before changing it.
 - On Linux and macOS the socket is open to every user: the service answers a client only after `tunapi.Allowed` (root, or a user who installed it), and the client trusts only a socket served by root.
 - The service accepts updates signed with its key only ([Development](DEVELOPMENT.md#signing-key)); never weaken `readSigned`.
-- Update [OPERATOR.md](OPERATOR.md#tun-mode), the app's texts (proposed to the user first), and the tests in [TESTING.md](TESTING.md); the gVisor tests need `-tags with_gvisor`. A change to routes, DNS, or the channel on Linux or macOS runs the end-to-end test too (`e2e_test.go`; CI runs it on its Linux and macOS computers).
+- Update [OPERATOR.md](OPERATOR.md#tun-mode), the app's texts, and the tests; the gVisor tests need `-tags with_gvisor`. A change to routes, DNS, or the channel on Linux or macOS runs the end-to-end test too (`e2e_test.go`; CI runs it on its Linux and macOS computers).
 
 ## Change the app's updates
 
@@ -140,7 +140,7 @@ Sources: `internal/update` (download, check, `Apply`, swap, the update folder; `
 - Install only what the signed list names, and only a newer version; re-check the package before installing. Never run the release's Setup for an update (its rollback keeps replaced files).
 - Never touch `user-data`, the portable marker, or Setup's uninstaller, nor anything in the app's folder that the new version does not replace; every failure must leave the old version whole and runnable.
 - The release files' names, the packages' layout (the zip's and the Linux tar.gz's top folder with the app and `core/`; the macOS tar.gz's `Firefox VPN.app`), `SHA256SUMS.txt.sig`, and `.github/updates.json` (its place, keys, and values, read by `app/lib/app_info.dart`) are a contract with the apps already installed: a change there breaks their updates.
-- Update [OPERATOR.md](OPERATOR.md#app-updates), [DASHBOARD.md](DASHBOARD.md) for the API, and [TESTING.md](TESTING.md).
+- Update [OPERATOR.md](OPERATOR.md#app-updates), and [DASHBOARD.md](DASHBOARD.md) for the API.
 
 ## Change status, persistence, or logs
 
@@ -160,6 +160,5 @@ Find the writer and every reader before changing a field: `status.json` is read 
 | Data-folder files, selection rules, status contract | [CONFIGURATION.md](CONFIGURATION.md) |
 | Running, systemd install, troubleshooting | [OPERATOR.md](OPERATOR.md) |
 | Toolchain or build procedure | [DEVELOPMENT.md](DEVELOPMENT.md) |
-| Test names, commands, isolation, side effects | [TESTING.md](TESTING.md) |
 
 Keep [README.md](README.md) as the directory index. Link to the owning guide instead of duplicating tables. For documentation-only work, validate links, referenced symbols and test families, English text, and changed source contracts.

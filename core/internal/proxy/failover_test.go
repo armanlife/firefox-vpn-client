@@ -214,28 +214,42 @@ func TestServerFailoverCountsTheDialsOfNewPasses(t *testing.T) {
 	}
 }
 
-// Sessions that open but break on the server count as well; a tunnel that
-// opens in between starts the count again.
-func TestBrokenSessionsMoveTheServer(t *testing.T) {
-	noRedialWait(t)
-	f := newFailoverFixture(t, nil)
-	breakSession := func() {
-		t.Helper()
-		f.c.mu.Lock()
-		failed := f.c.current
-		f.c.mu.Unlock()
-		f.c.markSessionUnusable(failed)
-		if err := f.c.rebuildSession(failed, errProxySessionUnhealthy); err != nil {
-			t.Fatalf("rebuild: %v", err)
-		}
+// breakSession makes f's current session fail on the server and rebuilds
+// it, as a tunnel that found it dead does.
+func (f *failoverFixture) breakSession(t *testing.T) {
+	t.Helper()
+	f.c.mu.Lock()
+	failed := f.c.current
+	f.c.mu.Unlock()
+	f.c.markSessionUnusable(failed)
+	if err := f.c.rebuildSession(failed, errProxySessionUnhealthy); err != nil {
+		t.Fatalf("rebuild: %v", err)
 	}
-	breakSession()
-	breakSession()
+}
+
+// tunnel opens a tunnel through f's controller and closes it.
+func (f *failoverFixture) tunnel(t *testing.T) {
+	t.Helper()
 	conn, err := f.c.OpenTunnel("example.com:443")
 	if err != nil {
 		t.Fatal(err)
 	}
 	_ = conn.Close()
+}
+
+// Sessions that open but break on the server count as well; a tunnel that
+// opens in between starts the count in a row again.
+func TestBrokenSessionsMoveTheServer(t *testing.T) {
+	noRedialWait(t)
+	f := newFailoverFixture(t, nil)
+	clock := time.Now()
+	f.failover.now = func() time.Time { return clock }
+	breakSession := func() { t.Helper(); f.breakSession(t) }
+	breakSession()
+	breakSession()
+	f.tunnel(t)
+	// Later than the drop window, so only the count in a row could move it.
+	clock = clock.Add(serverDropWindow)
 	breakSession()
 	breakSession()
 	if got := f.c.currentServer().Addr; got != serverA {
@@ -250,6 +264,78 @@ func TestBrokenSessionsMoveTheServer(t *testing.T) {
 	f.c.mu.Unlock()
 	if on != serverB {
 		t.Fatalf("the current session is on %s, want %s", on, serverB)
+	}
+}
+
+// A server whose sessions keep breaking moves even when tunnels open
+// between the breaks, as on a network that cuts the connection to it
+// every minute or so; breaks spread wider than the window do not.
+func TestDroppingSessionsMoveTheServer(t *testing.T) {
+	noRedialWait(t)
+	f := newFailoverFixture(t, nil)
+	clock := time.Now()
+	f.failover.now = func() time.Time { return clock }
+	for range serverDropLimit - 1 {
+		f.breakSession(t)
+		f.tunnel(t)
+		clock = clock.Add(time.Minute)
+	}
+	if got := f.c.currentServer().Addr; got != serverA {
+		t.Fatalf("after %d drops: on %s, want A", serverDropLimit-1, got)
+	}
+	f.breakSession(t)
+	if got := f.c.currentServer().Addr; got != serverB {
+		t.Fatalf("after %d drops in %s: on %s, want B", serverDropLimit, serverDropWindow, got)
+	}
+
+	g := newFailoverFixture(t, nil)
+	g.failover.now = func() time.Time { return clock }
+	for range 2 * serverDropLimit {
+		g.breakSession(t)
+		g.tunnel(t)
+		clock = clock.Add(serverDropWindow / (serverDropLimit - 1))
+	}
+	if got := g.c.currentServer().Addr; got != serverA {
+		t.Fatalf("drops spread wider than the window moved the server to %s", got)
+	}
+}
+
+// The recommended location has one server: when it keeps failing, a
+// stand-in of another location takes over, is not saved as the choice,
+// and gives way to the recommended server once its avoidance is over.
+func TestRecommendedLocationUsesAStandIn(t *testing.T) {
+	noRedialWait(t)
+	f := newFailoverFixture(t, nil)
+	clock := time.Now()
+	f.failover.now = func() time.Time { return clock }
+	location := f.c.location
+	rec, standIn := location[0], location[2]
+	f.c.location = []Candidate{rec}
+	f.c.fallback = func() []Candidate { return []Candidate{standIn} }
+	if err := SaveSelection(f.failover.selectionFile, rec); err != nil {
+		t.Fatal(err)
+	}
+	for range serverFailoverStrikes {
+		f.breakSession(t)
+	}
+	if got := f.c.currentServer().Addr; got != standIn.Addr {
+		t.Fatalf("on %s, want the stand-in %s", got, standIn.Addr)
+	}
+	if got := f.persisted(t); got != rec.Addr {
+		t.Fatalf("persisted %s; the stand-in must not be saved", got)
+	}
+	if next, ok := f.failover.Instead(f.c.location, f.c.fallback(), rec); !ok || next.Addr != standIn.Addr {
+		t.Fatalf("a new connection while the server is avoided: %s %v", next.Addr, ok)
+	}
+
+	f.breakSession(t)
+	if got := f.c.currentServer().Addr; got != standIn.Addr {
+		t.Fatalf("returned to %s while it is avoided", got)
+	}
+	clock = clock.Add(serverAvoidTime)
+	f.breakSession(t)
+	if got := f.c.currentServer().Addr; got != rec.Addr {
+		t.Fatalf("on %s after the avoidance; want the recommended server back", got)
 	}
 }
 
@@ -393,7 +479,7 @@ func TestAvoidedServerIsSkippedUntilItsTimeIsUp(t *testing.T) {
 		var next Candidate
 		var ok bool
 		for i := 1; i <= serverFailoverStrikes; i++ {
-			next, ok = f.Failed(location, server, errServerReset)
+			next, ok = f.Failed(location, nil, server, errServerReset)
 			if ok != (i == serverFailoverStrikes) {
 				t.Fatalf("failure %d of %s: switched=%v", i, server.Addr, ok)
 			}
@@ -456,7 +542,7 @@ func TestRecommendedLocationFailsOverWithinItself(t *testing.T) {
 	f := NewServerFailover("")
 	var next Candidate
 	for range serverFailoverStrikes {
-		next, _ = f.Failed(location, location[0], errServerReset)
+		next, _ = f.Failed(location, nil, location[0], errServerReset)
 	}
 	if next.Addr != "rec2.example:2499" {
 		t.Fatalf("next %q, want the other recommended server", next.Addr)

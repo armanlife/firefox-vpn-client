@@ -326,6 +326,34 @@ func (u *engineUpstream) OpenTunnelForClient(authority, clientKey string) (net.C
 	return releasingConn(conn, release), nil
 }
 
+// OpenUDP opens a UDP tunnel through the controller, and keeps the engine
+// awake while it is open.
+func (u *engineUpstream) OpenUDP(authority, clientKey string) (proxy.UDPTunnel, error) {
+	c, release, err := u.d.useController(u.engine, wakeForClient)
+	if err != nil {
+		return nil, err
+	}
+	tunnel, err := c.OpenUDP(authority, clientKey)
+	if err != nil {
+		release()
+		return nil, err
+	}
+	return &releaseUDPTunnel{UDPTunnel: tunnel, release: release}, nil
+}
+
+// releaseUDPTunnel calls release when the tunnel closes.
+type releaseUDPTunnel struct {
+	proxy.UDPTunnel
+	release func()
+	once    sync.Once
+}
+
+func (t *releaseUDPTunnel) Close() error {
+	err := t.UDPTunnel.Close()
+	t.once.Do(t.release)
+	return err
+}
+
 // releasingConn calls release when conn closes, keeping half-close.
 func releasingConn(conn net.Conn, release func()) net.Conn {
 	r := &releaseConn{Conn: conn, release: release}

@@ -16,6 +16,34 @@ String withPort(String listen, int port) {
   return '${host.isEmpty ? '127.0.0.1' : host}:$port';
 }
 
+/// The host and port of an address as typed or pasted: without spaces and a
+/// scheme (socks5://), IPv6 without its brackets. No port is an empty one.
+(String, String) splitAddress(String address) {
+  var s = address.replaceAll(RegExp(r'\s'), '');
+  final scheme = s.indexOf('://');
+  if (scheme >= 0) s = s.substring(scheme + 3);
+  if (s.endsWith('/')) s = s.substring(0, s.length - 1);
+  if (s.startsWith('[')) {
+    final end = s.indexOf(']');
+    if (end < 0) return (s.substring(1), '');
+    final rest = s.substring(end + 1);
+    return (s.substring(1, end), rest.startsWith(':') ? rest.substring(1) : '');
+  }
+  final colon = s.indexOf(':');
+  // More than one colon: IPv6, without a port.
+  if (colon < 0 || colon != s.lastIndexOf(':')) return (s, '');
+  return (s.substring(0, colon), s.substring(colon + 1));
+}
+
+/// The address the core takes (config.ValidateUpstreamProxy) of a host and a
+/// port; empty for neither.
+String joinAddress(String host, String port) {
+  final h = host.replaceAll(RegExp(r'\s'), '');
+  final p = port.replaceAll(RegExp(r'\s'), '');
+  if (h.isEmpty && p.isEmpty) return '';
+  return h.contains(':') ? '[$h]:$p' : '$h:$p';
+}
+
 /// A loopback port nothing listens on, near [after] so it is easy to
 /// remember; a port from the system when none of those is free.
 Future<int> findFreePort(int after) async {

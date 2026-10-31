@@ -156,8 +156,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addAccount => '添加账户';
 
   @override
-  String lowQuotaNotice(String left, String size) {
-    return '当前账户的流量快用完了（剩余 $left）。再添加一个账户，可再获得 $size。';
+  String lowQuotaNotice(String size) {
+    return '此账户的流量快用完了。再添加一个账户，可再获得 $size。';
   }
 
   @override
@@ -165,6 +165,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noAccountsHint => '添加 Firefox 账户即可连接。';
+
+  @override
+  String get delayTestFailed => '无法测量服务器延迟。请检查网络。';
 
   @override
   String get createAccountTitle => '还没有 Firefox 账户？';
@@ -298,6 +301,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get close => '关闭';
+
+  @override
+  String get noBrowserTitle => '此设备没有浏览器';
+
+  @override
+  String get noBrowserText => '请在手机或电脑上打开此地址：';
 
   @override
   String get cancel => '取消';
@@ -628,8 +637,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get noticeCommand =>
-      '有应用使用了 UDP（游戏、语音和视频通话等）。Mozilla 代理仅支持 TCP，因此无法通过。';
+  String get noticeCommand => 'VPN 不支持此类连接。';
 
   @override
   String noticeTimes(int count, String time) {
@@ -815,6 +823,65 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sectionAdvanced => '高级';
 
   @override
+  String get tlsFragment => 'TLS 分片';
+
+  @override
+  String get tlsFragmentOff => '关闭';
+
+  @override
+  String get tlsFragmentFirstByte => '首字节';
+
+  @override
+  String get tlsFragmentSni => '服务器名称 (SNI)';
+
+  @override
+  String get tlsFragmentFirstByteHint => '在首字节处拆分 TLS 头部 (0x16)';
+
+  @override
+  String get tlsFragmentSniHint => '将服务器名称 (SNI) 拆分到多个 TCP 数据包';
+
+  @override
+  String get tlsFragmentOffHint => '普通 TLS 连接';
+
+  @override
+  String get sectionBypass => '如果 Mozilla 被封锁';
+
+  @override
+  String get apiRelay => '中继服务器';
+
+  @override
+  String get apiRelayHint =>
+      '你自己的 Cloudflare Worker，或你自己主机上的 relay.php。\n仅在 Mozilla 无法直接应答时使用：登录、账户和服务器列表经过它，VPN 流量不经过。';
+
+  @override
+  String get upstreamProxy => '上游代理';
+
+  @override
+  String get upstreamProxyOn => '上游代理已开启';
+
+  @override
+  String get upstreamProxyAddress => 'SOCKS5 代理地址';
+
+  @override
+  String get upstreamProxyPort => '端口';
+
+  @override
+  String get upstreamProxyHint =>
+      '与 Mozilla 的连接通过此代理，适用于封锁或限速 Mozilla 的网络。\n如果代理运行在本设备上，请将其排除在 VPN 之外。';
+
+  @override
+  String get upstreamProxyInvalid => '请输入代理地址，例如 127.0.0.1。';
+
+  @override
+  String get upstreamProxyInvalidPort => '请输入 1 到 65535 之间的端口。';
+
+  @override
+  String get upstreamProxyOwn => '这是本应用自己的代理。请输入其他代理。';
+
+  @override
+  String get apiRelayInvalid => '必须是 https:// 地址。';
+
+  @override
   String get listenAddress => '允许连接的设备';
 
   @override
@@ -940,6 +1007,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get updateAllowInstall => '请允许 Firefox VPN 安装应用，然后再次点击“更新”。';
+
+  @override
   String updateInstalling(String version) {
     return '正在安装版本 $version，应用将关闭并重新打开。';
   }
@@ -960,10 +1030,14 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get autoUpdate => '自动更新';
+  String get sectionUpdates => '更新';
 
   @override
-  String get autoUpdateHint => '新版本会在后台下载，并在下次打开应用时安装。';
+  String get inAppUpdates => '在应用内更新';
+
+  @override
+  String get inAppUpdatesHint =>
+      '新版本在后台下载，并打开 Android 的安装程序。\n关闭时：“下载”按钮会打开浏览器。';
 
   @override
   String get repoNotSet => '尚未设置 GitHub 仓库。';
@@ -993,6 +1067,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get groupApp => '应用';
 
   @override
+  String get groupServersAccounts => '服务器和账户';
+
+  @override
+  String get groupNetwork => '网络';
+
+  @override
   String get stateOff => '已断开';
 
   @override
@@ -1000,6 +1080,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tapToDisconnectPhone => '点击断开';
+
+  @override
+  String get tapToConnectTv => '按 OK 键连接';
+
+  @override
+  String get tapToDisconnectTv => '按 OK 键断开';
 
   @override
   String lanAddress(String address) {
@@ -1033,7 +1119,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connectRetrying => '无法连接。请检查网络。';
 
   @override
-  String get failUnreachable => 'Mozilla 服务器在此网络上被屏蔽。请换一个网络连接试试。';
+  String get failUnreachable => '无法连接到 Mozilla 的服务器。请尝试其他网络。';
+
+  @override
+  String get failUpstreamProxy => '无法通过上游代理连接到 Mozilla。请检查代理是否正在运行。';
+
+  @override
+  String get failInsideVpn => '此网络已经通过 VPN。请将其关闭。';
 
   @override
   String get failRefused => 'Mozilla 服务器拒绝了连接。请几分钟后再试。';
@@ -1339,19 +1431,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String udpNoticeBody(String program) {
-    return '$program 试图拨打电话或在线游戏，但在 TUN 模式下这类流量（UDP）无法经过 VPN。';
+    return '$program 的 UDP 流量无法经过 VPN。';
   }
-
-  @override
-  String get udpNoticeAction => '让它的 UDP 直连';
 
   @override
   String get dontShowAgain => '不再显示';
-
-  @override
-  String udpDirectAdded(String program) {
-    return '$program：其 UDP 现在直连。';
-  }
 
   @override
   String get addRunningProgram => '从正在运行的程序中选择';
@@ -1574,8 +1658,8 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get addAccount => '新增帳號';
 
   @override
-  String lowQuotaNotice(String left, String size) {
-    return '目前帳號的流量快用完了（剩餘 $left）。再新增一個帳號，可再獲得 $size。';
+  String lowQuotaNotice(String size) {
+    return '此帳號的流量快用完了。再新增一個帳號，可再獲得 $size。';
   }
 
   @override
@@ -1583,6 +1667,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get noAccountsHint => '新增一個 Firefox Account 以連線。';
+
+  @override
+  String get delayTestFailed => '無法測量伺服器延遲。請檢查網路。';
 
   @override
   String get createAccountTitle => '還沒有 Firefox Account？';
@@ -1715,6 +1802,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get close => '關閉';
+
+  @override
+  String get noBrowserTitle => '此裝置沒有瀏覽器';
+
+  @override
+  String get noBrowserText => '請在手機或電腦上開啟此位址：';
 
   @override
   String get cancel => '取消';
@@ -2045,8 +2138,7 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get noticeCommand =>
-      '有應用程式要求使用 UDP（遊戲、語音和視訊通話）。Mozilla 的代理只傳輸 TCP，因此無法通過。';
+  String get noticeCommand => 'VPN 不支援此類連線。';
 
   @override
   String noticeTimes(int count, String time) {
@@ -2231,6 +2323,65 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get sectionAdvanced => '進階';
 
   @override
+  String get tlsFragment => 'TLS 分片';
+
+  @override
+  String get tlsFragmentOff => '關閉';
+
+  @override
+  String get tlsFragmentFirstByte => '首位元組';
+
+  @override
+  String get tlsFragmentSni => '伺服器名稱 (SNI)';
+
+  @override
+  String get tlsFragmentFirstByteHint => '在首位元組處拆分 TLS 標頭 (0x16)';
+
+  @override
+  String get tlsFragmentSniHint => '將伺服器名稱 (SNI) 拆分到多個 TCP 封包';
+
+  @override
+  String get tlsFragmentOffHint => '一般 TLS 連線';
+
+  @override
+  String get sectionBypass => '如果 Mozilla 被封鎖';
+
+  @override
+  String get apiRelay => '中繼伺服器';
+
+  @override
+  String get apiRelayHint =>
+      '你自己的 Cloudflare Worker，或你自己主機上的 relay.php。\n僅在 Mozilla 無法直接回應時使用：登入、帳戶和伺服器清單經過它，VPN 流量不經過。';
+
+  @override
+  String get upstreamProxy => '上游代理';
+
+  @override
+  String get upstreamProxyOn => '上游代理已開啟';
+
+  @override
+  String get upstreamProxyAddress => 'SOCKS5 代理位址';
+
+  @override
+  String get upstreamProxyPort => '連接埠';
+
+  @override
+  String get upstreamProxyHint =>
+      '與 Mozilla 的連線會經過此代理，適用於封鎖或限速 Mozilla 的網路。\n如果代理在本裝置上執行，請將其排除在 VPN 之外。';
+
+  @override
+  String get upstreamProxyInvalid => '請輸入代理位址，例如 127.0.0.1。';
+
+  @override
+  String get upstreamProxyInvalidPort => '請輸入 1 到 65535 之間的連接埠。';
+
+  @override
+  String get upstreamProxyOwn => '這是本應用程式自己的代理。請輸入其他代理。';
+
+  @override
+  String get apiRelayInvalid => '必須是 https:// 位址。';
+
+  @override
   String get listenAddress => '允許連線的裝置';
 
   @override
@@ -2356,6 +2507,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
+  String get updateAllowInstall => '請允許 Firefox VPN 安裝應用程式，然後再次按「更新」。';
+
+  @override
   String updateInstalling(String version) {
     return '正在安裝版本 $version，應用程式將關閉並重新開啟。';
   }
@@ -2376,10 +2530,14 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get autoUpdate => '自動更新';
+  String get sectionUpdates => '更新';
 
   @override
-  String get autoUpdateHint => '新版本會在背景下載，並在下次開啟應用程式時安裝。';
+  String get inAppUpdates => '在應用程式內更新';
+
+  @override
+  String get inAppUpdatesHint =>
+      '新版本在背景下載，並開啟 Android 的安裝程式。\n關閉時：「下載」按鈕會開啟瀏覽器。';
 
   @override
   String get repoNotSet => '尚未設定 GitHub 儲存庫。';
@@ -2409,6 +2567,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get groupApp => '應用程式';
 
   @override
+  String get groupServersAccounts => '伺服器和帳戶';
+
+  @override
+  String get groupNetwork => '網路';
+
+  @override
   String get stateOff => '未連線';
 
   @override
@@ -2416,6 +2580,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get tapToDisconnectPhone => '輕觸以中斷連線';
+
+  @override
+  String get tapToConnectTv => '按 OK 鍵連線';
+
+  @override
+  String get tapToDisconnectTv => '按 OK 鍵中斷連線';
 
   @override
   String lanAddress(String address) {
@@ -2449,7 +2619,13 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get connectRetrying => '無法連線。請檢查網路。';
 
   @override
-  String get failUnreachable => 'Mozilla 伺服器在此網路上遭封鎖。請改用其他網路連線。';
+  String get failUnreachable => '無法連線到 Mozilla 的伺服器。請嘗試其他網路。';
+
+  @override
+  String get failUpstreamProxy => '無法透過上游代理連線到 Mozilla。請檢查代理是否正在執行。';
+
+  @override
+  String get failInsideVpn => '此網路已經通過 VPN。請將其關閉。';
 
   @override
   String get failRefused => 'Mozilla 伺服器拒絕了連線。請幾分鐘後再試。';
@@ -2758,19 +2934,11 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String udpNoticeBody(String program) {
-    return '$program 試圖撥打電話或線上遊戲，但在 TUN 模式下這類流量（UDP）無法經過 VPN。';
+    return '$program 的 UDP 流量無法經過 VPN。';
   }
-
-  @override
-  String get udpNoticeAction => '讓它的 UDP 直接連線';
 
   @override
   String get dontShowAgain => '不再顯示';
-
-  @override
-  String udpDirectAdded(String program) {
-    return '$program：其 UDP 現在直接連線。';
-  }
 
   @override
   String get addRunningProgram => '從正在執行的程式中選擇';

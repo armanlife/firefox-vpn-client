@@ -41,7 +41,11 @@ Future<void> main(List<String> args) async {
         : null,
   )..start();
   // Back in front: the core tries again at once, not after a wait.
-  AppLifecycleListener(onResume: core.retryNow);
+  AppLifecycleListener(
+    onResume: core.retryNow,
+    onShow: () => core.onScreen = true,
+    onHide: () => core.onScreen = false,
+  );
   final navigatorKey = GlobalKey<NavigatorState>();
   // Before the desktop's: a version installed at the start goes first.
   Updates.start(core, settings, args: args);
@@ -79,7 +83,11 @@ Future<void> runAndroid() async {
     AndroidCore(dataDir).connect,
     turnOn: AndroidCore.setOn,
   )..start();
-  AppLifecycleListener(onResume: core.retryNow);
+  AppLifecycleListener(
+    onResume: core.retryNow,
+    onShow: () => core.onScreen = true,
+    onHide: () => core.onScreen = false,
+  );
   Updates.start(core, settings);
   runApp(VpnApp(core: core, settings: settings));
 }

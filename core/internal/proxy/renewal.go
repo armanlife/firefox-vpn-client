@@ -475,6 +475,10 @@ func (c *Controller) replaceSessionLocked(failed *managedSession, cause error) (
 			if wait := c.redialBackoff.wait(redialSteps, now); wait > 0 {
 				return false, c.redialBackoff.coolingDown(wait)
 			}
+			// On a stand-in, a rebuild goes back to the location's own
+			// server when its avoidance is over; the failure that brought
+			// the rebuild was the stand-in's and is not counted against it.
+			returned := c.returnToLocation()
 			from := c.currentServer()
 			err := c.redialLocked(token, expiresAt)
 			c.redialBackoff.record(now, cause, err)
@@ -484,7 +488,7 @@ func (c *Controller) replaceSessionLocked(failed *managedSession, cause error) (
 				// counts (dialSession), else the session it replaced, when
 				// that broke on the server. Past serverFailoverStrikes the
 				// next server of the location replaces the new session too.
-				if failed != nil && c.currentServer().Addr == from.Addr && c.failOver(from, cause) {
+				if !returned && failed != nil && c.currentServer().Addr == from.Addr && c.failOver(from, cause) {
 					nextErr := c.redialLocked(token, expiresAt)
 					c.redialBackoff.record(now, cause, nextErr)
 					if nextErr != nil {

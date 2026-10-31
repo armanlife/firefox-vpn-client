@@ -17,18 +17,40 @@ import (
 	"golang.org/x/net/http2"
 
 	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
+	"github.com/armanlife/firefox-vpn-client/core/internal/hellosplit"
 	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
 	"github.com/armanlife/firefox-vpn-client/core/internal/resolver"
 )
 
+// The keepalive PINGs the connection this often and waits this long for
+// the answer: a connection the network stopped carrying (some cut the
+// connection to a server every minute or so) is found within about 15
+// seconds, while the tunnels on it wait. Tests shorten them.
+var (
+	upstreamKeepAliveInterval    = 5 * time.Second
+	upstreamKeepAlivePingTimeout = 5 * time.Second
+)
+
 const (
-	upstreamKeepAliveInterval    = 10 * time.Second
-	upstreamKeepAlivePingTimeout = 10 * time.Second
 	// upstreamKeepAliveMisses is how many PINGs in a row must go
-	// unanswered before the session counts as dead: on a busy phone link
-	// one PING can wait behind a video's data, and a false alarm moves new
-	// tunnels to a new session.
+	// unanswered before the session counts as dead. A PING that waits
+	// behind a video's data on a busy phone link is no miss: data arriving
+	// meanwhile shows the connection alive (watchedConn).
 	upstreamKeepAliveMisses = 2
+	// An upload fills the link's queue, and the answer to a PING behind it
+	// may take many seconds while nothing arrives. upstreamBusyWrite is how
+	// much must have left since data last arrived to think so, and
+	// upstreamBusyGrace how long that may go on, for a connection that died
+	// during an upload.
+	upstreamBusyWrite = 256 << 10
+	upstreamBusyGrace = 45 * time.Second
+	// upstreamStreamWindow is how much a server may send on one tunnel ahead of
+	// what arrived here. Every tunnel shares one connection, so the answer to a
+	// new one comes behind all of it: the default 4 MiB makes a new connection
+	// wait seconds beside a download (SESSIONS.md). One tunnel's speed is at most
+	// this per round trip. Several tunnels add up: the connection's window stays
+	// large, since a client that stopped reading holds on to its share of it.
+	upstreamStreamWindow = 1 << 20
 )
 
 var errProxyHTTP2Unavailable = errors.New("proxy did not negotiate HTTP/2")
@@ -36,6 +58,8 @@ var errProxyHTTP2Unavailable = errors.New("proxy did not negotiate HTTP/2")
 type h2ProxySession struct {
 	raw       *tls.Conn
 	cc        *http2.ClientConn
+	watched   *watchedConn
+	opened    time.Time
 	proxyHost string
 	token     string
 	timeout   time.Duration
@@ -75,34 +99,15 @@ func dialH2ProxySession(proxyURL *url.URL, token string, timeout time.Duration) 
 		dialCtx, cancelDial = context.WithTimeout(context.Background(), timeout)
 	}
 	defer cancelDial()
-	raw, err := resolver.Dial(dialCtx, "tcp", proxyHost)
+	proxyTLS, raw, err := dialUpstreamTLS(dialCtx, proxyURL, proxyHost)
 	if err != nil {
 		return nil, err
 	}
-	proxyTLS := tls.Client(raw, &tls.Config{
-		RootCAs:    upstreamRoots.Load(),
-		ServerName: proxyURL.Hostname(),
-		MinVersion: tls.VersionTLS12,
-		NextProtos: []string{"h2"},
-	})
-	if err := proxyTLS.HandshakeContext(dialCtx); err != nil {
-		_ = raw.Close()
-		return nil, err
-	}
 
-	if proxyTLS.ConnectionState().NegotiatedProtocol != "h2" {
+	transport, err := newUpstreamH2Transport()
+	if err != nil {
 		_ = proxyTLS.Close()
-		return nil, errProxyHTTP2Unavailable
-	}
-
-	transport := &http2.Transport{
-		// A new tunnel waits for a free stream when the server's
-		// MAX_CONCURRENT_STREAMS is reached, rather than failing as if the
-		// connection were gone.
-		StrictMaxConcurrentStreams: true,
-		ReadIdleTimeout:            30 * time.Second,
-		PingTimeout:                15 * time.Second,
-		WriteByteTimeout:           30 * time.Second,
+		return nil, err
 	}
 	cc, err := transport.NewClientConn(proxyTLS)
 	if err != nil {
@@ -114,6 +119,8 @@ func dialH2ProxySession(proxyURL *url.URL, token string, timeout time.Duration) 
 	session := &h2ProxySession{
 		raw:           proxyTLS,
 		cc:            cc,
+		watched:       raw,
+		opened:        time.Now(),
 		proxyHost:     proxyHost,
 		token:         token,
 		timeout:       timeout,
@@ -123,6 +130,55 @@ func dialH2ProxySession(proxyURL *url.URL, token string, timeout time.Duration) 
 	go session.runKeepAlive(ctx)
 
 	return session, nil
+}
+
+// newUpstreamH2Transport is the HTTP/2 client of a session to Mozilla.
+func newUpstreamH2Transport() (*http2.Transport, error) {
+	transport, err := http2.ConfigureTransports(&http.Transport{
+		HTTP2: &http.HTTP2Config{MaxReceiveBufferPerStream: upstreamStreamWindow},
+	})
+	if err != nil {
+		return nil, err
+	}
+	// A new tunnel waits for a free stream when the server's
+	// MAX_CONCURRENT_STREAMS is reached, rather than failing as if the
+	// connection were gone.
+	transport.StrictMaxConcurrentStreams = true
+	transport.ReadIdleTimeout = 30 * time.Second
+	transport.PingTimeout = 15 * time.Second
+	transport.WriteByteTimeout = 30 * time.Second
+	return transport, nil
+}
+
+// upstreamTLSSessions lets a new connection to a server resume TLS, which
+// saves the time of a whole handshake when the network cuts connections and
+// the program reconnects.
+var upstreamTLSSessions = tls.NewLRUClientSessionCache(32)
+
+// dialUpstreamTLS connects to proxyHost and completes TLS with proxyURL's
+// name, for HTTP/2.
+func dialUpstreamTLS(ctx context.Context, proxyURL *url.URL, proxyHost string) (*tls.Conn, *watchedConn, error) {
+	dialed, err := resolver.Dial(ctx, "tcp", proxyHost)
+	if err != nil {
+		return nil, nil, err
+	}
+	raw := newWatchedConn(hellosplit.Wrap(dialed))
+	proxyTLS := tls.Client(raw, &tls.Config{
+		RootCAs:            upstreamRoots.Load(),
+		ServerName:         proxyURL.Hostname(),
+		MinVersion:         tls.VersionTLS12,
+		NextProtos:         []string{"h2"},
+		ClientSessionCache: upstreamTLSSessions,
+	})
+	if err := proxyTLS.HandshakeContext(ctx); err != nil {
+		_ = raw.Close()
+		return nil, nil, err
+	}
+	if proxyTLS.ConnectionState().NegotiatedProtocol != "h2" {
+		_ = proxyTLS.Close()
+		return nil, nil, errProxyHTTP2Unavailable
+	}
+	return proxyTLS, raw, nil
 }
 
 // runKeepAlive pings the upstream connection periodically so a silently
@@ -138,6 +194,7 @@ func (s *h2ProxySession) runKeepAlive(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			sent := time.Now()
 			pingCtx, cancel := context.WithTimeout(ctx, upstreamKeepAlivePingTimeout)
 			err := s.cc.Ping(pingCtx)
 			cancel()
@@ -148,12 +205,23 @@ func (s *h2ProxySession) runKeepAlive(ctx context.Context) {
 			if ctx.Err() != nil {
 				return
 			}
-			if misses++; misses < upstreamKeepAliveMisses && !s.cc.State().Closed {
+			closed := s.cc.State().Closed
+			if !closed && (s.watched.readSince(sent) || s.watched.uploading()) {
+				// Busy, not dead: data came while the PING waited, or it
+				// waits behind an upload.
+				misses = 0
+				continue
+			}
+			if misses++; misses < upstreamKeepAliveMisses && !closed {
 				logx.Debug("upstream HTTP/2 keepalive PING unanswered proxy=%s misses=%d err=%s", s.proxyHost, misses, logx.Err(err))
 				continue
 			}
 			s.alive.Store(false)
-			logx.Warn("upstream HTTP/2 keepalive failed proxy=%s err=%s", s.proxyHost, logx.Err(err))
+			reportConnectionLost(s.proxyHost, s.watched.RemoteAddr(), time.Since(s.opened), s.cc.State().StreamsActive, s.watched.failure(), err)
+			// The tunnels waiting on the dead connection fail now and
+			// are retried on a new session, instead of waiting out
+			// their CONNECT timeout.
+			_ = s.cc.Close()
 			return
 		}
 	}

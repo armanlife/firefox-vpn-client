@@ -157,12 +157,9 @@
     }
   },
   "addAccount": "Add account",
-  "lowQuotaNotice": "The current account is running out of data ({left} left). Add another account to get {size} more.",
+  "lowQuotaNotice": "This account is running out of data. Add another account to get {size} more.",
   "@lowQuotaNotice": {
     "placeholders": {
-      "left": {
-        "type": "String"
-      },
       "size": {
         "type": "String"
       }
@@ -170,6 +167,7 @@
   },
   "noAccounts": "No accounts yet",
   "noAccountsHint": "Add a Firefox Account to connect.",
+  "delayTestFailed": "Couldn't measure the servers' delay. Check your internet.",
   "createAccountTitle": "Don't have a Firefox Account?",
   "createAccountHint": "Create one for free at accounts.firefox.com, then come back and press Add account.",
   "moveUp": "Move up",
@@ -252,6 +250,8 @@
   "continueLabel": "Continue",
   "done": "Done",
   "close": "Close",
+  "noBrowserTitle": "No browser on this device",
+  "noBrowserText": "Open this address on your phone or computer:",
   "cancel": "Cancel",
   "tryAgain": "Try again",
   "signingIn": "Signing in…",
@@ -436,7 +436,7 @@
       }
     }
   },
-  "noticeCommand": "An app asked for UDP (games, voice and video calls). Mozilla's proxy carries TCP only, so it cannot go through.",
+  "noticeCommand": "This type of connection isn't supported by the VPN.",
   "noticeTimes": "{count} times, last {time}",
   "@noticeTimes": {
     "placeholders": {
@@ -535,6 +535,25 @@
   },
   "portRefusedNote": "Mozilla's proxy does not connect to this port.",
   "sectionAdvanced": "Advanced",
+  "tlsFragment": "TLS fragmentation",
+  "tlsFragmentOff": "Off",
+  "tlsFragmentFirstByte": "First byte",
+  "tlsFragmentSni": "Server name (SNI)",
+  "tlsFragmentFirstByteHint": "Splits the TLS header at the first byte (0x16)",
+  "tlsFragmentSniHint": "Splits the server name (SNI) across TCP packets",
+  "tlsFragmentOffHint": "Normal TLS connection",
+  "sectionBypass": "If Mozilla is blocked",
+  "apiRelay": "Relay server",
+  "apiRelayHint": "Your own Cloudflare Worker, or relay.php on your own host.\nUsed only when Mozilla doesn't answer directly: the sign-in, accounts, and server list go through it, not the VPN traffic.",
+  "upstreamProxy": "Upstream proxy",
+  "upstreamProxyOn": "Upstream proxy is on",
+  "upstreamProxyAddress": "SOCKS5 proxy address",
+  "upstreamProxyPort": "Port",
+  "upstreamProxyHint": "The connection to Mozilla goes through this proxy, for networks that block or slow Mozilla.\nIf the proxy runs on this device, leave it out of the VPN.",
+  "upstreamProxyInvalid": "Enter the proxy's address, such as 127.0.0.1.",
+  "upstreamProxyInvalidPort": "Enter a port from 1 to 65535.",
+  "upstreamProxyOwn": "That's this app's own proxy. Enter another one.",
+  "apiRelayInvalid": "Must be an https:// address.",
   "listenAddress": "Listen on",
   "listenLocal": "127.0.0.1 · this device only",
   "listenAll": "0.0.0.0 · all networks (LAN)",
@@ -624,6 +643,7 @@
       }
     }
   },
+  "updateAllowInstall": "Allow Firefox VPN to install apps, then press Update again.",
   "updateInstalling": "Installing version {version}. The app will close and open again.",
   "@updateInstalling": {
     "placeholders": {
@@ -656,8 +676,9 @@
       }
     }
   },
-  "autoUpdate": "Update automatically",
-  "autoUpdateHint": "New versions download in the background and install the next time the app opens.",
+  "sectionUpdates": "Updates",
+  "inAppUpdates": "Update in the app",
+  "inAppUpdatesHint": "New versions download in the background and Android's installer opens.\nOff: the Download button opens the browser.",
   "repoNotSet": "The GitHub repository is not set yet.",
   "sourceCode": "Source code",
   "tapToConnect": "Click to connect",
@@ -667,9 +688,16 @@
   "proxyServiceActive": "Proxy service active",
   "navHome": "Home",
   "groupApp": "App",
+  "groupServersAccounts": "Servers and accounts",
+  "groupNetwork": "Network",
   "stateOff": "Disconnected",
   "tapToConnectPhone": "Tap to connect",
   "tapToDisconnectPhone": "Tap to disconnect",
+  "tapToConnectTv": "Press OK to connect",
+  "@tapToConnectTv": {
+    "description": "Under the switch on a TV, worked with a remote: its middle button is OK."
+  },
+  "tapToDisconnectTv": "Press OK to disconnect",
   "lanAddress": "LAN {address}",
   "@lanAddress": {
     "placeholders": {
@@ -693,7 +721,9 @@
   "dataUsedTitle": "Data used",
   "bypassApps": "Per-app proxy",
   "connectRetrying": "Couldn't connect. Check your internet.",
-  "failUnreachable": "Mozilla's servers are blocked on this internet. Try another internet connection.",
+  "failUnreachable": "Couldn't reach Mozilla's servers. Try another internet connection.",
+  "failUpstreamProxy": "Couldn't reach Mozilla through your upstream proxy. Check that it's running.",
+  "failInsideVpn": "This internet already goes through a VPN. Turn it off.",
   "failRefused": "Mozilla's server refused the connection. Try again in a few minutes.",
   "failLocationRefused": "This country isn't open to your account. Choose another country.",
   "useRecommendedLocation": "Use the recommended location",
@@ -892,7 +922,7 @@
   "tunProgramUdp": "UDP only",
   "tunProgramUdpHint": "Only its UDP connects directly; the rest goes through the VPN.",
   "udpNoticeSetting": "Notice when UDP is blocked",
-  "udpNoticeBody": "{program} tried to make a call or play online, but in TUN mode that traffic (UDP) can't go through the VPN.",
+  "udpNoticeBody": "{program}'s UDP traffic can't go through the VPN.",
   "@udpNoticeBody": {
     "description": "A card on the home page in TUN mode when a program's UDP was refused.",
     "placeholders": {
@@ -902,17 +932,7 @@
       }
     }
   },
-  "udpNoticeAction": "Send its UDP directly",
   "dontShowAgain": "Don't show again",
-  "udpDirectAdded": "{program}: its UDP now connects directly.",
-  "@udpDirectAdded": {
-    "placeholders": {
-      "program": {
-        "type": "String",
-        "example": "Telegram"
-      }
-    }
-  },
   "addRunningProgram": "From running programs",
   "@addRunningProgram": {
     "description": "TUN settings, Add program: the first of three ways (then a file, then a name)."

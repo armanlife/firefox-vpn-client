@@ -211,6 +211,9 @@ class CoreApi {
     await _json('POST', '/api/test', const {}, _slow),
   );
 
+  /// Measures the delay again; [status] shows it.
+  Future<void> delay() => _json('POST', '/api/delay', const {}, _slow);
+
   Future<void> restartProxy() => _json('POST', '/api/proxy/restart', const {});
 
   Future<void> activateAccount(String id) =>

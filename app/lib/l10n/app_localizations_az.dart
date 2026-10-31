@@ -158,8 +158,8 @@ class AppLocalizationsAz extends AppLocalizations {
   String get addAccount => 'Hesab əlavə et';
 
   @override
-  String lowQuotaNotice(String left, String size) {
-    return 'Cari hesabın trafiki bitmək üzrədir ($left qalıb). Daha bir hesab əlavə etsəniz, $size əlavə trafikiniz olacaq.';
+  String lowQuotaNotice(String size) {
+    return 'Bu hesabın trafiki bitmək üzrədir. Daha bir hesab əlavə etsəniz, $size əlavə trafikiniz olacaq.';
   }
 
   @override
@@ -167,6 +167,10 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get noAccountsHint => 'Qoşulmaq üçün Firefox Account əlavə edin.';
+
+  @override
+  String get delayTestFailed =>
+      'Serverlərin gecikməsi ölçülə bilmədi. İnterneti yoxlayın.';
 
   @override
   String get createAccountTitle => 'Firefox Account hesabınız yoxdur?';
@@ -304,6 +308,13 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get close => 'Bağla';
+
+  @override
+  String get noBrowserTitle => 'Bu cihazda brauzer yoxdur';
+
+  @override
+  String get noBrowserText =>
+      'Bu ünvanı telefonunuzda və ya kompüterinizdə açın:';
 
   @override
   String get cancel => 'Ləğv et';
@@ -645,8 +656,7 @@ class AppLocalizationsAz extends AppLocalizations {
   }
 
   @override
-  String get noticeCommand =>
-      'Bir tətbiq UDP istifadə etmək istədi (oyunlar, səsli və görüntülü zənglər). Mozilla-nın proksisi yalnız TCP ötürür, ona görə bu trafik keçə bilmir.';
+  String get noticeCommand => 'Bu bağlantı növü VPN-də dəstəklənmir.';
 
   @override
   String noticeTimes(int count, String time) {
@@ -835,6 +845,69 @@ class AppLocalizationsAz extends AppLocalizations {
   String get sectionAdvanced => 'Əlavə';
 
   @override
+  String get tlsFragment => 'TLS fraqmentasiyası';
+
+  @override
+  String get tlsFragmentOff => 'Söndürülüb';
+
+  @override
+  String get tlsFragmentFirstByte => 'Birinci bayt';
+
+  @override
+  String get tlsFragmentSni => 'Server adı (SNI)';
+
+  @override
+  String get tlsFragmentFirstByteHint =>
+      'TLS başlığını birinci baytda bölür (0x16)';
+
+  @override
+  String get tlsFragmentSniHint =>
+      'Server adını (SNI) bir neçə TCP paketinə bölür';
+
+  @override
+  String get tlsFragmentOffHint => 'Adi TLS bağlantısı';
+
+  @override
+  String get sectionBypass => 'Mozilla bloklanıbsa';
+
+  @override
+  String get apiRelay => 'Relay serveri';
+
+  @override
+  String get apiRelayHint =>
+      'Öz Cloudflare Worker-iniz və ya öz hostinqinizdəki relay.php.\nYalnız Mozilla birbaşa cavab vermədikdə istifadə olunur: ondan giriş, hesablar və server siyahısı keçir, VPN trafiki yox.';
+
+  @override
+  String get upstreamProxy => 'Yuxarı proksi';
+
+  @override
+  String get upstreamProxyOn => 'Yuxarı proksi aktivdir';
+
+  @override
+  String get upstreamProxyAddress => 'SOCKS5 proksi ünvanı';
+
+  @override
+  String get upstreamProxyPort => 'Port';
+
+  @override
+  String get upstreamProxyHint =>
+      'Mozilla ilə bağlantı bu proksidən keçir; Mozilla-nı bloklayan və ya yavaşladan şəbəkələr üçün.\nProksi bu cihazdadırsa, onu VPN-dən kənarda saxlayın.';
+
+  @override
+  String get upstreamProxyInvalid =>
+      'Proksi ünvanını daxil edin, məsələn 127.0.0.1.';
+
+  @override
+  String get upstreamProxyInvalidPort => '1-dən 65535-ə qədər port daxil edin.';
+
+  @override
+  String get upstreamProxyOwn =>
+      'Bu, tətbiqin öz proksisidir. Başqasını daxil edin.';
+
+  @override
+  String get apiRelayInvalid => 'https:// ünvanı olmalıdır.';
+
+  @override
   String get listenAddress => 'Proksiyə kim qoşula bilər';
 
   @override
@@ -963,6 +1036,10 @@ class AppLocalizationsAz extends AppLocalizations {
   }
 
   @override
+  String get updateAllowInstall =>
+      'Firefox VPN-ə tətbiq quraşdırmağa icazə verin, sonra yenidən «Yenilə» düyməsini basın.';
+
+  @override
   String updateInstalling(String version) {
     return '$version versiyası quraşdırılır. Tətbiq bağlanıb yenidən açılacaq.';
   }
@@ -983,11 +1060,14 @@ class AppLocalizationsAz extends AppLocalizations {
   }
 
   @override
-  String get autoUpdate => 'Avtomatik yenilə';
+  String get sectionUpdates => 'Yeniləmələr';
 
   @override
-  String get autoUpdateHint =>
-      'Yeni versiyalar arxa planda endirilir və tətbiq növbəti dəfə açılanda quraşdırılır.';
+  String get inAppUpdates => 'Tətbiq daxilində yeniləmə';
+
+  @override
+  String get inAppUpdatesHint =>
+      'Yeni versiyalar arxa planda endirilir və Android quraşdırıcısı açılır.\nSöndürüldükdə: Endir düyməsi brauzeri açır.';
 
   @override
   String get repoNotSet => 'GitHub repozitoriyası hələ təyin edilməyib.';
@@ -1017,6 +1097,12 @@ class AppLocalizationsAz extends AppLocalizations {
   String get groupApp => 'Tətbiq';
 
   @override
+  String get groupServersAccounts => 'Serverlər və hesablar';
+
+  @override
+  String get groupNetwork => 'Şəbəkə';
+
+  @override
   String get stateOff => 'Qoşulmayıb';
 
   @override
@@ -1024,6 +1110,12 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get tapToDisconnectPhone => 'Bağlantını kəsmək üçün toxunun';
+
+  @override
+  String get tapToConnectTv => 'Qoşulmaq üçün OK düyməsini basın';
+
+  @override
+  String get tapToDisconnectTv => 'Bağlantını kəsmək üçün OK düyməsini basın';
 
   @override
   String lanAddress(String address) {
@@ -1059,7 +1151,14 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get failUnreachable =>
-      'Mozilla serverləri bu internetdə bloklanıb. Başqa internet bağlantısını sınayın.';
+      'Mozilla serverlərinə qoşulmaq mümkün olmadı. Başqa internet bağlantısını sınayın.';
+
+  @override
+  String get failUpstreamProxy =>
+      'Yuxarı proksi vasitəsilə Mozilla-ya qoşulmaq mümkün olmadı. Proksinin işlədiyini yoxlayın.';
+
+  @override
+  String get failInsideVpn => 'Bu internet artıq VPN-dən keçir. Onu söndürün.';
 
   @override
   String get failRefused =>
@@ -1393,19 +1492,11 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String udpNoticeBody(String program) {
-    return '$program zəng etməyə və ya onlayn oynamağa çalışdı, lakin TUN rejimində bu trafik (UDP) VPN-dən keçə bilmir.';
+    return '$program proqramının UDP trafiki VPN-dən keçmir.';
   }
-
-  @override
-  String get udpNoticeAction => 'UDP-sini birbaşa göndər';
 
   @override
   String get dontShowAgain => 'Bir daha göstərmə';
-
-  @override
-  String udpDirectAdded(String program) {
-    return '$program: UDP-si artıq birbaşa qoşulur.';
-  }
 
   @override
   String get addRunningProgram => 'İşləyən proqramlardan';

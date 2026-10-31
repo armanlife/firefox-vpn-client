@@ -966,6 +966,7 @@ func (d *Daemon) updateSettings(next config.Config, newPassword *string) (settin
 		return settingsChange{}, errors.New("set a dashboard username and password before opening the dashboard to other devices")
 	}
 	next.Tun.Programs = config.CleanTunPrograms(next.Tun.Programs)
+	next.Network = config.SettleUpstreamProxy(prev.Network, next.Network)
 	// Another region: its preset rules replace the old region's in the
 	// Direct list; the user's own rules stay.
 	if next.Routing.Region != prev.Routing.Region {
@@ -985,8 +986,8 @@ func (d *Daemon) updateSettings(next config.Config, newPassword *string) (settin
 			return settingsChange{}, fmt.Errorf("invalid dns.servers: %w", err)
 		}
 	}
-	if next.Network.APIRelay != prev.Network.APIRelay {
-		if err := configureAPIRelay(next.Network.APIRelay); err != nil {
+	if next.Network != prev.Network {
+		if err := configureAPIRelay(next.Network); err != nil {
 			return settingsChange{}, fmt.Errorf("invalid network.api_relay: %w", err)
 		}
 	}
@@ -1000,8 +1001,7 @@ func (d *Daemon) updateSettings(next config.Config, newPassword *string) (settin
 	logx.Verbose.Store(next.Logging.Verbose || d.forceVerbose)
 	d.mgr.SetPolicy(accounts.Policy{ThresholdPercent: next.Accounts.SwitchThresholdPercent})
 	change := settingsChange{
-		restartEngine: next.Proxy != prev.Proxy || next.Network.APIRelay != prev.Network.APIRelay ||
-			next.Network.GuardianEndpoint != prev.Network.GuardianEndpoint,
+		restartEngine:    next.Proxy != prev.Proxy || next.Network != prev.Network,
 		restartDashboard: next.Dashboard.Listen != prev.Dashboard.Listen,
 	}
 	logx.Info("settings saved restart_proxy=%v restart_dashboard=%v", change.restartEngine, change.restartDashboard)

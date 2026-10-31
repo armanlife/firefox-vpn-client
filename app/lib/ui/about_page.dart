@@ -132,7 +132,9 @@ class _AboutPageState extends State<AboutPage> {
                     ),
                   ),
                   OutlinedButton.icon(
-                    onPressed: github.isEmpty ? null : () => openUrl(github),
+                    onPressed: github.isEmpty
+                        ? null
+                        : () => openLink(context, github),
                     icon: const Icon(Icons.open_in_new_rounded, size: 18),
                     label: const Text('GitHub'),
                   ),
@@ -217,12 +219,17 @@ class _UpdateAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: Listenable.merge([core, Updates.failure]),
+    listenable: Listenable.merge([
+      core,
+      Updates.failure,
+      Updates.androidInApp,
+      Updates.needsInstallPermission,
+    ]),
     builder: (context, _) {
       final l = AppLocalizations.of(context);
       final muted = Theme.of(context).textTheme.bodySmall
           ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant);
-      final update = core.status?.update;
+      final update = Updates.of(core.status);
       Widget button(String label, IconData icon, VoidCallback? onPressed) =>
           SizedBox(
             width: double.infinity,
@@ -238,7 +245,7 @@ class _UpdateAction extends StatelessWidget {
             : button(
                 l.download,
                 Icons.download_rounded,
-                () => openDownload(release),
+                () => Updates.download(release),
               );
       }
       final mine = update.version == release.version;
@@ -270,6 +277,9 @@ class _UpdateAction extends StatelessWidget {
               message: failure,
               child: Text(l.updateFailed(release.version), style: muted),
             ),
+            const SizedBox(height: 8),
+          ] else if (Updates.needsInstallPermission.value) ...[
+            Text(l.updateAllowInstall, style: muted),
             const SizedBox(height: 8),
           ],
           button(

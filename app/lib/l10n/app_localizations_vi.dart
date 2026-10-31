@@ -158,8 +158,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get addAccount => 'Thêm tài khoản';
 
   @override
-  String lowQuotaNotice(String left, String size) {
-    return 'Dung lượng của tài khoản hiện tại sắp hết (còn $left). Thêm một tài khoản nữa để có thêm $size.';
+  String lowQuotaNotice(String size) {
+    return 'Dung lượng của tài khoản này sắp hết. Thêm một tài khoản nữa để có thêm $size.';
   }
 
   @override
@@ -167,6 +167,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get noAccountsHint => 'Thêm một Firefox Account để kết nối.';
+
+  @override
+  String get delayTestFailed =>
+      'Không đo được độ trễ của máy chủ. Hãy kiểm tra internet.';
 
   @override
   String get createAccountTitle => 'Chưa có Firefox Account?';
@@ -303,6 +307,13 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get close => 'Đóng';
+
+  @override
+  String get noBrowserTitle => 'Thiết bị này không có trình duyệt';
+
+  @override
+  String get noBrowserText =>
+      'Hãy mở địa chỉ này trên điện thoại hoặc máy tính:';
 
   @override
   String get cancel => 'Hủy';
@@ -645,8 +656,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get noticeCommand =>
-      'Một ứng dụng yêu cầu UDP (trò chơi, gọi thoại và video). Proxy của Mozilla chỉ hỗ trợ TCP, nên lưu lượng này không thể đi qua.';
+  String get noticeCommand => 'Loại kết nối này không được VPN hỗ trợ.';
 
   @override
   String noticeTimes(int count, String time) {
@@ -836,6 +846,67 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sectionAdvanced => 'Nâng cao';
 
   @override
+  String get tlsFragment => 'Phân mảnh TLS';
+
+  @override
+  String get tlsFragmentOff => 'Tắt';
+
+  @override
+  String get tlsFragmentFirstByte => 'Byte đầu tiên';
+
+  @override
+  String get tlsFragmentSni => 'Tên máy chủ (SNI)';
+
+  @override
+  String get tlsFragmentFirstByteHint =>
+      'Tách phần đầu TLS tại byte đầu tiên (0x16)';
+
+  @override
+  String get tlsFragmentSniHint => 'Chia tên máy chủ (SNI) thành nhiều gói TCP';
+
+  @override
+  String get tlsFragmentOffHint => 'Kết nối TLS thông thường';
+
+  @override
+  String get sectionBypass => 'Nếu Mozilla bị chặn';
+
+  @override
+  String get apiRelay => 'Máy chủ chuyển tiếp';
+
+  @override
+  String get apiRelayHint =>
+      'Cloudflare Worker của riêng bạn, hoặc relay.php trên hosting của bạn.\nChỉ dùng khi Mozilla không trả lời trực tiếp: đăng nhập, tài khoản và danh sách máy chủ đi qua nó, không phải lưu lượng VPN.';
+
+  @override
+  String get upstreamProxy => 'Proxy thượng nguồn';
+
+  @override
+  String get upstreamProxyOn => 'Proxy thượng nguồn đang bật';
+
+  @override
+  String get upstreamProxyAddress => 'Địa chỉ proxy SOCKS5';
+
+  @override
+  String get upstreamProxyPort => 'Cổng';
+
+  @override
+  String get upstreamProxyHint =>
+      'Kết nối đến Mozilla đi qua proxy này, dành cho các mạng chặn hoặc làm chậm Mozilla.\nNếu proxy chạy trên thiết bị này, hãy để nó ngoài VPN.';
+
+  @override
+  String get upstreamProxyInvalid => 'Nhập địa chỉ proxy, ví dụ 127.0.0.1.';
+
+  @override
+  String get upstreamProxyInvalidPort => 'Nhập cổng từ 1 đến 65535.';
+
+  @override
+  String get upstreamProxyOwn =>
+      'Đó là proxy của chính ứng dụng này. Hãy nhập proxy khác.';
+
+  @override
+  String get apiRelayInvalid => 'Phải là địa chỉ https://.';
+
+  @override
   String get listenAddress => 'Quyền truy cập proxy';
 
   @override
@@ -963,6 +1034,10 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get updateAllowInstall =>
+      'Cho phép Firefox VPN cài đặt ứng dụng, rồi nhấn «Cập nhật» lần nữa.';
+
+  @override
   String updateInstalling(String version) {
     return 'Đang cài đặt phiên bản $version. Ứng dụng sẽ đóng và mở lại.';
   }
@@ -983,11 +1058,14 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get autoUpdate => 'Tự động cập nhật';
+  String get sectionUpdates => 'Cập nhật';
 
   @override
-  String get autoUpdateHint =>
-      'Phiên bản mới được tải ở chế độ nền và được cài đặt vào lần mở ứng dụng tiếp theo.';
+  String get inAppUpdates => 'Cập nhật trong ứng dụng';
+
+  @override
+  String get inAppUpdatesHint =>
+      'Phiên bản mới được tải về trong nền và trình cài đặt của Android mở ra.\nTắt: nút Tải xuống mở trình duyệt.';
 
   @override
   String get repoNotSet => 'Chưa thiết lập kho GitHub.';
@@ -1017,6 +1095,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get groupApp => 'Ứng dụng';
 
   @override
+  String get groupServersAccounts => 'Máy chủ và tài khoản';
+
+  @override
+  String get groupNetwork => 'Mạng';
+
+  @override
   String get stateOff => 'Đã ngắt kết nối';
 
   @override
@@ -1024,6 +1108,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tapToDisconnectPhone => 'Chạm để ngắt kết nối';
+
+  @override
+  String get tapToConnectTv => 'Nhấn OK để kết nối';
+
+  @override
+  String get tapToDisconnectTv => 'Nhấn OK để ngắt kết nối';
 
   @override
   String lanAddress(String address) {
@@ -1059,7 +1149,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get failUnreachable =>
-      'Máy chủ Mozilla bị chặn trên mạng này. Hãy thử kết nối internet khác.';
+      'Không thể kết nối đến máy chủ của Mozilla. Hãy thử kết nối internet khác.';
+
+  @override
+  String get failUpstreamProxy =>
+      'Không thể kết nối đến Mozilla qua proxy thượng nguồn. Hãy kiểm tra xem proxy có đang chạy không.';
+
+  @override
+  String get failInsideVpn => 'Internet này đã đi qua một VPN. Hãy tắt nó.';
 
   @override
   String get failRefused =>
@@ -1392,19 +1489,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String udpNoticeBody(String program) {
-    return '$program đã cố gọi điện hoặc chơi trực tuyến, nhưng ở chế độ TUN lưu lượng này (UDP) không thể đi qua VPN.';
+    return 'Lưu lượng UDP của $program không đi qua VPN.';
   }
-
-  @override
-  String get udpNoticeAction => 'Cho UDP của nó đi trực tiếp';
 
   @override
   String get dontShowAgain => 'Không hiện lại';
-
-  @override
-  String udpDirectAdded(String program) {
-    return '$program: UDP của nó giờ kết nối trực tiếp.';
-  }
 
   @override
   String get addRunningProgram => 'Từ các chương trình đang chạy';

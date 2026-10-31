@@ -36,6 +36,35 @@ func TestTunnelAllowsMozillaPortsAndDirectDestinations(t *testing.T) {
 	}
 }
 
+// What leads nowhere is refused at once, whatever the port or the routing; DNS
+// is answered by the proxy, whichever server it is sent to.
+func TestTunnelRefusesDeadEnds(t *testing.T) {
+	d := newTestDaemon(t)
+	writeTestGeoIP(t, d, map[string][]string{"private": {"10.0.0.0/8"}})
+	d.applyRouting(config.Routing{Enabled: true, Direct: []string{"geoip:private"}})
+	for _, host := range []string{"10.10.34.36", "2001:4188:2:600:10:10:34:36", "172.19.0.2", "198.18.0.7"} {
+		if d.TunnelAllows(host, "443") {
+			t.Errorf("TCP to %s is allowed", host)
+		}
+		if d.TunnelAllowsUDP(host, "3478") {
+			t.Errorf("UDP to %s is allowed", host)
+		}
+	}
+	for _, host := range []string{"8.8.8.8", "172.19.0.2"} {
+		if !d.TunnelAllows(host, "53") || !d.TunnelAllowsUDP(host, "53") {
+			t.Errorf("DNS to %s is refused", host)
+		}
+	}
+	for _, host := range []string{"192.168.1.5", "224.0.0.251", "ff02::fb"} {
+		if d.TunnelAllowsUDP(host, "3478") {
+			t.Errorf("UDP to %s is allowed", host)
+		}
+	}
+	if !d.TunnelAllowsUDP("1.2.3.4", "3478") {
+		t.Error("UDP to an address on the internet is refused")
+	}
+}
+
 // The region's app list is read only while routing is on.
 func TestDirectAppsFollowTheRouting(t *testing.T) {
 	d := newTestDaemon(t)
@@ -95,4 +124,26 @@ func writeTestFile(dir, name, content string) error {
 		return err
 	}
 	return os.WriteFile(filepath.Join(dir, name), []byte(content), 0o600)
+}
+
+// The VPN's UDP goes through Mozilla on its ports, without QUIC unless the
+// setting asks for it; a direct destination may use any port.
+func TestTunnelAllowsUDP(t *testing.T) {
+	d := newTestDaemon(t)
+	for port, want := range map[string]bool{"3478": true, "50000": true, "443": false, "19302": false, "53": true} {
+		if got := d.TunnelAllowsUDP("peer.example", port); got != want {
+			t.Errorf("port %s: %t", port, got)
+		}
+	}
+	d.mu.Lock()
+	d.cfg.Tun.QUIC = true
+	d.mu.Unlock()
+	if !d.TunnelAllowsUDP("peer.example", "443") {
+		t.Error("tun.quic did not let QUIC through")
+	}
+	writeTestGeoIP(t, d, map[string][]string{"private": {"10.0.0.0/8"}})
+	d.applyRouting(config.Routing{Enabled: true, Direct: []string{"domain:bank.test"}})
+	if !d.TunnelAllowsUDP("www.bank.test", "19302") {
+		t.Fatal("a direct destination may use any port")
+	}
 }

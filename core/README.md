@@ -2,7 +2,7 @@
 
 An unofficial Go client for Mozilla's Firefox VPN (IP Protection) service. It signs in with Firefox Accounts, obtains a Guardian ProxyPass, and serves a local SOCKS5 CONNECT proxy through Mozilla's Fastly HTTP/2 (or experimental HTTP/3) proxies. Several accounts can be stored; when the active one has used its quota threshold (95% by default; the last usable account goes on to the end of its quota), the next one takes over without dropping open connections. A built-in web dashboard manages accounts, settings, logs, and connection tests.
 
-The proxy carries TCP traffic from applications configured to use SOCKS5. Firefox does not need to be installed or running. There is no SOCKS5 UDP ASSOCIATE, BIND, TUN interface, or system-wide routing beyond Windows' proxy setting.
+The proxy carries TCP traffic, and UDP on the ports Mozilla's proxy allows, from applications configured to use SOCKS5. Firefox does not need to be installed or running. There is no SOCKS5 BIND; the desktop app adds a TUN mode for the whole computer.
 
 ## Quick start
 
@@ -73,7 +73,7 @@ go generate ./cmd/firefox-vpn-core   # icon and version information, after a ver
 go build -trimpath -o dist\firefox-vpn-core.exe ./cmd/firefox-vpn-core
 ```
 
-The ordinary test suite uses local fixtures and synthetic credentials. Real account tests require separate, explicit opt-in; see [TESTING.md](doc/TESTING.md).
+The ordinary test suite uses local fixtures and synthetic credentials. Real account tests require separate, explicit opt-in.
 
 ## Recorded verification and limits
 

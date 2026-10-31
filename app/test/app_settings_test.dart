@@ -22,6 +22,8 @@ void main() {
     expect(s.autostart, isTrue);
     // Connecting by itself is the user's choice.
     expect(s.autoConnect, isFalse);
+    // Android's in-app updates follow the device until chosen.
+    expect(s.inAppUpdates, isNull);
   });
 
   test('saves and loads the choices', () async {
@@ -33,6 +35,7 @@ void main() {
       firstRun: false,
       autostart: false,
       autoConnect: true,
+      inAppUpdates: false,
     );
     // update saves in the background.
     await Future<void>.delayed(const Duration(milliseconds: 200));
@@ -43,6 +46,7 @@ void main() {
     expect(again.firstRun, isFalse);
     expect(again.autostart, isFalse);
     expect(again.autoConnect, isTrue);
+    expect(again.inAppUpdates, isFalse);
   });
 
   test('maps languages to routing regions', () {

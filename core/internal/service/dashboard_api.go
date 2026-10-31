@@ -125,7 +125,9 @@ type StatusView struct {
 	NetworkChangedAt time.Time `json:"network_changed_at,omitzero"`
 	// NoNetwork: the phone reported that no network is connected, so the
 	// app says so at once instead of waiting for a test to fail.
-	NoNetwork     bool                 `json:"no_network,omitempty"`
+	NoNetwork bool `json:"no_network,omitempty"`
+	// UpstreamProxy is the address of the user's SOCKS5 proxy while it is on.
+	UpstreamProxy string               `json:"upstream_proxy,omitempty"`
 	SelectionName string               `json:"selection_name,omitempty"`
 	Pass          *proxy.RuntimeStatus `json:"pass,omitempty"`
 	ActiveAccount *AccountView         `json:"active_account,omitempty"`
@@ -209,6 +211,7 @@ func (d *Daemon) StatusView() (StatusView, error) {
 	view.Selection = cfg.Proxy.Country
 	view.NetworkChangedAt = d.networkChangedAt
 	view.NoNetwork = netstate.ReportedDown()
+	view.UpstreamProxy = cfg.Network.UpstreamProxyInUse()
 	if code := strings.ToUpper(cfg.Proxy.Country); len(code) == 2 {
 		view.SelectionName = d.countryNameLocked(code)
 	}
@@ -561,6 +564,12 @@ func (s *dashboardServer) handleConnectionTest(w http.ResponseWriter, r *http.Re
 	writeJSON(w, http.StatusOK, result)
 }
 
+// handleDelay measures the delay again; GET /status shows it (RefreshDelay).
+func (s *dashboardServer) handleDelay(w http.ResponseWriter, r *http.Request) {
+	s.d.RefreshDelay()
+	w.WriteHeader(http.StatusNoContent)
+}
+
 // countryNameLocked names a country code from the server list, or returns
 // the code; d.mu is held.
 func (d *Daemon) countryNameLocked(code string) string {
@@ -588,6 +597,47 @@ func (d *Daemon) ConnectionTest() (proxy.ConnectionTestResult, error) {
 	}
 	defer release()
 	return d.runConnectionTest(engine, controller, "requested"), nil
+}
+
+// RefreshDelay measures the delay again for the status view, for an app showing
+// one that is high or old: it may be a moment's queue, such as the apps' rush
+// when the VPN comes on, and would stay until the next test. Unlike a connection
+// test it never wakes a sleeping proxy and looks for no public IP. One that fails
+// may be a queue too, so a whole test decides, whose result the app's state
+// follows: the way to Mozilla may have gone since the last test.
+func (d *Daemon) RefreshDelay() {
+	if !d.autoTesting.CompareAndSwap(false, true) {
+		return
+	}
+	defer d.autoTesting.Store(false)
+	engine := d.currentEngine()
+	if engine == nil {
+		return
+	}
+	controller := engine.reserve()
+	if controller == nil {
+		return
+	}
+	defer engine.releaseFunc()()
+	result := proxy.RunConnectionTest(controller, proxy.ConnectionTestURL, 0, proxy.ConnectionTestTimeout)
+	if !result.OK {
+		d.runConnectionTest(engine, controller, "delay not measured")
+		return
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.lastTest != nil && d.lastTest.OK {
+		test := withDelay(*d.lastTest, result)
+		d.lastTest = &test
+	}
+}
+
+// withDelay is the test last with the times of a newer one.
+func withDelay(last, measured proxy.ConnectionTestResult) proxy.ConnectionTestResult {
+	last.At = measured.At
+	last.TunnelMS, last.TLSMS, last.ResponseMS = measured.TunnelMS, measured.TLSMS, measured.ResponseMS
+	last.FirstByteMS, last.TotalMS = measured.FirstByteMS, measured.TotalMS
+	return last
 }
 
 // autoTest runs the connection test by itself when the proxy first

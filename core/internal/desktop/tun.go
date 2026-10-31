@@ -13,6 +13,7 @@ import (
 	"github.com/armanlife/firefox-vpn-client/core/internal/config"
 	"github.com/armanlife/firefox-vpn-client/core/internal/egress"
 	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
 	"github.com/armanlife/firefox-vpn-client/core/internal/service"
 	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
 	"github.com/armanlife/firefox-vpn-client/core/internal/version"
@@ -34,6 +35,7 @@ type tunHost interface {
 	SetTunStatus(service.TunStatus)
 	ReconnectUpstream()
 	TunPrograms() []config.TunProgram
+	VPNUDPPorts() []proxy.PortRange
 	NoteRefusedUDP(program, path string)
 }
 
@@ -219,9 +221,13 @@ func (t *tunSync) start(ctx context.Context) {
 		t.fail(failed(service.TunCodeFailed, "opening the TUN listener: %w", err), serviceVersion)
 		return
 	}
-	// A service of protocol 1 ignores the programs.
+	// A service of an older protocol ignores the programs, or the UDP.
 	programs := tunPrograms(t.host.TunPrograms())
-	reply, err := t.ask(conn, tunapi.Message{Type: tunapi.TypeOpen, Proxy: addr, Username: user, Password: password, Programs: programs})
+	var udpPorts []tunapi.PortRange
+	for _, r := range t.host.VPNUDPPorts() {
+		udpPorts = append(udpPorts, tunapi.PortRange{From: r.From, To: r.To})
+	}
+	reply, err := t.ask(conn, tunapi.Message{Type: tunapi.TypeOpen, Proxy: addr, Username: user, Password: password, Programs: programs, UDPPorts: udpPorts})
 	if err == nil && (reply.Type != tunapi.TypeOpened || reply.Interface == nil) {
 		err = fmt.Errorf("unexpected reply %q", reply.Type)
 	}

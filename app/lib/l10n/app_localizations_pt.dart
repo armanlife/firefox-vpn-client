@@ -159,8 +159,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get addAccount => 'Adicionar conta';
 
   @override
-  String lowQuotaNotice(String left, String size) {
-    return 'A franquia da conta atual está acabando (restam $left). Adicione outra conta para ter mais $size.';
+  String lowQuotaNotice(String size) {
+    return 'A franquia desta conta está acabando. Adicione outra conta para ter mais $size.';
   }
 
   @override
@@ -168,6 +168,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get noAccountsHint => 'Adicione uma Firefox Account para conectar.';
+
+  @override
+  String get delayTestFailed =>
+      'Não foi possível medir o atraso dos servidores. Verifique sua internet.';
 
   @override
   String get createAccountTitle => 'Não tem uma Firefox Account?';
@@ -304,6 +308,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get close => 'Fechar';
+
+  @override
+  String get noBrowserTitle => 'Não há navegador neste dispositivo';
+
+  @override
+  String get noBrowserText =>
+      'Abra este endereço no seu celular ou computador:';
 
   @override
   String get cancel => 'Cancelar';
@@ -647,7 +658,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get noticeCommand =>
-      'Um app tentou usar UDP (jogos, chamadas de voz e vídeo). O proxy da Mozilla só aceita TCP, então essa conexão não pode passar.';
+      'Este tipo de conexão não é compatível com a VPN.';
 
   @override
   String noticeTimes(int count, String time) {
@@ -837,6 +848,69 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sectionAdvanced => 'Avançado';
 
   @override
+  String get tlsFragment => 'Fragmentação TLS';
+
+  @override
+  String get tlsFragmentOff => 'Desativado';
+
+  @override
+  String get tlsFragmentFirstByte => 'Primeiro byte';
+
+  @override
+  String get tlsFragmentSni => 'Nome do servidor (SNI)';
+
+  @override
+  String get tlsFragmentFirstByteHint =>
+      'Divide o cabeçalho TLS no primeiro byte (0x16)';
+
+  @override
+  String get tlsFragmentSniHint =>
+      'Divide o nome do servidor (SNI) em vários pacotes TCP';
+
+  @override
+  String get tlsFragmentOffHint => 'Conexão TLS normal';
+
+  @override
+  String get sectionBypass => 'Se a Mozilla estiver bloqueada';
+
+  @override
+  String get apiRelay => 'Servidor de retransmissão';
+
+  @override
+  String get apiRelayHint =>
+      'Seu próprio Cloudflare Worker, ou relay.php na sua própria hospedagem.\nUsado só quando a Mozilla não responde diretamente: o login, as contas e a lista de servidores passam por ele, não o tráfego da VPN.';
+
+  @override
+  String get upstreamProxy => 'Proxy upstream';
+
+  @override
+  String get upstreamProxyOn => 'Proxy upstream ativado';
+
+  @override
+  String get upstreamProxyAddress => 'Endereço SOCKS5';
+
+  @override
+  String get upstreamProxyPort => 'Porta';
+
+  @override
+  String get upstreamProxyHint =>
+      'A conexão com a Mozilla passa por este proxy, para redes que bloqueiam ou deixam a Mozilla lenta.\nSe o proxy roda neste dispositivo, deixe-o fora da VPN.';
+
+  @override
+  String get upstreamProxyInvalid =>
+      'Digite o endereço do proxy, como 127.0.0.1.';
+
+  @override
+  String get upstreamProxyInvalidPort => 'Digite uma porta de 1 a 65535.';
+
+  @override
+  String get upstreamProxyOwn =>
+      'Esse é o proxy do próprio aplicativo. Digite outro.';
+
+  @override
+  String get apiRelayInvalid => 'Deve ser um endereço https://.';
+
+  @override
   String get listenAddress => 'Acesso ao proxy';
 
   @override
@@ -964,6 +1038,10 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get updateAllowInstall =>
+      'Permita que o Firefox VPN instale apps e pressione «Atualizar» de novo.';
+
+  @override
   String updateInstalling(String version) {
     return 'Instalando a versão $version. O app vai fechar e abrir de novo.';
   }
@@ -984,11 +1062,14 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
-  String get autoUpdate => 'Atualizar automaticamente';
+  String get sectionUpdates => 'Atualizações';
 
   @override
-  String get autoUpdateHint =>
-      'As novas versões são baixadas em segundo plano e instaladas na próxima vez que o app abrir.';
+  String get inAppUpdates => 'Atualizar no app';
+
+  @override
+  String get inAppUpdatesHint =>
+      'As novas versões são baixadas em segundo plano e o instalador do Android abre.\nDesativado: o botão Baixar abre o navegador.';
 
   @override
   String get repoNotSet => 'O repositório do GitHub ainda não foi definido.';
@@ -1018,6 +1099,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get groupApp => 'App';
 
   @override
+  String get groupServersAccounts => 'Servidores e contas';
+
+  @override
+  String get groupNetwork => 'Rede';
+
+  @override
   String get stateOff => 'Desconectado';
 
   @override
@@ -1025,6 +1112,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tapToDisconnectPhone => 'Toque para desconectar';
+
+  @override
+  String get tapToConnectTv => 'Pressione OK para conectar';
+
+  @override
+  String get tapToDisconnectTv => 'Pressione OK para desconectar';
 
   @override
   String lanAddress(String address) {
@@ -1061,7 +1154,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get failUnreachable =>
-      'Os servidores da Mozilla estão bloqueados nesta internet. Tente outra conexão.';
+      'Não foi possível alcançar os servidores da Mozilla. Tente outra conexão de internet.';
+
+  @override
+  String get failUpstreamProxy =>
+      'Não foi possível alcançar a Mozilla pelo proxy upstream. Verifique se ele está em execução.';
+
+  @override
+  String get failInsideVpn => 'Esta internet já passa por uma VPN. Desative-a.';
 
   @override
   String get failRefused =>
@@ -1396,19 +1496,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String udpNoticeBody(String program) {
-    return '$program tentou fazer uma chamada ou jogar online, mas no modo TUN esse tráfego (UDP) não passa pela VPN.';
+    return 'O tráfego UDP de $program não passa pela VPN.';
   }
-
-  @override
-  String get udpNoticeAction => 'Enviar o UDP dele diretamente';
 
   @override
   String get dontShowAgain => 'Não mostrar de novo';
-
-  @override
-  String udpDirectAdded(String program) {
-    return '$program: o UDP dele agora se conecta diretamente.';
-  }
 
   @override
   String get addRunningProgram => 'Dos programas em execução';

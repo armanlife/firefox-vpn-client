@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/armanlife/firefox-vpn-client/core/internal/hellosplit"
 	"github.com/armanlife/firefox-vpn-client/core/internal/resolver"
 )
 
@@ -23,19 +24,55 @@ const (
 )
 
 // defaultTransport is Go's default transport with its connections resolved
-// through the configured DNS servers (package resolver).
+// through the configured DNS servers (package resolver), and without
+// HTTP_PROXY and HTTPS_PROXY: another program's proxy left in the
+// environment (v2rayN's 127.0.0.1:10808), not running, refused every
+// sign-in and Guardian request, which then read as Mozilla being blocked.
+// The user's own relay is network.api_relay.
 var defaultTransport = func() *http.Transport {
 	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.Proxy = nil
 	t.DialContext = DialContext
 	return t
 }()
+
+// QuickTransport is the default transport that gives up on a server it
+// cannot connect to within wait (the connection and TLS each; the name has
+// its own time, resolver.DialWithin): the user's relay is tried then
+// (service.relayFallback), rather than waiting for the default's half a
+// minute.
+func QuickTransport(wait time.Duration) *http.Transport {
+	t := defaultTransport.Clone()
+	t.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+		ctx, cancel := context.WithTimeout(ctx, dialTimeout)
+		defer cancel()
+		conn, err := resolver.DialWithin(ctx, wait, network, address)
+		if err != nil {
+			return nil, err
+		}
+		return hellosplit.Wrap(conn), nil
+	}
+	t.TLSHandshakeTimeout = wait
+	return t
+}
 
 // DialContext connects through the configured resolver with a timeout; a
 // custom transport (the API proxy) uses it to reach its proxy.
 func DialContext(ctx context.Context, network, address string) (net.Conn, error) {
 	ctx, cancel := context.WithTimeout(ctx, dialTimeout)
 	defer cancel()
-	return resolver.Dial(ctx, network, address)
+	return dial(ctx, network, address)
+}
+
+// dial connects through the configured resolver, the TLS over it sending
+// its ClientHello as network.hello_split says: the filter that stops the
+// VPN's servers may stop these names too.
+func dial(ctx context.Context, network, address string) (net.Conn, error) {
+	conn, err := resolver.Dial(ctx, network, address)
+	if err != nil {
+		return nil, err
+	}
+	return hellosplit.Wrap(conn), nil
 }
 
 // client carries an explicit timeout so requests can never hang

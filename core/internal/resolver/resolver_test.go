@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/netip"
+	"os"
 	"strings"
 	"sync/atomic"
 	"syscall"
@@ -213,5 +214,182 @@ func TestServerErrorsKeepTheCause(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "https://1.1.1.1/dns-query: context deadline exceeded; https://9.9.9.9/dns-query:") {
 		t.Fatalf("text: %v", err)
+	}
+}
+
+// A wait shorter than the servers' time does not cut the name short: when
+// they all fail the system still answers, as it did not on a network where
+// the DNS over HTTPS servers hung (the relay was used for nothing).
+func TestDialWithinLeavesTheNameItsOwnTime(t *testing.T) {
+	host, err := os.Hostname()
+	if err != nil {
+		t.Skip(err)
+	}
+	if addrs, err := net.LookupHost(host); err != nil || len(addrs) == 0 {
+		t.Skipf("this machine's name does not resolve: %v", err)
+	}
+	silent, err := net.ListenPacket("udp4", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer silent.Close()
+	ln, err := net.Listen("tcp", ":0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	_, port, _ := net.SplitHostPort(ln.Addr().String())
+
+	r, err := New([]string{"udp://" + silent.LocalAddr().String()}, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	start := time.Now()
+	conn, err := r.DialWithin(context.Background(), 200*time.Millisecond, "tcp", net.JoinHostPort(host, port))
+	if err != nil {
+		t.Fatalf("after %s: %v", time.Since(start), err)
+	}
+	conn.Close()
+	if took := time.Since(start); took < 200*time.Millisecond {
+		t.Fatalf("the silent server was not asked: %s", took)
+	}
+}
+
+// The wait does limit the connection: an address that does not answer gives
+// up within it, not within the caller's time.
+func TestDialWithinLimitsTheConnection(t *testing.T) {
+	r, err := New([]string{"udp://127.0.0.1:9"}, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	start := time.Now()
+	// 192.0.2.0/24 is reserved for documentation: nothing answers there.
+	conn, err := r.DialWithin(ctx, 300*time.Millisecond, "tcp", "192.0.2.1:9")
+	if err == nil {
+		conn.Close()
+		t.Skip("this network answers for 192.0.2.1")
+	}
+	if took := time.Since(start); took > 5*time.Second {
+		t.Fatalf("gave up after %s", took)
+	}
+}
+
+// fakeServer answers after a delay, or fails.
+type fakeServer struct {
+	delay time.Duration
+	addr  string
+	hits  atomic.Int32
+}
+
+func (f *fakeServer) lookup(ctx context.Context, _ string) ([]netip.Addr, time.Duration, error) {
+	f.hits.Add(1)
+	select {
+	case <-time.After(f.delay):
+	case <-ctx.Done():
+		return nil, 0, ctx.Err()
+	}
+	if f.addr == "" {
+		return nil, 0, errors.New("blocked")
+	}
+	return []netip.Addr{netip.MustParseAddr(f.addr)}, time.Minute, nil
+}
+
+func (f *fakeServer) exchange(context.Context, []byte) ([]byte, error) {
+	return nil, errors.New("not used")
+}
+
+func (f *fakeServer) String() string { return "fake" }
+
+// withFakes is a resolver with one fake server and a fake system.
+func withFakes(srv *fakeServer, system string, asked *atomic.Int32) *Resolver {
+	return &Resolver{
+		servers:  []server{srv},
+		fallback: true,
+		cache:    make(map[string]cacheEntry),
+		system: func(context.Context, string) (Result, error) {
+			asked.Add(1)
+			return Result{Addrs: []netip.Addr{netip.MustParseAddr(system)}, Source: "system"}, nil
+		},
+	}
+}
+
+func TestFastServersAreNotJoinedByTheSystem(t *testing.T) {
+	var asked atomic.Int32
+	r := withFakes(&fakeServer{addr: "203.0.113.1"}, "203.0.113.9", &asked)
+	res, err := r.Lookup(context.Background(), "a.example")
+	if err != nil || res.Addrs[0].String() != "203.0.113.1" {
+		t.Fatalf("got %+v %v", res, err)
+	}
+	if asked.Load() != 0 {
+		t.Fatal("the system was asked")
+	}
+}
+
+// Where a network blocks the servers, a name does not wait for them: the
+// system answers after systemAfter, and at once while they are known to fail.
+func TestSlowServersDoNotHoldTheSystemsAnswer(t *testing.T) {
+	var asked atomic.Int32
+	srv := &fakeServer{delay: 1500 * time.Millisecond}
+	r := withFakes(srv, "203.0.113.9", &asked)
+	start := time.Now()
+	res, err := r.Lookup(context.Background(), "a.example")
+	if err != nil || res.Addrs[0].String() != "203.0.113.9" || res.Source != "system (fallback)" {
+		t.Fatalf("got %+v %v", res, err)
+	}
+	if took := time.Since(start); took < systemAfter || took > systemAfter+time.Second {
+		t.Fatalf("took %s", took)
+	}
+	// Kept for a while.
+	if res, _ := r.Lookup(context.Background(), "a.example"); !res.Cached {
+		t.Fatalf("not cached: %+v", res)
+	}
+	// Once the servers have failed, another name does not wait.
+	time.Sleep(srv.delay)
+	start = time.Now()
+	if _, err := r.Lookup(context.Background(), "b.example"); err != nil {
+		t.Fatal(err)
+	}
+	if took := time.Since(start); took > systemAfter/2 {
+		t.Fatalf("the second name waited %s", took)
+	}
+}
+
+// The system's block page is not taken over a real answer on its way, and is
+// only used when the servers fail.
+func TestABlockPageWaitsForTheServers(t *testing.T) {
+	var asked atomic.Int32
+	r := withFakes(&fakeServer{delay: 1200 * time.Millisecond, addr: "203.0.113.1"}, "10.10.34.35", &asked)
+	res, err := r.Lookup(context.Background(), "blocked.example")
+	if err != nil || res.Addrs[0].String() != "203.0.113.1" {
+		t.Fatalf("got %+v %v", res, err)
+	}
+	if asked.Load() != 1 {
+		t.Fatalf("the system was asked %d times", asked.Load())
+	}
+
+	r = withFakes(&fakeServer{delay: 1200 * time.Millisecond}, "10.10.34.35", &asked)
+	res, err = r.Lookup(context.Background(), "blocked.example")
+	if err != nil || res.Addrs[0].String() != "10.10.34.35" {
+		t.Fatalf("got %+v %v", res, err)
+	}
+	if again, _ := r.Lookup(context.Background(), "blocked.example"); again.Cached {
+		t.Fatal("a block page was cached")
+	}
+}
+
+func TestIsBlockPage(t *testing.T) {
+	for addr, want := range map[string]bool{
+		"10.10.34.35":                 true,
+		"127.0.0.1":                   true,
+		"192.168.1.1":                 true,
+		"2001:4188:2:600:10:10:34:36": true,
+		"151.101.1.91":                false,
+		"2a04:4e42::347":              false,
+	} {
+		if got := IsBlockPage(netip.MustParseAddr(addr)); got != want {
+			t.Errorf("%s: %v", addr, got)
+		}
 	}
 }

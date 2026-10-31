@@ -134,7 +134,12 @@ class AndroidCore {
   static Future<void> loadMode() async {
     mode.value = await _channel.invokeMethod<String>('connectionMode') ?? 'vpn';
     showSpeed.value = await _channel.invokeMethod<bool>('showSpeed') ?? false;
+    isTv = await _channel.invokeMethod<bool>('isTv') ?? false;
   }
+
+  /// Whether this is a TV, worked with a remote: the home page then says
+  /// "press" rather than "tap". Read at start ([loadMode]).
+  static bool isTv = false;
 
   /// Whether the notification shows the speed (CoreService.kt reads it).
   static final showSpeed = ValueNotifier<bool>(false);
@@ -211,6 +216,13 @@ class AndroidCore {
       await _channel.invokeMethod<String>('abi') ?? '';
 
   /// Opens [url] in the app that handles it (such as a tg:// link).
+  /// Opens Android's installer for the update the core downloaded
+  /// ([UpdateState.file]): "started"; "permission" when the app may not
+  /// install apps yet (Android's setting for it opened); "missing".
+  static Future<String> installApk(String path) async =>
+      await _channel.invokeMethod<String>('installApk', {'path': path}) ??
+      'missing';
+
   static Future<bool> openUrl(String url) async =>
       await _channel.invokeMethod<bool>('openUrl', {'url': url}) ?? false;
 }

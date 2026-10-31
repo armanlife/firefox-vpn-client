@@ -42,6 +42,9 @@ type SOCKSServer struct {
 	// without trying it: the TUN mode's rule for the ports Mozilla's proxy
 	// does not carry.
 	Allow func(host, port string) bool
+	// AllowUDP, when set, does the same for UDP: a destination it rejects gets
+	// no tunnel, and its packets are dropped.
+	AllowUDP func(host, port string) bool
 	// Conns, when set, lists the connections (the dashboard's Connections),
 	// as Inbound: "tun", or by the client's protocol (socks5, http) when
 	// empty. Transport tells h2 or h3 for a connection through Mozilla.
@@ -113,7 +116,14 @@ func (s *SOCKSServer) handleConn(conn net.Conn) {
 		s.serveHTTP(client, clientAddr, start)
 		return
 	}
-	target, replyCode, err := handshakeSOCKS5Auth(client, s.Auth)
+	command, target, replyCode, err := handshakeSOCKS5Request(client, s.Auth)
+	if err == nil && command == socksCmdUDP {
+		if s.handshakeTimeout > 0 {
+			_ = conn.SetDeadline(time.Time{})
+		}
+		s.serveUDPAssociate(client, conn, clientAddr)
+		return
+	}
 	if err != nil {
 		var cmdErr *unsupportedCommandError
 		switch {
@@ -121,7 +131,7 @@ func (s *SOCKSServer) handleConn(conn net.Conn) {
 			logx.Warn("SOCKS5 client rejected: %s client=%s", err, clientAddr)
 		case errors.As(err, &cmdErr):
 			s.Notices.record(NoticeCommand, cmdErr.name(), "")
-			logx.Warn("SOCKS5 client asked for %s, which this proxy does not support (Mozilla's proxy carries TCP connections only) client=%s", cmdErr.name(), clientAddr)
+			logx.Warn("SOCKS5 client asked for %s, which this proxy does not support client=%s", cmdErr.name(), clientAddr)
 		default:
 			logx.Debug("SOCKS5 handshake failed client=%s reply=%d err=%v", clientAddr, replyCode, err)
 		}
@@ -138,7 +148,7 @@ func (s *SOCKSServer) handleConn(conn net.Conn) {
 	logx.Debug("SOCKS5 CONNECT requested client=%s target=%s", clientAddr, logx.Target(target))
 	if s.Allow != nil {
 		if host, port, err := net.SplitHostPort(target); err != nil || !s.Allow(host, port) {
-			logx.Debug("SOCKS5 CONNECT refused at once: Mozilla's proxy does not carry the port client=%s target=%s", clientAddr, logx.Target(target))
+			logx.Debug("SOCKS5 CONNECT refused at once: the VPN does not carry it client=%s target=%s", clientAddr, logx.Target(target))
 			s.Conns.refused(s.inbound("socks5"), clientAddr, target, RoutePort)
 			_ = writeSOCKSReply(conn, socksReplyNotAllow, nil)
 			return
@@ -206,20 +216,32 @@ func handshakeSOCKS5(conn net.Conn) (string, byte, error) {
 	return handshakeSOCKS5Auth(conn, nil)
 }
 
-// handshakeSOCKS5Auth negotiates the method (no authentication, or
-// username/password when auth is set), then reads the CONNECT request.
+// handshakeSOCKS5Auth negotiates the method and reads a CONNECT request;
+// anything else is an unsupported command.
 func handshakeSOCKS5Auth(conn net.Conn, auth *socksCredentials) (string, byte, error) {
+	command, target, reply, err := handshakeSOCKS5Request(conn, auth)
+	if err == nil && command != socksCmdConnect {
+		return "", socksReplyCmdUnsup, &unsupportedCommandError{cmd: command}
+	}
+	return target, reply, err
+}
+
+// handshakeSOCKS5Request negotiates the method (no authentication, or
+// username/password when auth is set), then reads the request: CONNECT, with
+// its target, or UDP ASSOCIATE, whose address is ignored (the client's first
+// packet says where it sends from).
+func handshakeSOCKS5Request(conn net.Conn, auth *socksCredentials) (byte, string, byte, error) {
 	header := make([]byte, 2)
 	if _, err := io.ReadFull(conn, header); err != nil {
-		return "", 0, err
+		return 0, "", 0, err
 	}
 	if header[0] != socksVersion5 {
-		return "", 0, fmt.Errorf("unexpected SOCKS version %d", header[0])
+		return 0, "", 0, fmt.Errorf("unexpected SOCKS version %d", header[0])
 	}
 
 	methods := make([]byte, int(header[1]))
 	if _, err := io.ReadFull(conn, methods); err != nil {
-		return "", 0, err
+		return 0, "", 0, err
 	}
 
 	wanted := byte(socksAuthNoAuth)
@@ -234,45 +256,45 @@ func handshakeSOCKS5Auth(conn net.Conn, auth *socksCredentials) (string, byte, e
 		}
 	}
 	if _, err := conn.Write([]byte{socksVersion5, method}); err != nil {
-		return "", 0, err
+		return 0, "", 0, err
 	}
 	if method == socksAuthNoAccept {
 		if auth != nil {
-			return "", 0, fmt.Errorf("%w: the client does not offer username/password", errSOCKSAuth)
+			return 0, "", 0, fmt.Errorf("%w: the client does not offer username/password", errSOCKSAuth)
 		}
-		return "", 0, fmt.Errorf("no supported SOCKS auth methods")
+		return 0, "", 0, fmt.Errorf("no supported SOCKS auth methods")
 	}
 	if method == socksAuthUserPass {
 		if err := checkSOCKSUserPass(conn, auth); err != nil {
-			return "", 0, err
+			return 0, "", 0, err
 		}
 	}
 
 	reqHeader := make([]byte, 4)
 	if _, err := io.ReadFull(conn, reqHeader); err != nil {
-		return "", 0, err
+		return 0, "", 0, err
 	}
 	if reqHeader[0] != socksVersion5 {
-		return "", socksReplyFailure, fmt.Errorf("unexpected request version %d", reqHeader[0])
+		return 0, "", socksReplyFailure, fmt.Errorf("unexpected request version %d", reqHeader[0])
 	}
-	if reqHeader[1] != socksCmdConnect {
-		return "", socksReplyCmdUnsup, &unsupportedCommandError{cmd: reqHeader[1]}
+	if reqHeader[1] != socksCmdConnect && reqHeader[1] != socksCmdUDP {
+		return 0, "", socksReplyCmdUnsup, &unsupportedCommandError{cmd: reqHeader[1]}
 	}
 
 	host, err := readSOCKSAddr(conn, reqHeader[3])
 	if err != nil {
 		if errors.Is(err, errUnsupportedAddrType) {
-			return "", socksReplyAtypUnsup, err
+			return 0, "", socksReplyAtypUnsup, err
 		}
-		return "", socksReplyFailure, err
+		return 0, "", socksReplyFailure, err
 	}
 
 	portBytes := make([]byte, 2)
 	if _, err := io.ReadFull(conn, portBytes); err != nil {
-		return "", socksReplyFailure, err
+		return 0, "", socksReplyFailure, err
 	}
 	port := binary.BigEndian.Uint16(portBytes)
-	return net.JoinHostPort(host, fmt.Sprintf("%d", port)), socksReplySuccess, nil
+	return reqHeader[1], net.JoinHostPort(host, fmt.Sprintf("%d", port)), socksReplySuccess, nil
 }
 
 // checkSOCKSUserPass runs the RFC 1929 sub-negotiation.
@@ -357,11 +379,11 @@ func readSOCKSAddr(r io.Reader, atyp byte) (string, error) {
 func writeSOCKSReply(w io.Writer, rep byte, addr net.Addr) error {
 	host := "0.0.0.0"
 	port := 0
-	if addr != nil {
-		if tcpAddr, ok := addr.(*net.TCPAddr); ok {
-			host = tcpAddr.IP.String()
-			port = tcpAddr.Port
-		}
+	switch a := addr.(type) {
+	case *net.TCPAddr:
+		host, port = a.IP.String(), a.Port
+	case *net.UDPAddr:
+		host, port = a.IP.String(), a.Port
 	}
 
 	ip := net.ParseIP(host)

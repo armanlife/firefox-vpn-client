@@ -31,6 +31,7 @@ class OverviewPage extends StatelessWidget {
     this.onOpenServers,
     this.onOpenAccounts,
     this.onOpenConnection,
+    this.onOpenUpstreamProxy,
     this.phone = false,
   });
 
@@ -47,6 +48,7 @@ class OverviewPage extends StatelessWidget {
 
   /// Opens the connection settings, when Mozilla's servers are blocked.
   final VoidCallback? onOpenConnection;
+  final VoidCallback? onOpenUpstreamProxy;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +63,7 @@ class OverviewPage extends StatelessWidget {
         onOpenServers: onOpenServers,
         onOpenAccounts: onOpenAccounts,
         onOpenConnection: onOpenConnection,
+        onOpenUpstreamProxy: onOpenUpstreamProxy,
       );
     }
     return _DesktopHome(
@@ -71,6 +74,7 @@ class OverviewPage extends StatelessWidget {
       onOpenServers: onOpenServers,
       onOpenAccounts: onOpenAccounts,
       onOpenConnection: onOpenConnection,
+      onOpenUpstreamProxy: onOpenUpstreamProxy,
     );
   }
 }
@@ -78,9 +82,12 @@ class OverviewPage extends StatelessWidget {
 /// Opens the connection settings under "Mozilla's servers are blocked":
 /// HTTP/2 or HTTP/3, one of which a network may let through.
 class _ConnectionSettingsButton extends StatelessWidget {
-  const _ConnectionSettingsButton({required this.onPressed});
+  const _ConnectionSettingsButton({required this.onPressed, this.label});
 
   final VoidCallback onPressed;
+
+  /// The button's text; "Connection settings" without it.
+  final String? label;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -89,7 +96,7 @@ class _ConnectionSettingsButton extends StatelessWidget {
       child: TextButton.icon(
         onPressed: onPressed,
         icon: const Icon(Icons.tune_rounded, size: 18),
-        label: Text(AppLocalizations.of(context).connectionSettings),
+        label: Text(label ?? AppLocalizations.of(context).connectionSettings),
       ),
     ),
   );
@@ -261,6 +268,7 @@ class _DesktopHome extends StatelessWidget {
     this.onOpenServers,
     this.onOpenAccounts,
     this.onOpenConnection,
+    this.onOpenUpstreamProxy,
   });
 
   final CoreController core;
@@ -272,6 +280,7 @@ class _DesktopHome extends StatelessWidget {
   final VoidCallback? onOpenServers;
   final VoidCallback? onOpenAccounts;
   final VoidCallback? onOpenConnection;
+  final VoidCallback? onOpenUpstreamProxy;
 
   /// The connection mode shown as chosen; changing it (chooseConnectionMode)
   /// keeps the proxy running and connected.
@@ -439,6 +448,12 @@ class _DesktopHome extends StatelessWidget {
                     style: theme.textTheme.labelLarge?.copyWith(color: p.muted),
                   ),
                 ),
+              if (status.upstreamProxy.isNotEmpty)
+                _UpstreamProxyPill(
+                  address: status.upstreamProxy,
+                  palette: p,
+                  onPressed: onOpenUpstreamProxy,
+                ),
             ],
           )
         else if (failing || (status.noNetwork && on) || gaveUp)
@@ -468,6 +483,25 @@ class _DesktopHome extends StatelessWidget {
           ),
         if (failure?.code == Failure.unreachable && onOpenConnection != null)
           _ConnectionSettingsButton(onPressed: onOpenConnection!),
+        if (failure?.code == Failure.upstreamProxy &&
+            onOpenUpstreamProxy != null)
+          _ConnectionSettingsButton(
+            onPressed: onOpenUpstreamProxy!,
+            label: AppLocalizations.of(context).upstreamProxy,
+          ),
+        if (!connected &&
+            status.upstreamProxy.isNotEmpty &&
+            failure?.code != Failure.upstreamProxy)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Center(
+              child: _UpstreamProxyPill(
+                address: status.upstreamProxy,
+                palette: p,
+                onPressed: onOpenUpstreamProxy,
+              ),
+            ),
+          ),
         if (isLocationRefused(failure?.code ?? '') ||
             (gaveUp && isLocationRefused(status.connectFailure)))
           _RecommendedLocationButton(core: core),
@@ -558,7 +592,7 @@ class _DesktopHome extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         _UpdateNotice(core: core, settings: settings, palette: p),
-        _UdpNotice(core: core, status: status, settings: settings, palette: p),
+        _UdpNotice(status: status, settings: settings, palette: p),
         _Notices(notices: homeNotices(status.notices)),
         _LowQuotaNotice(
           core: core,
@@ -605,6 +639,48 @@ class _HomePill extends StatelessWidget {
       shape: StadiumBorder(side: BorderSide(color: palette.cardBorder)),
     ),
     child: child,
+  );
+}
+
+/// While the upstream proxy is on: says so whatever the connection's state, with
+/// its address on hover or a long press, and opens its settings.
+class _UpstreamProxyPill extends StatelessWidget {
+  const _UpstreamProxyPill({
+    required this.address,
+    required this.palette,
+    this.onPressed,
+  });
+
+  final String address;
+  final _HomePalette palette;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: ltr(address),
+    child: Material(
+      color: palette.card,
+      shape: StadiumBorder(side: BorderSide(color: palette.cardBorder)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.lan_outlined, size: 16, color: palette.connected),
+              const SizedBox(width: 6),
+              Text(
+                AppLocalizations.of(context).upstreamProxyOn,
+                style: Theme.of(context).textTheme.labelLarge
+                    ?.copyWith(color: palette.muted),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
   );
 }
 
@@ -952,6 +1028,7 @@ class _PhoneHome extends StatelessWidget {
     this.onOpenServers,
     this.onOpenAccounts,
     this.onOpenConnection,
+    this.onOpenUpstreamProxy,
   });
 
   final CoreController core;
@@ -963,6 +1040,7 @@ class _PhoneHome extends StatelessWidget {
   final VoidCallback? onOpenServers;
   final VoidCallback? onOpenAccounts;
   final VoidCallback? onOpenConnection;
+  final VoidCallback? onOpenUpstreamProxy;
 
   Future<void> _toggle(bool on) async {
     if (status.systemProxySupported) {
@@ -994,7 +1072,7 @@ class _PhoneHome extends StatelessWidget {
           builder: (context, box) => SingleChildScrollView(
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: box.maxHeight),
-              child: IntrinsicHeight(child: _content(context, p, box.maxWidth)),
+              child: IntrinsicHeight(child: _content(context, p, box)),
             ),
           ),
         ),
@@ -1003,17 +1081,21 @@ class _PhoneHome extends StatelessWidget {
     return p.dark ? Theme(data: midnightTheme(base), child: page) : page;
   }
 
-  Widget _content(BuildContext context, _HomePalette p, double width) {
+  Widget _content(BuildContext context, _HomePalette p, BoxConstraints box) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final look = PhaseLook.of(l, status);
     final running = status.state.phase == Phase.running;
     final canSwitch = status.systemProxySupported;
+    final width = box.maxWidth;
+    // A wide, low screen (a TV, 960 x 540): a smaller switch and the two
+    // cards side by side, so that all of it shows without scrolling.
+    final short = box.maxHeight < 560 && width >= 600;
     // On a tablet the content keeps about a phone's width in the middle (the
     // colors still reach the edges), and the problem boxes their own limit.
     // Both as padding, since IntrinsicHeight measures through padding but
     // not through a width limit.
-    final side = math.max(20.0, (width - 560) / 2);
+    final side = math.max(20.0, (width - (short ? 720 : 560)) / 2);
     final boxSide = math.max(0.0, (width - 2 * side - _problemBoxWidth) / 2);
     Widget problem(Widget box) => Padding(
       padding: EdgeInsets.symmetric(horizontal: boxSide),
@@ -1055,6 +1137,11 @@ class _PhoneHome extends StatelessWidget {
             _ => p.busy,
           };
     final label = confirming ? l.stateConnecting : look.label;
+    // A TV's remote presses OK; a phone is tapped.
+    final tv = Platform.isAndroid && AndroidCore.isTv;
+    final press = on
+        ? (tv ? l.tapToDisconnectTv : l.tapToDisconnectPhone)
+        : (tv ? l.tapToConnectTv : l.tapToConnectPhone);
     final place = homeLocation(l, status, connected: connected);
     final mismatch = exitMismatchText(l, status);
     final top = MediaQuery.paddingOf(context).top;
@@ -1095,14 +1182,17 @@ class _PhoneHome extends StatelessWidget {
                 ],
               ),
               const Spacer(),
-              const SizedBox(height: 16),
+              SizedBox(height: short ? 4 : 16),
               Center(
                 child: _PowerOrb(
                   palette: p,
+                  scale: short ? 0.68 : 1,
+                  // A TV starts on the switch, its ring showing.
+                  autofocus: Platform.isAndroid && AndroidCore.isTv,
                   on: on,
                   accent: accent,
                   busy: core.switchingProxy,
-                  tooltip: on ? l.tapToDisconnectPhone : l.tapToConnectPhone,
+                  tooltip: press,
                   // No account yet: the accounts page, which explains
                   // them and links to Mozilla's sign-up.
                   onPressed: () => status.totalAccounts == 0
@@ -1110,7 +1200,7 @@ class _PhoneHome extends StatelessWidget {
                       : runShowingErrors(context, () => _toggle(on)),
                 ),
               ),
-              const SizedBox(height: 14),
+              SizedBox(height: short ? 8 : 14),
               Text(
                 label,
                 textAlign: TextAlign.center,
@@ -1137,15 +1227,11 @@ class _PhoneHome extends StatelessWidget {
                           ),
                         ),
                       ),
-                    if (proxyOnly && proxy != null)
-                      _HomePill(
+                    if (status.upstreamProxy.isNotEmpty)
+                      _UpstreamProxyPill(
+                        address: status.upstreamProxy,
                         palette: p,
-                        child: Text(
-                          '${l.modeProxyOnly} ${ltr('127.0.0.1:${portOf(proxy.listen) ?? 10810}')}',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: p.muted,
-                          ),
-                        ),
+                        onPressed: onOpenUpstreamProxy,
                       ),
                   ],
                 )
@@ -1171,18 +1257,49 @@ class _PhoneHome extends StatelessWidget {
                       ? status.state.message
                       : '',
                   child: Text(
-                    look.hint.isNotEmpty
-                        ? look.hint
-                        : on
-                        ? l.tapToDisconnectPhone
-                        : l.tapToConnectPhone,
+                    look.hint.isNotEmpty ? look.hint : press,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(color: p.muted),
+                  ),
+                ),
+              // Where to find the proxy, on a line of its own under the delay.
+              if (connected && proxyOnly && proxy != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Center(
+                    child: _HomePill(
+                      palette: p,
+                      child: Text(
+                        '${l.modeProxyOnly} ${ltr('127.0.0.1:${portOf(proxy.listen) ?? 10810}')}',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: p.muted,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               if (failure?.code == Failure.unreachable &&
                   onOpenConnection != null)
                 _ConnectionSettingsButton(onPressed: onOpenConnection!),
+              if (failure?.code == Failure.upstreamProxy &&
+                  onOpenUpstreamProxy != null)
+                _ConnectionSettingsButton(
+                  onPressed: onOpenUpstreamProxy!,
+                  label: AppLocalizations.of(context).upstreamProxy,
+                ),
+              if (!connected &&
+                  status.upstreamProxy.isNotEmpty &&
+                  failure?.code != Failure.upstreamProxy)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Center(
+                    child: _UpstreamProxyPill(
+                      address: status.upstreamProxy,
+                      palette: p,
+                      onPressed: onOpenUpstreamProxy,
+                    ),
+                  ),
+                ),
               if (isLocationRefused(failure?.code ?? '') ||
                   (gaveUp && isLocationRefused(status.connectFailure)))
                 _RecommendedLocationButton(core: core),
@@ -1226,14 +1343,9 @@ class _PhoneHome extends StatelessWidget {
                 Center(child: _LanChip(port: portOf(proxy.listen) ?? 10810)),
               ],
               const Spacer(),
-              const SizedBox(height: 20),
+              SizedBox(height: short ? 12 : 20),
               _UpdateNotice(core: core, settings: settings, palette: p),
-              _UdpNotice(
-                core: core,
-                status: status,
-                settings: settings,
-                palette: p,
-              ),
+              _UdpNotice(status: status, settings: settings, palette: p),
               _Notices(notices: homeNotices(status.notices)),
               _LowQuotaNotice(
                 core: core,
@@ -1242,14 +1354,42 @@ class _PhoneHome extends StatelessWidget {
                 connected: connected,
                 palette: p,
               ),
-              _PlaceCard(
-                palette: p,
-                place: place,
-                accent: accent,
-                onTap: onOpenServers,
-              ),
-              const SizedBox(height: 12),
-              _HomeData(status: status, palette: p, onTap: onOpenAccounts),
+              if (short)
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _PlaceCard(
+                          palette: p,
+                          place: place,
+                          accent: accent,
+                          onTap: onOpenServers,
+                          compact: true,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _HomeData(
+                          status: status,
+                          palette: p,
+                          onTap: onOpenAccounts,
+                          compact: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else ...[
+                _PlaceCard(
+                  palette: p,
+                  place: place,
+                  accent: accent,
+                  onTap: onOpenServers,
+                ),
+                const SizedBox(height: 12),
+                _HomeData(status: status, palette: p, onTap: onOpenAccounts),
+              ],
             ],
           ),
         ),
@@ -1400,6 +1540,8 @@ class _HomeDelay extends StatelessWidget {
 class _PowerOrb extends StatelessWidget {
   const _PowerOrb({
     required this.palette,
+    this.scale = 1,
+    this.autofocus = false,
     required this.on,
     required this.accent,
     required this.busy,
@@ -1408,6 +1550,10 @@ class _PowerOrb extends StatelessWidget {
   });
 
   final _HomePalette palette;
+
+  /// The size against a phone's: smaller on a low screen (a TV).
+  final double scale;
+  final bool autofocus;
   final bool on;
   final Color accent;
   final bool busy;
@@ -1417,9 +1563,10 @@ class _PowerOrb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = palette;
-    const area = 250.0;
-    const ring = 186.0;
-    const disc = 148.0;
+    final area = 250.0 * scale;
+    final ring = 186.0 * scale;
+    final disc = 148.0 * scale;
+    final reach = 70.0 * scale;
     return Tooltip(
       message: tooltip,
       child: SizedBox.square(
@@ -1430,10 +1577,10 @@ class _PowerOrb extends StatelessWidget {
           children: [
             // Contour lines reaching past the button's area.
             Positioned(
-              left: -70,
-              top: -70,
-              right: -70,
-              bottom: -70,
+              left: -reach,
+              top: -reach,
+              right: -reach,
+              bottom: -reach,
               child: IgnorePointer(
                 child: CustomPaint(
                   painter: _Contours(
@@ -1507,10 +1654,11 @@ class _PowerOrb extends StatelessWidget {
                 shape: const CircleBorder(),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
+                  autofocus: autofocus,
                   onTap: busy ? null : onPressed,
                   child: Icon(
                     Icons.power_settings_new_rounded,
-                    size: 58,
+                    size: 58 * scale,
                     color: on ? Colors.white : (p.dark ? p.muted : p.idle),
                   ),
                 ),
@@ -1856,8 +2004,9 @@ class _NoticesState extends State<_Notices> {
 
 /// A newer version on GitHub. The desktop apps (Windows, Linux, macOS)
 /// install it themselves: Update downloads it (its progress shows here),
-/// then the app closes and opens again as the new version; on Android the
-/// button opens its download.
+/// then the app closes and opens again as the new version; on Android it
+/// downloads here and Update opens Android's installer (or, with Update in
+/// the app off, Download opens the browser; Updates).
 /// After an update, what it did. Closed, a version's notice stays away
 /// until a later version.
 class _UpdateNotice extends StatelessWidget {
@@ -1877,10 +2026,12 @@ class _UpdateNotice extends StatelessWidget {
       Updates.available,
       Updates.failure,
       Updates.resultSeen,
+      Updates.androidInApp,
+      Updates.needsInstallPermission,
     ]),
     builder: (context, _) {
       final l = AppLocalizations.of(context);
-      final update = core.status?.update;
+      final update = Updates.of(core.status);
       final last = update?.last;
       if (last != null && !Updates.resultSeen.value) {
         return _UpdateBanner(
@@ -1907,7 +2058,7 @@ class _UpdateNotice extends StatelessWidget {
               : (
                   label: l.download,
                   icon: Icons.download_rounded,
-                  onPressed: () => openDownload(release),
+                  onPressed: () => Updates.download(release),
                 ),
           onClose: dismiss,
         );
@@ -1945,7 +2096,9 @@ class _UpdateNotice extends StatelessWidget {
       return _UpdateBanner(
         palette: palette,
         icon: Icons.system_update_rounded,
-        text: mine && update.ready
+        text: Updates.needsInstallPermission.value
+            ? l.updateAllowInstall
+            : mine && update.ready
             ? l.updateReady(release.version)
             : l.updateAvailable(release.version),
         action: (
@@ -2012,33 +2165,71 @@ class _UpdateBanner extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, color: color),
-              const SizedBox(width: 10),
+              // The notice with its button is one place to choose: a
+              // remote's down arrow from the switch reaches it (the button
+              // alone stands aside, out of the arrow's line), and OK runs
+              // the button's action; right goes on to close.
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: InkWell(
+                  onTap: action?.onPressed,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Row(
                     children: [
-                      Tooltip(
-                        message: tooltip,
-                        child: Text(
-                          text,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: p.text,
-                            fontWeight: FontWeight.w600,
+                      Icon(icon, color: color),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Tooltip(
+                                message: tooltip,
+                                child: Text(
+                                  text,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: p.text,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              if (busy) ...[
+                                const SizedBox(height: 8),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: progress,
+                                    minHeight: 4,
+                                    color: color,
+                                    backgroundColor: color.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ),
-                      if (busy) ...[
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            minHeight: 4,
-                            color: color,
-                            backgroundColor: color.withValues(alpha: 0.2),
+                      if (action != null) ...[
+                        const SizedBox(width: 8),
+                        // Solid, in the banner's color: the one thing to
+                        // press (focus goes to the whole notice).
+                        ExcludeFocus(
+                          child: FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: color,
+                              foregroundColor: Colors.white,
+                              visualDensity: VisualDensity.compact,
+                              // From the theme, for its font (Vazirmatn in
+                              // Persian): a bare style would replace it.
+                              textStyle: theme.textTheme.labelLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            onPressed: action.onPressed,
+                            icon: Icon(action.icon, size: 18),
+                            label: Text(action.label),
                           ),
                         ),
                       ],
@@ -2046,21 +2237,6 @@ class _UpdateBanner extends StatelessWidget {
                   ),
                 ),
               ),
-              if (action != null) ...[
-                const SizedBox(width: 8),
-                // Solid, in the banner's color: the one thing to press.
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: color,
-                    foregroundColor: Colors.white,
-                    visualDensity: VisualDensity.compact,
-                    textStyle: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  onPressed: action.onPressed,
-                  icon: Icon(action.icon, size: 18),
-                  label: Text(action.label),
-                ),
-              ],
               if (onClose != null)
                 IconButton(
                   tooltip: l.dismiss,
@@ -2076,21 +2252,18 @@ class _UpdateBanner extends StatelessWidget {
   }
 }
 
-/// TUN mode refused a program's UDP that looks like a call or a game
-/// (Mozilla does not carry UDP): the program by name, with a way to send its
-/// UDP directly (its other traffic stays in the VPN, so a messenger blocked
-/// in the country keeps working), or to see this card no more. Once seen, it
-/// goes after a minute, and stays away while the same program is the one
-/// refused and the TUN runs.
+/// TUN mode refused a program's UDP that looks like a call or a game (on a port
+/// Mozilla does not carry): the program by name. Sending its UDP directly is
+/// chosen in the TUN settings, on purpose: a button here could be pressed without
+/// knowing what it gives away. Once seen, the card goes after a minute, and stays
+/// away while the same program is the one refused and the TUN runs.
 class _UdpNotice extends StatefulWidget {
   const _UdpNotice({
-    required this.core,
     required this.status,
     required this.settings,
     required this.palette,
   });
 
-  final CoreController core;
   final CoreStatus status;
   final AppSettings settings;
   final _HomePalette palette;
@@ -2170,43 +2343,6 @@ class _UdpNoticeState extends State<_UdpNotice> {
       ? program.substring(0, program.length - 4)
       : program;
 
-  /// Adds the program (with where it runs from) to the ones that skip the
-  /// VPN, its UDP alone; the core then refuses its calls no more and drops
-  /// this card.
-  Future<void> _sendDirectly(
-    BuildContext context,
-    String program,
-    String path,
-  ) async {
-    final l = AppLocalizations.of(context);
-    final core = widget.core;
-    final ok = await runShowingErrors(
-      context,
-      () => core.editSettings((config) {
-        final tun = switch (config['tun']) {
-          final Map<String, Object?> m => m,
-          _ => config['tun'] = <String, Object?>{},
-        };
-        final programs = [...(tun['programs'] as List<Object?>? ?? const [])];
-        final known = programs.any(
-          (p) =>
-              p is Map && '${p['name']}'.toLowerCase() == program.toLowerCase(),
-        );
-        if (!known) {
-          programs.add({
-            'name': program,
-            'udp_only': true,
-            if (path.isNotEmpty) 'path': path,
-          });
-        }
-        tun['programs'] = programs;
-      }),
-    );
-    if (!ok || !context.mounted) return;
-    showError(context, l.udpDirectAdded(ltr(_label(program))));
-    await core.refresh();
-  }
-
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.settings,
@@ -2234,45 +2370,31 @@ class _UdpNoticeState extends State<_UdpNotice> {
             side: BorderSide(color: StatusColors.busy.withValues(alpha: 0.4)),
           ),
           child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 6, 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            padding: const EdgeInsetsDirectional.fromSTEB(14, 8, 6, 8),
+            child: Row(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(top: 2),
-                      child: Icon(
-                        Icons.phone_disabled_rounded,
-                        color: StatusColors.busy,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        l.udpNoticeBody(ltr(_label(program))),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: p.text,
-                        ),
-                      ),
-                    ),
-                  ],
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: StatusColors.busy,
                 ),
-                OverflowBar(
-                  alignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => settings.update(udpNotice: false),
-                      child: Text(l.dontShowAgain),
-                    ),
-                    TextButton.icon(
-                      onPressed: () =>
-                          _sendDirectly(context, program, tun.refusedUdpPath),
-                      icon: const Icon(Icons.call_rounded, size: 18),
-                      label: Text(l.udpNoticeAction),
-                    ),
-                  ],
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l.udpNoticeBody(ltr(_label(program))),
+                    style: theme.textTheme.bodyMedium?.copyWith(color: p.text),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // The style starts from the theme, for its font.
+                TextButton.icon(
+                  style: TextButton.styleFrom(
+                    foregroundColor: p.muted,
+                    visualDensity: VisualDensity.compact,
+                    textStyle: theme.textTheme.labelLarge,
+                  ),
+                  onPressed: () => settings.update(udpNotice: false),
+                  icon: const Icon(Icons.visibility_off_outlined, size: 18),
+                  label: Text(l.dontShowAgain),
                 ),
               ],
             ),
@@ -2410,10 +2532,7 @@ class _LowQuotaNoticeState extends State<_LowQuotaNotice> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      l.lowQuotaNotice(
-                        rounded(usage.remainingBytes),
-                        rounded(usage.limitBytes),
-                      ),
+                      l.lowQuotaNotice(rounded(usage.limitBytes)),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: p.text,
                       ),

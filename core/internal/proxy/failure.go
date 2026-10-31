@@ -28,6 +28,14 @@ const (
 	// connection was cut (timeouts, resets, failed TLS handshakes), as on
 	// a network that blocks them.
 	FailureUnreachable = "unreachable"
+	// FailureInsideVPN: as unreachable, on a device whose own internet
+	// already leaves through a VPN's exit (Fastly's network: another
+	// Firefox VPN, on this device or one whose proxy it uses), which lets
+	// only web ports through, not Mozilla's proxy port.
+	FailureInsideVPN = "inside_vpn"
+	// FailureUpstreamProxy: as unreachable, through the user's own SOCKS5
+	// proxy (network.upstream_proxy): the proxy, or its way to Mozilla.
+	FailureUpstreamProxy = "upstream_proxy"
 	// FailureRefused: a Mozilla proxy server refused the tunnel.
 	FailureRefused = "refused"
 	// FailureLocationRefused: the server of a location the user chose

@@ -2,7 +2,10 @@
 # one APK per ABI (arm64-v8a, armeabi-v7a, x86_64). It first binds the Go
 # core into app\android\app\libs\core.aar with gomobile, then builds the
 # Flutter app. The version is "major.minor.patch" from app\pubspec.yaml, passed
-# to the app (APP_VERSION) and to the core (version.Current).
+# to the app (APP_VERSION) and to the core (version.Current). The core gets
+# the public half of the update signing key (scripts\signing-key.ps1): it
+# downloads only APKs of releases whose SHA256SUMS.txt is signed with it, for
+# the app to install (on a TV, which has no browser).
 #
 # Needs Go, Flutter, the Android SDK with the NDK named in
 # app\android\app\build.gradle.kts, a JDK (JAVA_HOME, else Android
@@ -32,10 +35,14 @@ if (-not $env:GOTOOLCHAIN) {
     if ([version]$have -lt [version]$need) { $env:GOTOOLCHAIN = "go$need+auto" }
 }
 
+$public = & "$PSScriptRoot\signing-key.ps1"
+$ldflags = "-s -w -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$version"
+if ($public) { $ldflags += " -X github.com/armanlife/firefox-vpn-client/core/internal/signing.Key=$public" }
+
 Push-Location "$root\core"
 try {
     gomobile bind -target=android -androidapi 24 -trimpath `
-        -ldflags "-s -w -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$version" `
+        -ldflags $ldflags `
         -o ..\app\android\app\libs\core.aar ./mobile
     if ($LASTEXITCODE -ne 0) { throw 'gomobile bind failed' }
 } finally { Pop-Location }

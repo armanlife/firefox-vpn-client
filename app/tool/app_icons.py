@@ -8,7 +8,9 @@ connecting, logo-animated1.png to logo-animated4.png (80 px):
   black background layer and the symbol as the foreground layer, 108 dp
   each, which the launcher crops to its own shape; and ic_launcher.png for
   older Android, the same tile, rounded. The status bar icon
-  (res/drawable/ic_stat_logo.xml) is the symbol in white, by hand.
+  (res/drawable/ic_stat_logo.xml) is the symbol in white, by hand. The
+  Android TV banner (res/drawable-xhdpi/banner.png, 320 x 180 px): the
+  symbol and the name in white on the night theme's navy.
 - macOS (macos/Runner/Assets.xcassets/AppIcon.appiconset): the black tile
   in Apple's grid, a rounded square of 824 in 1024 with room for its
   shadow, the symbol in its middle, in the sizes the icon set lists.
@@ -102,6 +104,32 @@ def android(glyph):
     os.makedirs(folder, exist_ok=True)
     with open(os.path.join(folder, 'ic_launcher.xml'), 'w', newline='\n') as f:
         f.write(ADAPTIVE)
+
+
+def tv_banner(glyph):
+    """Android TV's banner, which its home screen shows in the apps row:
+    the symbol and the name, 320 x 180 px (160 x 90 dp at xhdpi), on the
+    app's dark navy (its night theme), which stands out from the TV's black
+    home screen as the other apps' tiles do."""
+    from PIL import ImageFont
+    w, h = 320, 180
+    top, bottom = (0x26, 0x30, 0x6B), (0x14, 0x1B, 0x3D)
+    out = Image.new('RGBA', (w, h))
+    for y in range(h):
+        t = y / (h - 1)
+        out.paste(tuple(round(a + (b - a) * t) for a, b in zip(top, bottom)) + (255,), (0, y, w, y + 1))
+    symbol = art_layer(glyph, 96, 1.0)
+    font = ImageFont.truetype(os.path.join(APP, 'assets', 'fonts', 'Vazirmatn-Bold.ttf'), 34)
+    name = 'Firefox VPN'
+    draw = ImageDraw.Draw(out)
+    left, top, right, bottom = draw.textbbox((0, 0), name, font=font)
+    gap = 14
+    x = (w - (symbol.width + gap + right - left)) // 2
+    out.alpha_composite(symbol, (x, (h - symbol.height) // 2))
+    draw.text((x + symbol.width + gap - left, (h - (bottom - top)) // 2 - top), name, font=font, fill=(255, 255, 255, 255))
+    folder = os.path.join(RES, 'drawable-xhdpi')
+    os.makedirs(folder, exist_ok=True)
+    out.save(os.path.join(folder, 'banner.png'), optimize=True)
 
 
 def crisp(art, size):
@@ -230,6 +258,7 @@ def main():
     tile_art = Image.open(TILE).convert('RGBA')
     glyph = Image.open(GLYPH).convert('RGBA')
     android(glyph)
+    tv_banner(glyph)
     macos(glyph)
     windows(tile_art)
     core(tile_art)

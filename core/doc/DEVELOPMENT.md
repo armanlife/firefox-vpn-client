@@ -19,9 +19,9 @@ There is no generated-code step and no frontend build: the dashboard's plain HTM
 
 ## Toolchain and dependencies
 
-`go.mod` declares Go `1.27.2` (gVisor's minimum; with `GOTOOLCHAIN=auto` an older Go downloads it). It pins `quic-go v0.59.0`, `x/crypto`, `x/net`, `x/sys` (Windows API, registry), `x/term`, `fyne.io/systray v1.12.2` (tray icon; pulls `godbus/dbus` on Linux), `gvisor.dev/gvisor` (the userspace TCP/IP stack of the Android VPN mode, [internal/tun](../internal/tun)), `github.com/sagernet/sing-tun` with `sagernet/sing` and sagernet's gVisor fork (the desktop TUN, imported only by [internal/tunstack](../internal/tunstack); its stack needs the build tag `with_gvisor`), `github.com/sagernet/netlink` (on Linux, removing the rules a crashed TUN left), `github.com/Microsoft/go-winio` (the TUN service's named pipe), and `golang.org/x/mobile` at commit `8b95e45f8d3e` (2026-09-08, kept by a `tool` directive) for the Android build of [mobile/](../mobile). None of them needs CGO on Windows or Linux; the Android build uses CGO through gomobile and the NDK.
+`go.mod` declares Go `1.27.2` (with `GOTOOLCHAIN=auto` an older Go downloads it). It pins `quic-go v0.59.0`, `x/crypto`, `x/net`, `x/sys` (Windows API, registry), `x/term`, `fyne.io/systray v1.12.2` (tray icon; pulls `godbus/dbus` on Linux), `gvisor.dev/gvisor` (the userspace TCP/IP stack of the Android VPN mode, [internal/tun](../internal/tun)), `github.com/sagernet/sing-tun` with `sagernet/sing` and sagernet's gVisor fork (the desktop TUN, imported only by [internal/tunstack](../internal/tunstack); its stack needs the build tag `with_gvisor`), `github.com/sagernet/netlink` (on Linux, removing the rules a crashed TUN left), `github.com/Microsoft/go-winio` (the TUN service's named pipe), and `golang.org/x/mobile` at commit `8b95e45f8d3e` (2026-09-08, kept by a `tool` directive) for the Android build of [mobile/](../mobile). None of them needs CGO on Windows or Linux; the Android build uses CGO through gomobile and the NDK.
 
-Android: `gomobile` and `gobind` are installed at the same x/mobile commit (`go install golang.org/x/mobile/cmd/gomobile@8b95e45f8d3e`, likewise `cmd/gobind`). With `ANDROID_HOME`, `ANDROID_NDK_HOME`, and a JDK (Android Studio's) set, `gomobile bind -target=android -androidapi 24 -trimpath -ldflags "-s -w" -o ../app/android/app/libs/core.aar ./mobile` builds the library the Flutter app links. Read current [go.mod](../go.mod) and [go.sum](../go.sum) before changing dependencies.
+Android: `gomobile` and `gobind` are installed at the same x/mobile commit (`go install golang.org/x/mobile/cmd/gomobile@8b95e45f8d3e`, likewise `cmd/gobind`). With `ANDROID_HOME`, `ANDROID_NDK_HOME`, and a JDK (Android Studio's) set, `gomobile bind -target=android -androidapi 24 -trimpath -ldflags "-s -w" -o ../app/android/app/libs/core.aar ./mobile` builds the library the Flutter app links; Gradle builds the VPN's tunnel, [`app/android/hev-socks5-tunnel`](#hev-socks5-tunnel), with the NDK named in `app/android/app/build.gradle.kts` when it builds the app. Read current [go.mod](../go.mod) and [go.sum](../go.sum) before changing dependencies.
 
 Control-plane requests and the proxy's CONNECT carry desktop Firefox's User-Agent for this system ([controlplane/headers.go](../internal/controlplane/headers.go)), with the Firefox release from Mozilla's product details; it is not this program's version.
 
@@ -32,6 +32,14 @@ go mod verify
 ```
 
 Do not run `go mod tidy` or upgrade dependencies for an unrelated edit. Dependency changes need an explicit compatibility review of H2/H3 behavior and the supported Go version.
+
+### hev-socks5-tunnel
+
+`app/android/hev-socks5-tunnel` is [hev-socks5-tunnel](https://github.com/heiher/hev-socks5-tunnel) 2.19.3 (commit `c5584fe`) with its submodules (`src/core`, `third-part/hev-task-system`, `third-part/lwip`, `third-part/yaml`), which the Android app's VPN runs. Its license is in `LICENSE` there, and those of the submodules beside them. It is kept in the repository so that the app builds with nothing downloaded, and because its symlinks do not check out on Windows without special rights. Only what the Android build needs is copied, with every symlink replaced by the file it points to.
+
+One change to its code: `hev_socks5_client_connect` in `src/core/src/hev-socks5-client.c` sets `TCP_NODELAY` on its connection to the proxy. Without it, a client's second small write waits for the first one's acknowledgement, which the kernel delays, and the first response of a connection comes later for it.
+
+To update it: clone the new tag with `git -c core.autocrlf=false clone --recursive`; replace `LICENSE`, `Android.mk`, `Application.mk`, `build.mk`, `conf`, `include`, `src`, and `third-part/{hev-task-system,lwip,yaml}` (without `.git*` and `Makefile`); replace each symlink (`git ls-files -s`, mode `120000`, in each submodule too) with its target; make the change above again; and change `REV_ID` in `app/android/app/build.gradle.kts`.
 
 ## Edit and verification loop
 
@@ -50,7 +58,7 @@ go test -count=1 -timeout=120s ./...
 go vet ./...
 ```
 
-See [TESTING.md](TESTING.md) for focused commands, isolation, race requirements, and live opt-ins. Documentation-only changes need link/language/source checks; they do not require a live account or proxy process.
+Documentation-only changes need link/language/source checks; they do not require a live account or proxy process.
 
 ## Windows development build
 
@@ -70,7 +78,7 @@ These environment values persist in the current PowerShell process. Use a fresh 
 
 A development build next to the distribution executable shares its `user-data` folder (the folder next to the executable). Run test builds from a separate folder or with `-data-dir` and a temporary home so they never touch real accounts. Replacing `dist\firefox-vpn-core.exe` or restarting a running instance is a separate concrete action within the user's requested scope. Confirm listener ownership, and stop test instances by PID or path rather than image name.
 
-The Windows app carries `d3dcompiler_47.dll`, DirectX's shader compiler, beside `firefox-vpn.exe`: Flutter's renderer (ANGLE on Direct3D 11) needs it to draw anything, and some stripped copies of Windows 10 (the "lite" ones) lack the system's copy, where the window stays empty (black in dark mode). `app\windows\CMakeLists.txt` installs it from the Windows SDK (`Windows Kits\10\Redist\D3D\x64`, which Visual Studio's C++ workload installs), and `scripts\build-windows.ps1` refuses a build without it. Checked on 2026-10-25: a copy of the app with a broken `d3dcompiler_47.dll` beside it opened an empty window; with the SDK's copy beside it, it drew normally.
+The Windows app carries `d3dcompiler_47.dll`, DirectX's shader compiler, beside `firefox-vpn.exe`: Flutter's renderer (ANGLE on Direct3D 11) needs it to draw anything, and some stripped copies of Windows 10 (the "lite" ones) lack the system's copy, where the window stays empty (black in dark mode). `app\windows\CMakeLists.txt` installs it from the Windows SDK (`Windows Kits\10\Redist\D3D\x64`, which Visual Studio's C++ workload installs), and `scripts\build-windows.ps1` refuses a build without it.
 
 The TUN service is built with the gVisor tag and without a console: `go build -tags with_gvisor -ldflags "-H windowsgui ..." ./cmd/firefox-vpn-tun` (`scripts/build-windows-tun.ps1`; `APP_VERSION=<version> go generate ./cmd/firefox-vpn-tun` makes its resources, `tools/winres -program tun`). The app's build puts it beside the core in `core\`, from where the app or Setup installs it. On Linux and macOS it is `CGO_ENABLED=0 go build -tags with_gvisor ./cmd/firefox-vpn-tun`; `scripts/build-linux.sh` puts it in the app's `core/`, `scripts/build-macos.sh` in `Contents/MacOS` (both processors in one file, signed ad hoc like the core).
 
@@ -94,7 +102,7 @@ A release is the version in `app/pubspec.yaml` and its tag `v<version>`, which C
 
 ## Operational testing
 
-Use [OPERATOR.md](OPERATOR.md) for login and startup commands. Local fixtures do not require Mozilla credentials. Real-account testing can send traffic, activate account access, or persist refreshed credentials; follow the explicit live-test workflow in [TESTING.md](TESTING.md).
+Use [OPERATOR.md](OPERATOR.md) for login and startup commands. Local fixtures do not require Mozilla credentials. Real-account testing can send traffic, activate account access, or persist refreshed credentials.
 
 Observe the actual listener, upstream socket, and response together when attributing live traffic. A changed IP or another proxy's success alone is insufficient.
 

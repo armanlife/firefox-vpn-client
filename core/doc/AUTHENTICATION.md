@@ -149,7 +149,7 @@ Do not infer live quota-exhaustion behavior from parsing quota headers. The hist
 
 [internal/controlplane](../internal/controlplane/client.go) owns a shared 30-second HTTP client and cookie jar. Configure `controlplane.SetTransport` before requests start. This client is distinct from data-plane sessions.
 
-[challenge.go](../internal/fxa/challenge.go) handles account-API HTTP 406 challenges, PoW/PAT, and challenge cookies, with at most five challenge attempts. `contextWithMinDeadline` can extend a short caller deadline to the configured minimum: FxA uses 90 seconds and challenge solving uses 60 seconds. Check the actual context path before promising a strict end-to-end timeout.
+[challenge.go](../internal/fxa/challenge.go) handles account-API HTTP 406 challenges, PoW/PAT, and challenge cookies, with at most five challenge attempts. `contextWithMinDeadline` can extend a short caller deadline to the configured minimum: FxA uses 90 seconds and challenge solving uses 60 seconds. Check the actual context path before promising a strict end-to-end timeout. Each 406 is logged at INFO (`the account server answered HTTP 406`), each solved challenge with its host, the kinds of challenge asked, the rounds, and the time (`Fastly challenge solved host=accounts.firefox.com challenges=pat,pow,clientmetrics rounds=2 took=4.1s`), and a failed solve at WARN, so the logs show how often the bot check comes and whether the solver keeps up.
 
 Do not disable production TLS validation to work around a challenge or local interception. Test-only certificate configurations must remain local to tests.
 
@@ -165,5 +165,3 @@ Do not disable production TLS validation to work around a challenge or local int
 - `TestWritePrivateReplacesContentAndTightensPermissions`: credential file replacement and permissions.
 - `TestAuditSOCKSConnectAndRenewal`: controlled automatic expired-access refresh, pass renewal, saved response, and stream preservation for H2/H3.
 - `TestLiveOAuthRefresh`: explicit real-account refresh and Guardian acceptance, only with authorization and opt-in.
-
-See [TESTING.md](TESTING.md) for commands, fixture isolation, and the distinction between explicit refresh and waiting for natural OAuth expiry.

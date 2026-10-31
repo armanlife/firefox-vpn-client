@@ -245,6 +245,14 @@ class Traffic {
 abstract final class Failure {
   static const noNetwork = 'no_network';
   static const unreachable = 'unreachable';
+
+  /// As [unreachable], through the user's own proxy
+  /// (network.upstream_proxy).
+  static const upstreamProxy = 'upstream_proxy';
+
+  /// As [unreachable], on an internet that already goes through a VPN's
+  /// exit (another Firefox VPN), which lets only web ports through.
+  static const insideVpn = 'inside_vpn';
   static const refused = 'refused';
 
   /// The server of a location the user chose refused the account again
@@ -270,8 +278,7 @@ class TunState {
       serviceVersion = _str(j['service_version']),
       installed = _bool(j['installed']),
       programsSupported = _bool(j['programs_supported']),
-      refusedUdp = _str(j['refused_udp']),
-      refusedUdpPath = _str(j['refused_udp_path']);
+      refusedUdp = _str(j['refused_udp']);
 
   /// off, starting, on, or error.
   final String state;
@@ -290,9 +297,7 @@ class TunState {
 
   /// The file name of the last program whose UDP (a call or a game) the
   /// running TUN refused, while it does not skip the VPN; "" for none.
-  /// [refusedUdpPath] is its executable.
   final String refusedUdp;
-  final String refusedUdpPath;
 
   bool get on => state == 'on';
   bool get starting => state == 'starting';
@@ -331,6 +336,7 @@ class UpdateState {
       done = _int(j['done']),
       total = _int(j['total']),
       error = _str(j['error']),
+      file = _str(j['file']),
       last = switch (_mapOrNull(j['last'])) {
         final m? => UpdateResult.fromJson(m),
         null => null,
@@ -348,6 +354,9 @@ class UpdateState {
 
   /// Why the last download or install failed (the core's English).
   final String error;
+
+  /// The downloaded package once ready: Android's APK, for its installer.
+  final String file;
 
   /// What the update before this start did.
   final UpdateResult? last;
@@ -376,6 +385,10 @@ class UpdateResult {
   final bool ok;
   final String error;
 }
+
+/// A real delay below this many milliseconds is good; more may be a passing
+/// queue (CoreController._refreshDelay).
+const delayGoodMs = 400;
 
 /// The result of `POST /api/test` (core/internal/proxy/conntest.go).
 class ConnectionTest {
@@ -479,6 +492,7 @@ class CoreStatus {
       selection = _str(j['selection']),
       selectionName = _str(j['selection_name']),
       noNetwork = _bool(j['no_network']),
+      upstreamProxy = _str(j['upstream_proxy']),
       networkChangedAt = _time(j['network_changed_at']),
       dataDir = _str(j['data_dir']);
 
@@ -504,6 +518,9 @@ class CoreStatus {
   /// while it runs), clear (proxy only), or tun (every app, through the TUN
   /// service).
   final String systemProxy;
+
+  /// The address of the user's SOCKS5 proxy while it is on; "" otherwise.
+  final String upstreamProxy;
 
   bool get systemProxySet => systemProxy == 'set';
   final bool systemProxySupported;

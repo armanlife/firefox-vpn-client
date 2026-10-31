@@ -158,8 +158,8 @@ class AppLocalizationsHu extends AppLocalizations {
   String get addAccount => 'Fiók hozzáadása';
 
   @override
-  String lowQuotaNotice(String left, String size) {
-    return 'Az aktuális fiók adatkerete hamarosan elfogy (maradt $left). Adjon hozzá egy másik fiókot, és $size adatkerettel több lesz.';
+  String lowQuotaNotice(String size) {
+    return 'Ennek a fióknak az adatkerete hamarosan elfogy. Adjon hozzá egy másik fiókot, és $size adatkerettel több lesz.';
   }
 
   @override
@@ -168,6 +168,10 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get noAccountsHint =>
       'A csatlakozáshoz adjon hozzá egy Firefox Accountot.';
+
+  @override
+  String get delayTestFailed =>
+      'Nem sikerült megmérni a szerverek késleltetését. Ellenőrizze az internetet.';
 
   @override
   String get createAccountTitle => 'Nincs Firefox Accountja?';
@@ -305,6 +309,13 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get close => 'Bezárás';
+
+  @override
+  String get noBrowserTitle => 'Ezen az eszközön nincs böngésző';
+
+  @override
+  String get noBrowserText =>
+      'Nyissa meg ezt a címet a telefonján vagy a számítógépén:';
 
   @override
   String get cancel => 'Mégse';
@@ -649,8 +660,7 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get noticeCommand =>
-      'Egy alkalmazás UDP-t kért (játékok, hang- és videohívások). A Mozilla proxyja csak TCP-forgalmat továbbít, így ez nem jut át.';
+  String get noticeCommand => 'Ezt a kapcsolattípust a VPN nem támogatja.';
 
   @override
   String noticeTimes(int count, String time) {
@@ -841,6 +851,70 @@ class AppLocalizationsHu extends AppLocalizations {
   String get sectionAdvanced => 'Speciális';
 
   @override
+  String get tlsFragment => 'TLS-fragmentálás';
+
+  @override
+  String get tlsFragmentOff => 'Kikapcsolva';
+
+  @override
+  String get tlsFragmentFirstByte => 'Első bájt';
+
+  @override
+  String get tlsFragmentSni => 'Kiszolgálónév (SNI)';
+
+  @override
+  String get tlsFragmentFirstByteHint =>
+      'Az első bájtnál osztja ketté a TLS-fejlécet (0x16)';
+
+  @override
+  String get tlsFragmentSniHint =>
+      'Több TCP-csomagra osztja a kiszolgálónevet (SNI)';
+
+  @override
+  String get tlsFragmentOffHint => 'Normál TLS-kapcsolat';
+
+  @override
+  String get sectionBypass => 'Ha a Mozilla le van tiltva';
+
+  @override
+  String get apiRelay => 'Közvetítő szerver';
+
+  @override
+  String get apiRelayHint =>
+      'Saját Cloudflare Worker, vagy relay.php a saját tárhelyén.\nCsak akkor használatos, ha a Mozilla közvetlenül nem válaszol: a bejelentkezés, a fiókok és a szerverlista megy rajta keresztül, a VPN-forgalom nem.';
+
+  @override
+  String get upstreamProxy => 'Felsőbb szintű proxy';
+
+  @override
+  String get upstreamProxyOn => 'A felsőbb szintű proxy be van kapcsolva';
+
+  @override
+  String get upstreamProxyAddress => 'SOCKS5-proxy címe';
+
+  @override
+  String get upstreamProxyPort => 'Port';
+
+  @override
+  String get upstreamProxyHint =>
+      'A Mozillához vezető kapcsolat ezen a proxyn megy át, azokhoz a hálózatokhoz, amelyek letiltják vagy lassítják a Mozillát.\nHa a proxy ezen az eszközön fut, hagyja ki a VPN-ből.';
+
+  @override
+  String get upstreamProxyInvalid =>
+      'Adja meg a proxy címét, például 127.0.0.1.';
+
+  @override
+  String get upstreamProxyInvalidPort =>
+      'Adjon meg egy portot 1 és 65535 között.';
+
+  @override
+  String get upstreamProxyOwn =>
+      'Ez az alkalmazás saját proxyja. Adjon meg egy másikat.';
+
+  @override
+  String get apiRelayInvalid => 'https:// címnek kell lennie.';
+
+  @override
   String get listenAddress => 'Proxyhozzáférés';
 
   @override
@@ -969,6 +1043,10 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String get updateAllowInstall =>
+      'Engedélyezze a Firefox VPN-nek az alkalmazások telepítését, majd nyomja meg újra a „Frissítés” gombot.';
+
+  @override
   String updateInstalling(String version) {
     return 'A(z) $version verzió telepítése. Az alkalmazás bezárul, majd újra megnyílik.';
   }
@@ -989,11 +1067,14 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get autoUpdate => 'Automatikus frissítés';
+  String get sectionUpdates => 'Frissítések';
 
   @override
-  String get autoUpdateHint =>
-      'Az új verziók a háttérben töltődnek le, és az alkalmazás következő megnyitásakor települnek.';
+  String get inAppUpdates => 'Frissítés az alkalmazásban';
+
+  @override
+  String get inAppUpdatesHint =>
+      'Az új verziók a háttérben töltődnek le, és megnyílik az Android telepítője.\nKikapcsolva: a Letöltés gomb a böngészőt nyitja meg.';
 
   @override
   String get repoNotSet => 'A GitHub-tároló még nincs beállítva.';
@@ -1023,6 +1104,12 @@ class AppLocalizationsHu extends AppLocalizations {
   String get groupApp => 'Alkalmazás';
 
   @override
+  String get groupServersAccounts => 'Szerverek és fiókok';
+
+  @override
+  String get groupNetwork => 'Hálózat';
+
+  @override
   String get stateOff => 'Nincs csatlakozva';
 
   @override
@@ -1030,6 +1117,13 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get tapToDisconnectPhone => 'Koppintson a kapcsolat bontásához';
+
+  @override
+  String get tapToConnectTv => 'Nyomja meg az OK gombot a csatlakozáshoz';
+
+  @override
+  String get tapToDisconnectTv =>
+      'Nyomja meg az OK gombot a kapcsolat bontásához';
 
   @override
   String lanAddress(String address) {
@@ -1066,7 +1160,15 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get failUnreachable =>
-      'A Mozilla szerverei blokkolva vannak ezen az interneten. Próbáljon másik internetkapcsolatot.';
+      'Nem sikerült elérni a Mozilla szervereit. Próbáljon másik internetkapcsolatot.';
+
+  @override
+  String get failUpstreamProxy =>
+      'Nem sikerült elérni a Mozillát a felsőbb szintű proxyn keresztül. Ellenőrizze, hogy fut-e.';
+
+  @override
+  String get failInsideVpn =>
+      'Ez az internet már egy VPN-en keresztül megy. Kapcsolja ki.';
 
   @override
   String get failRefused =>
@@ -1403,19 +1505,11 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String udpNoticeBody(String program) {
-    return 'A(z) $program hívást próbált indítani vagy online játszani, de TUN módban ez a forgalom (UDP) nem mehet át a VPN-en.';
+    return 'A(z) $program UDP-forgalma nem megy át a VPN-en.';
   }
-
-  @override
-  String get udpNoticeAction => 'Az UDP-je menjen közvetlenül';
 
   @override
   String get dontShowAgain => 'Ne mutassa többé';
-
-  @override
-  String udpDirectAdded(String program) {
-    return '$program: az UDP-je mostantól közvetlenül csatlakozik.';
-  }
 
   @override
   String get addRunningProgram => 'A futó programok közül';

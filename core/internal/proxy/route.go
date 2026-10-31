@@ -54,6 +54,9 @@ type RoutedOpener struct {
 	dnsNoted                 atomic.Bool
 	proxied, direct, blocked atomic.Int64
 	meter                    *trafficMeter
+	// closed: the engine stopped, and its clients' UDP associations must end,
+	// so that they ask the next engine.
+	closed atomic.Bool
 }
 
 // directDial opens the connections routed directly with the local
@@ -134,8 +137,11 @@ func (o *RoutedOpener) Lookup(ctx context.Context, host string) ([]netip.Addr, e
 	return o.lookup(ctx, host)
 }
 
-// Close stops measuring the speed.
-func (o *RoutedOpener) Close() { o.meter.close() }
+// Close stops measuring the speed, and new UDP tunnels.
+func (o *RoutedOpener) Close() {
+	o.closed.Store(true)
+	o.meter.close()
+}
 
 // Traffic returns the bytes and speed so far.
 func (o *RoutedOpener) Traffic() Traffic { return o.meter.traffic() }

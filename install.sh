@@ -117,11 +117,14 @@ die() { printf '\n  %s%s error:%s %s\n\n' "$RED$BOLD" "$CROSS" "$OFF" "$*" >&2; 
 section() { printf '\n  %s%s%s\n' "$BOLD" "$*" "$OFF"; }
 field() { printf '    %s%-10s%s %s%s%s\n' "$DIM" "$1" "$OFF" "${3:-}" "$2" "$OFF"; }
 
+# fetch <url> <file>. GitHub's names have several addresses; one that does
+# not answer (a filtered network) held the download about two minutes
+# before the next was tried, so each gets a few seconds.
 fetch() {
   if command -v curl >/dev/null 2>&1; then
-    curl -fsSL --retry 3 -o "$2" "$1"
+    curl -fsSL --connect-timeout 15 --retry 3 -o "$2" "$1"
   elif command -v wget >/dev/null 2>&1; then
-    wget -q -O "$2" "$1"
+    wget -q --connect-timeout=15 -O "$2" "$1"
   else
     die "curl or wget is required"
   fi

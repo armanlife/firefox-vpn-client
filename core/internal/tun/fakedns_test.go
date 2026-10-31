@@ -44,7 +44,7 @@ func answers(t *testing.T, f *FakeDNS, name string, typ dnsmessage.Type) (dnsmes
 }
 
 func TestFakeDNSGivesEachNameAnAddressAndRemembersIt(t *testing.T) {
-	f := NewFakeDNS()
+	f := wholeRange()
 	m, a := answers(t, f, "Example.COM.", dnsmessage.TypeA)
 	if m.Header.ID != 7 || !m.Header.Response || m.Header.RCode != dnsmessage.RCodeSuccess || len(a) != 1 {
 		t.Fatalf("reply %+v %v", m.Header, a)
@@ -66,14 +66,14 @@ func TestFakeDNSGivesEachNameAnAddressAndRemembersIt(t *testing.T) {
 }
 
 func TestFakeDNSAnswersAAAAWithNothing(t *testing.T) {
-	m, a := answers(t, NewFakeDNS(), "example.com.", dnsmessage.TypeAAAA)
+	m, a := answers(t, wholeRange(), "example.com.", dnsmessage.TypeAAAA)
 	if m.Header.RCode != dnsmessage.RCodeSuccess || len(m.Answers) != 0 || len(a) != 0 {
 		t.Fatalf("AAAA: %+v", m)
 	}
 }
 
 func TestFakeDNSKeepsLocalhost(t *testing.T) {
-	_, a := answers(t, NewFakeDNS(), "localhost.", dnsmessage.TypeA)
+	_, a := answers(t, wholeRange(), "localhost.", dnsmessage.TypeA)
 	if len(a) != 1 || a[0] != netip.MustParseAddr("127.0.0.1") {
 		t.Fatalf("localhost: %v", a)
 	}
@@ -138,13 +138,13 @@ func TestDesktopFakeDNSAnswersTheNetworkCheckForReal(t *testing.T) {
 	if r, ok := m.Answers[0].Body.(*dnsmessage.AAAAResource); !ok || netip.AddrFrom16(r.AAAA) != netip.MustParseAddr("fd3e:4f5a:5b81::1") {
 		t.Fatalf("AAAA: %+v", m.Answers[0])
 	}
-	if _, a := answers(t, NewFakeDNS(), "dns.msftncsi.com.", dnsmessage.TypeA); !IsFake(a[0]) {
+	if _, a := answers(t, wholeRange(), "dns.msftncsi.com.", dnsmessage.TypeA); !IsFake(a[0]) {
 		t.Fatal("the phone's FakeDNS has no fixed names")
 	}
 }
 
 func TestTargetKeepsRealAddresses(t *testing.T) {
-	f := NewFakeDNS()
+	f := wholeRange()
 	for in, want := range map[string]string{
 		"1.2.3.4:443":                 "1.2.3.4:443",
 		"[2001:db8::1]:80":            "[2001:db8::1]:80",
@@ -158,7 +158,7 @@ func TestTargetKeepsRealAddresses(t *testing.T) {
 }
 
 func TestFakeDNSServesDNSOverTCP(t *testing.T) {
-	f := NewFakeDNS()
+	f := wholeRange()
 	client, server := net.Pipe()
 	done := make(chan error, 1)
 	go func() { done <- f.ServeStream(server); server.Close() }()
@@ -203,5 +203,15 @@ func TestFilterAddresses(t *testing.T) {
 		if IsFilterAddress(netip.MustParseAddr(a)) {
 			t.Errorf("%s is not", a)
 		}
+	}
+}
+
+// wholeRange hands out the whole range.
+func wholeRange() *FakeDNS { return newFakeDNS(1, 1<<(32-fakeRange.Bits())) }
+
+func TestFakeNetIsTheRange(t *testing.T) {
+	network, netmask := FakeNet()
+	if network != "198.18.0.0" || netmask != "255.254.0.0" {
+		t.Fatalf("%s %s", network, netmask)
 	}
 }

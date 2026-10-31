@@ -58,7 +58,92 @@ class _AutoConnectingApi implements CoreApi {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// A running core whose last test passed [age] ago; it counts the measurements
+/// of the delay.
+class _DelayApi implements CoreApi {
+  _DelayApi(this.responseMs, this.age);
+
+  final int responseMs;
+  final Duration age;
+  bool passed = true;
+  int delays = 0;
+
+  @override
+  Future<CoreStatus> status() async => CoreStatus.fromJson({
+    'state': {'phase': 'running', 'message': 'Proxy running'},
+    'proxy': <String, Object?>{},
+    'last_test': {
+      'ok': passed,
+      'at': DateTime.now().subtract(age).toUtc().toIso8601String(),
+      'response_ms': responseMs,
+    },
+  });
+
+  @override
+  Future<void> delay() async => delays++;
+
+  @override
+  Future<void> retry() async {}
+
+  @override
+  Future<AccountList> accounts() async => AccountList.fromJson({});
+
+  @override
+  void close() {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
+  group('the delay is measured again', () {
+    Future<int> measured(
+      _DelayApi api, {
+      bool onScreen = true,
+      bool cameToFront = false,
+    }) async {
+      final core = CoreController(
+        () async => api,
+        pollInterval: const Duration(hours: 1),
+      )..onScreen = onScreen;
+      await core.refresh();
+      if (cameToFront) {
+        await core.retryNow();
+        await core.refresh();
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      core.dispose();
+      return api.delays;
+    }
+
+    const old = Duration(minutes: 2);
+
+    test('while a high one is on the screen', () async {
+      expect(await measured(_DelayApi(1500, const Duration(seconds: 15))), 1);
+    });
+
+    test('not at once', () async {
+      expect(await measured(_DelayApi(1500, const Duration(seconds: 1))), 0);
+    });
+
+    test('not while the app is off the screen', () async {
+      final api = _DelayApi(1500, old);
+      expect(await measured(api, onScreen: false), 0);
+    });
+
+    test('a good one only when the app comes back to the front', () async {
+      expect(await measured(_DelayApi(150, old)), 0);
+      expect(await measured(_DelayApi(150, old), cameToFront: true), 1);
+      final fresh = _DelayApi(150, const Duration(seconds: 15));
+      expect(await measured(fresh, cameToFront: true), 0);
+    });
+
+    test('not after a failed test', () async {
+      final api = _DelayApi(1500, old)..passed = false;
+      expect(await measured(api), 0);
+    });
+  });
+
   // The core's auto-connect tests by itself; the app adds none meanwhile.
   test('no tests of its own while the core auto-connects', () async {
     final api = _AutoConnectingApi();

@@ -1,5 +1,6 @@
 // Package update installs new versions of the desktop app on Windows,
-// Linux, and macOS. The app finds a newer release on GitHub and asks its
+// Linux, and macOS, and downloads them for the Android app (APK: the core
+// fetches and checks the APK; the app hands it to Android's installer). The app finds a newer release on GitHub and asks its
 // core to download it: the core fetches the release's SHA256SUMS.txt and
 // its signature (SHA256SUMS.txt.sig, Ed25519, checked against the key built
 // into the core, internal/signing), then the release's zip (Windows) or
@@ -139,6 +140,12 @@ const (
 // AssetName is the release's file of version v for this system.
 func AssetName(v string) string { return thePackage.name(v) }
 
+// APK names the Android app's file of a version for processor abi
+// (arm64-v8a, armeabi-v7a, x86_64), for Options.Asset.
+func APK(abi string) func(v string) string {
+	return func(v string) string { return "Firefox-VPN-" + v + "-Android-" + abi + ".apk" }
+}
+
 // Status is the update's state, for the app (GET /api/status, "update").
 type Status struct {
 	State string `json:"state"`
@@ -151,6 +158,9 @@ type Status struct {
 	Total int64 `json:"total,omitempty"`
 	// Error is why the last download or install failed.
 	Error string `json:"error,omitempty"`
+	// File is the downloaded package once it is ready: Android's app hands
+	// the APK to the system's installer.
+	File string `json:"file,omitempty"`
 	// Last is what the update that ran before this start did.
 	Last *Result `json:"last,omitempty"`
 }
@@ -218,11 +228,16 @@ type Options struct {
 	// (Daemon.UpdateTransports): through the proxy while it is on, then
 	// directly. A loopback ServerEnv server is reached directly.
 	Transports func() []http.RoundTripper
+	// Asset, when set, names the release's file of a version instead of
+	// this system's app package (APK): the Manager then only downloads
+	// and checks it, and Install refuses; the app installs it.
+	Asset func(v string) string
 }
 
 // Manager downloads and installs updates for one copy of the app.
 type Manager struct {
 	opts    Options
+	asset   func(v string) string
 	dir     string
 	baseURL string
 	direct  bool
@@ -238,13 +253,11 @@ type Manager struct {
 // app's drive, with an app the user may change). It returns "" when it can,
 // else why not.
 func Supported(appDir, dataDir, current string) string {
-	switch {
-	case !platformSupported:
+	if !platformSupported {
 		return errNotSupported.Error()
-	case !signing.Available():
-		return signing.ErrNoKey.Error()
-	case current == "" || current == "0.0.0":
-		return "a development build has no version to update from"
+	}
+	if why := CanDownload(current); why != "" {
+		return why
 	}
 	if why := dataDirOK(appDir, dataDir); why != "" {
 		return why
@@ -255,13 +268,30 @@ func Supported(appDir, dataDir, current string) string {
 	return ""
 }
 
+// CanDownload reports whether this core can download and check a release:
+// with an update key built in and a version number (the Android app's
+// core, which installs nothing itself). It returns "" when it can, else
+// why not.
+func CanDownload(current string) string {
+	switch {
+	case !signing.Available():
+		return signing.ErrNoKey.Error()
+	case current == "" || current == "0.0.0":
+		return "a development build has no version to update from"
+	}
+	return ""
+}
+
 // New opens the update folder of a copy of the app: it reads what the
 // update before this start did, removes what that update left, and finds a
 // newer version downloaded before (StateReady). While an update runs for
 // the same app (another core of an older start), it leaves everything as
 // it is.
 func New(opts Options) *Manager {
-	m := &Manager{opts: opts, dir: filepath.Join(opts.DataDir, "update"), baseURL: releasesURL, status: Status{State: StateIdle}}
+	m := &Manager{opts: opts, asset: opts.Asset, dir: filepath.Join(opts.DataDir, "update"), baseURL: releasesURL, status: Status{State: StateIdle}}
+	if m.asset == nil {
+		m.asset = AssetName
+	}
 	if server := strings.TrimRight(os.Getenv(ServerEnv), "/"); server != "" {
 		m.baseURL = server + "/releases/download/"
 		if u, err := url.Parse(server); err == nil {
@@ -305,6 +335,9 @@ func (m *Manager) backupDir() string          { return filepath.Join(m.dir, "bac
 func (m *Manager) updaterDir() string         { return filepath.Join(m.dir, "updater") }
 func (m *Manager) pendingFile() string        { return filepath.Join(m.dir, "pending.json") }
 func (m *Manager) resultFile() string         { return filepath.Join(m.dir, "result.json") }
+
+// packageFile is the downloaded package of version v.
+func (m *Manager) packageFile(v string) string { return filepath.Join(m.versionDir(v), m.asset(v)) }
 
 // takeResult reads and removes the last update's result.
 func (m *Manager) takeResult() *Result {
@@ -376,7 +409,7 @@ func (m *Manager) findReady() {
 	for i, v := range newer {
 		if i == 0 {
 			if _, err := m.checkPackage(v); err == nil {
-				m.status = Status{State: StateReady, Version: v, Last: m.status.Last}
+				m.status = Status{State: StateReady, Version: v, File: m.packageFile(v), Last: m.status.Last}
 				logx.Info("update: version=%s is downloaded", v)
 				continue
 			} else {
@@ -470,7 +503,7 @@ func (m *Manager) download(v string) {
 	}
 	logx.Info("update: version=%s downloaded", v)
 	m.setStatus(func(s *Status) {
-		*s = Status{State: StateReady, Version: v, Done: s.Done, Total: s.Total, Last: s.Last}
+		*s = Status{State: StateReady, Version: v, Done: s.Done, Total: s.Total, File: m.packageFile(v), Last: s.Last}
 	})
 }
 
@@ -495,7 +528,7 @@ func (m *Manager) fetch(t http.RoundTripper, v string) error {
 	if err != nil {
 		return err
 	}
-	name := AssetName(v)
+	name := m.asset(v)
 	want, err := checkedHash(sums, sig, name)
 	if err != nil {
 		return err
@@ -660,7 +693,7 @@ func (m *Manager) checkPackage(v string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	name := AssetName(v)
+	name := m.asset(v)
 	want, err := checkedHash(sums, sig, name)
 	if err != nil {
 		return "", err
@@ -687,6 +720,9 @@ func (m *Manager) checkPackage(v string) (string, error) {
 // The app quits once it returns; it must not return an error for the app
 // to quit.
 func (m *Manager) Install(req InstallRequest) error {
+	if m.opts.Asset != nil {
+		return errors.New("the app installs this download itself")
+	}
 	for _, a := range req.Args {
 		if !slices.Contains(AppArgs, a) && !m.ownDataDir(a) {
 			return fmt.Errorf("the app's argument %q is not passed on", a)

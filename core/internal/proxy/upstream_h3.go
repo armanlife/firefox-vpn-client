@@ -25,6 +25,8 @@ import (
 
 var errProxyHTTP3Unavailable = errors.New("proxy did not negotiate HTTP/3")
 
+var upstreamH3TLSSessions = tls.NewLRUClientSessionCache(32)
+
 // h3ProxySession holds a single QUIC connection used for HTTP/3 CONNECT tunnels.
 type h3ProxySession struct {
 	conn      *quic.Conn
@@ -71,6 +73,8 @@ func newH3ProxySession(proxyURL *url.URL, token string, timeout time.Duration) (
 		ServerName: host,
 		MinVersion: tls.VersionTLS13,
 		NextProtos: []string{"h3"},
+		// Resumes TLS on a reconnection; HTTP/2 has its own cache.
+		ClientSessionCache: upstreamH3TLSSessions,
 	}
 	quicCfg := &quic.Config{
 		KeepAlivePeriod: 30 * time.Second,

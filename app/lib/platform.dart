@@ -4,11 +4,12 @@ import 'core/android_core.dart';
 import 'desktop/desktop_bridge.dart';
 
 /// Opens [url] in the system's handler: the browser, or the app for a
-/// scheme such as tg://. On Windows the runner opens it through the shell
-/// and accepts only http and https links.
-Future<void> openUrl(String url) async {
+/// scheme such as tg://; false when nothing on Android opens it (a TV has
+/// no browser). On Windows the runner opens it through the shell and
+/// accepts only http and https links.
+Future<bool> openUrl(String url) async {
   if (Platform.isAndroid) {
-    await AndroidCore.openUrl(url);
+    return AndroidCore.openUrl(url);
   } else if (Platform.isWindows) {
     await DesktopBridge.openUrl(url);
   } else if (Platform.isMacOS) {
@@ -16,6 +17,7 @@ Future<void> openUrl(String url) async {
   } else {
     await Process.start('xdg-open', [url]);
   }
+  return true;
 }
 
 /// Whether a proxy listen address accepts other devices.

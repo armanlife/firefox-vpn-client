@@ -69,29 +69,94 @@ class SettingsPage extends StatefulWidget {
 enum SettingsSection {
   general,
   connection,
+  relay,
+  upstreamProxy,
+  fragment,
   dns,
   routing,
   tun,
-  accounts,
   advanced,
 }
 
-/// Each section's icon and name, in the order the lists show them; TUN
-/// settings where the computer has the TUN mode ([tun]).
-List<(SettingsSection, IconData, String)> settingsSections(
+/// A section's icon and name.
+typedef SettingsEntry = (SettingsSection, IconData, String);
+
+/// The sections in the order a computer's list shows them, by group with its
+/// title (General stands alone, with none); TUN settings where the computer has
+/// the TUN mode ([tun]). Servers, accounts, logs, and About are in the side menu
+/// there; the phone's list has them among these groups.
+List<(String?, List<SettingsEntry>)> settingsGroups(
   AppLocalizations l, {
   bool tun = false,
 }) => [
-  (SettingsSection.general, Icons.tune_rounded, l.sectionGeneral),
-  (SettingsSection.connection, Icons.computer_rounded, l.sectionConnection),
-  (SettingsSection.dns, Icons.dns_rounded, l.sectionDns),
-  (SettingsSection.routing, Icons.alt_route_rounded, l.sectionRouting),
-  if (tun) (SettingsSection.tun, Icons.vpn_lock_rounded, l.sectionTun),
-  (SettingsSection.accounts, Icons.swap_horiz_rounded, l.sectionAccounts),
+  (null, [(SettingsSection.general, Icons.tune_rounded, l.sectionGeneral)]),
+  (
+    l.groupNetwork,
+    [
+      (SettingsSection.connection, Icons.computer_rounded, l.sectionConnection),
+      (SettingsSection.routing, Icons.alt_route_rounded, l.sectionRouting),
+      (SettingsSection.dns, Icons.dns_rounded, l.sectionDns),
+      if (tun) (SettingsSection.tun, Icons.vpn_lock_rounded, l.sectionTun),
+    ],
+  ),
+  (
+    l.sectionBypass,
+    [
+      (SettingsSection.relay, Icons.cloud_outlined, l.apiRelay),
+      (SettingsSection.fragment, Icons.content_cut_rounded, l.tlsFragment),
+      (SettingsSection.upstreamProxy, Icons.lan_outlined, l.upstreamProxy),
+    ],
+  ),
   // The app's port and the web dashboard: computers only.
   if (!Platform.isAndroid)
-    (SettingsSection.advanced, Icons.build_outlined, l.sectionAdvanced),
+    (
+      l.groupApp,
+      [(SettingsSection.advanced, Icons.build_outlined, l.sectionAdvanced)],
+    ),
 ];
+
+/// A group in a list of settings: its title, if any, over a card of its rows.
+class SettingsGroup extends StatelessWidget {
+  const SettingsGroup({super.key, this.title, required this.tiles});
+
+  final String? title;
+  final List<Widget> tiles;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final title = this.title;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (title == null)
+          const SizedBox(height: 12)
+        else
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(8, 20, 8, 8),
+            child: Text(
+              title,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
+        Card(
+          margin: EdgeInsets.zero,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (var i = 0; i < tiles.length; i++) ...[
+                if (i > 0) const Divider(height: 1, indent: 56),
+                tiles[i],
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
 
 class _SettingsPageState extends State<SettingsPage> {
   /// The section shown; null for the list of sections.
@@ -271,9 +336,12 @@ class _SettingsPageState extends State<SettingsPage> {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final s = widget.settings;
-    final sections = settingsSections(l, tun: _hasTunSection);
-    // The TUN mode went away (another core): back to the list.
-    final open = sections.any((e) => e.$1 == _open) ? _open : null;
+    final groups = settingsGroups(l, tun: _hasTunSection);
+    final sections = [for (final group in groups) ...group.$2];
+    // A page of its own shows its section. The TUN mode went away (another
+    // core): back to the list.
+    final open =
+        widget.section ?? (sections.any((e) => e.$1 == _open) ? _open : null);
     return ListenableBuilder(
       listenable: s,
       builder: (context, _) {
@@ -282,30 +350,26 @@ class _SettingsPageState extends State<SettingsPage> {
             padding: pagePadding(context),
             children: [
               PageTitle(l.settingsTitle),
-              const SizedBox(height: 20),
-              Card(
-                margin: EdgeInsets.zero,
-                clipBehavior: Clip.antiAlias,
-                child: Column(
-                  children: [
-                    for (var i = 0; i < sections.length; i++) ...[
-                      if (i > 0) const Divider(height: 1, indent: 56),
+              for (final (title, entries) in groups)
+                SettingsGroup(
+                  title: title,
+                  tiles: [
+                    for (final (section, icon, name) in entries)
                       ListTile(
-                        leading: Icon(sections[i].$2),
-                        title: Text(sections[i].$3),
+                        leading: Icon(icon),
+                        title: Text(name),
                         // Mirrors itself in right-to-left languages.
                         trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => setState(() => _open = sections[i].$1),
+                        onTap: () => setState(() => _open = section),
                       ),
-                    ],
                   ],
                 ),
-              ),
             ],
           );
         }
-        final title = sections.firstWhere((e) => e.$1 == open).$3;
         final fixed = widget.section != null;
+        // A page of its own has the title in its top bar.
+        final title = fixed ? '' : sections.firstWhere((e) => e.$1 == open).$3;
         final page = ListView(
           padding: fixed
               ? pagePadding(context)
@@ -325,17 +389,23 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
             if (!fixed) const SizedBox(height: 16),
-            if (open == SettingsSection.general)
-              _general(l, s)
-            else if (_config == null)
+            if (open == SettingsSection.general) ...[
+              _general(l, s),
+              if (Platform.isAndroid) ...[
+                const SizedBox(height: 16),
+                _updates(l, s),
+              ],
+            ] else if (_config == null)
               const LinearProgressIndicator()
             else
               switch (open) {
                 SettingsSection.connection => _connection(l),
+                SettingsSection.relay => _bypass(l),
+                SettingsSection.upstreamProxy => _upstreamProxy(l),
+                SettingsSection.fragment => _fragment(l),
                 SettingsSection.routing => _routing(l),
                 SettingsSection.tun => _tun(l),
                 SettingsSection.dns => _dns(l),
-                SettingsSection.accounts => _accounts(l),
                 _ => _advanced(l),
               },
           ],
@@ -437,19 +507,24 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
-        // Where the app installs its updates itself (the Windows app's
-        // core says so).
-        if (_core.status?.update != null)
-          _Row(
-            icon: Icons.system_update_alt_rounded,
-            label: l.autoUpdate,
-            value: l.autoUpdateHint,
-            child: Switch(
-              value: s.autoUpdate,
-              onChanged: (v) => s.update(autoUpdate: v),
-            ),
-          ),
       ],
+    ),
+  );
+
+  /// Android's updates, under General: whether they download in the app
+  /// (Android's installer always asks the user). A computer's always
+  /// install by themselves, with no setting.
+  Widget _updates(AppLocalizations l, AppSettings s) => Panel(
+    title: l.sectionUpdates,
+    icon: Icons.system_update_alt_rounded,
+    child: _Row(
+      icon: Icons.install_mobile_rounded,
+      label: l.inAppUpdates,
+      value: l.inAppUpdatesHint,
+      child: Switch(
+        value: s.inAppUpdates ?? true,
+        onChanged: (v) => s.update(inAppUpdates: v),
+      ),
     ),
   );
 
@@ -569,6 +644,87 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Getting past a network that filters Mozilla: the user's own relay
+  /// for the sign-in, accounts, and server list (network.api_relay). The
+  /// core hides its name with Encrypted Client Hello by itself where the
+  /// relay's name has a key (network.api_relay_ech, config.json only).
+  Widget _bypass(AppLocalizations l) => Panel(
+    title: l.sectionBypass,
+    icon: Icons.shield_outlined,
+    child: _TextSetting(
+      label: l.apiRelay,
+      hint: l.apiRelayHint,
+      value: _str(['network', 'api_relay']),
+      validator: (v) {
+        final u = Uri.tryParse(v.trim());
+        return v.trim().isEmpty ||
+                (u != null && u.scheme == 'https' && u.host.isNotEmpty)
+            ? null
+            : l.apiRelayInvalid;
+      },
+      onSave: (v) => _save({
+        ['network', 'api_relay']: v.trim(),
+      }),
+    ),
+  );
+
+  /// The way to Mozilla through the user's own SOCKS5 proxy, for a network
+  /// that blocks or slows it (network.upstream_proxy).
+  Widget _upstreamProxy(AppLocalizations l) => _UpstreamProxy(
+    enabled: _bool(['network', 'upstream_proxy_enabled']),
+    address: _str(['network', 'upstream_proxy']),
+    username: _str(['network', 'upstream_proxy_username']),
+    password: _str(['network', 'upstream_proxy_password']),
+    ownListen: _str(['proxy', 'listen']),
+    onSave: (enabled, address, username, password) => _save({
+      ['network', 'upstream_proxy_enabled']: enabled,
+      ['network', 'upstream_proxy']: address,
+      ['network', 'upstream_proxy_username']: username,
+      ['network', 'upstream_proxy_password']: password,
+    }),
+    onTurnOff: () => _save({
+      ['network', 'upstream_proxy_enabled']: false,
+    }),
+  );
+
+  /// How the TLS connections to Mozilla and the relay start, for a network
+  /// that filters by server name (network.hello_split).
+  Widget _fragment(AppLocalizations l) {
+    final mode = _str(['network', 'hello_split']);
+    return Panel(
+      title: l.tlsFragment,
+      icon: Icons.content_cut_rounded,
+      child: RadioGroup<String>(
+        groupValue: mode.isEmpty ? 'off' : mode,
+        onChanged: (v) {
+          if (v == null || _saving) return;
+          _save({
+            ['network', 'hello_split']: v,
+          });
+        },
+        child: Column(
+          children: [
+            for (final (value, label, hint) in [
+              ('off', l.tlsFragmentOff, l.tlsFragmentOffHint),
+              (
+                'first-byte',
+                l.tlsFragmentFirstByte,
+                l.tlsFragmentFirstByteHint,
+              ),
+              ('sni', l.tlsFragmentSni, l.tlsFragmentSniHint),
+            ])
+              RadioListTile<String>(
+                value: value,
+                title: Text(label),
+                subtitle: Text(hint),
+                contentPadding: EdgeInsets.zero,
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -978,25 +1134,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _accounts(AppLocalizations l) => Panel(
-    title: l.sectionAccounts,
-    icon: Icons.people_outline_rounded,
-    child: Column(
-      children: [
-        _TextSetting(
-          label: l.switchThreshold,
-          hint: l.switchThresholdHint,
-          value: _number(_get(['accounts', 'switch_threshold_percent'])),
-          suffix: '%',
-          validator: (v) => _intIn(v, 1, 100) ? null : l.numberInvalid(1, 100),
-          onSave: (v) => _save({
-            ['accounts', 'switch_threshold_percent']: int.parse(v.trim()),
-          }),
-        ),
-      ],
-    ),
-  );
-
   Widget _dns(AppLocalizations l) {
     final servers = _list(['dns', 'servers']);
     final saved =
@@ -1176,14 +1313,6 @@ List<String> _lines(String text) => [
   for (final line in text.split('\n'))
     if (line.trim().isNotEmpty) line.trim(),
 ];
-
-String _number(Object? v) =>
-    v is num ? (v == v.roundToDouble() ? '${v.round()}' : '$v') : '';
-
-bool _intIn(String v, int min, int max) {
-  final n = int.tryParse(v.trim());
-  return n != null && n >= min && n <= max;
-}
 
 /// Go's "1h0m0s" as "1h", "15m0s" as "15m".
 String _shortDuration(String go) {
@@ -1627,7 +1756,6 @@ class _TextSetting extends StatefulWidget {
     required this.onSave,
     this.hint,
     this.multiline = false,
-    this.suffix,
     this.validator,
   });
 
@@ -1636,7 +1764,6 @@ class _TextSetting extends StatefulWidget {
   final Future<void> Function(String value) onSave;
   final String? hint;
   final bool multiline;
-  final String? suffix;
   final String? Function(String value)? validator;
 
   @override
@@ -1690,7 +1817,6 @@ class _TextSettingState extends State<_TextSetting> {
         helperText: widget.hint,
         helperMaxLines: 6,
         errorText: _error,
-        suffixText: widget.suffix,
         isDense: true,
         border: const OutlineInputBorder(),
       ),
@@ -1702,30 +1828,15 @@ class _TextSettingState extends State<_TextSetting> {
             dimension: 20,
             child: CircularProgressIndicator(strokeWidth: 2),
           )
-        : FilledButton.tonal(
-            onPressed: _dirty ? _submit : null,
-            child: Text(l.save),
-          );
-    // In a narrow window (a phone), and under a list of lines, the button
-    // goes under the field, which keeps the whole width.
-    return LayoutBuilder(
-      builder: (context, box) => widget.multiline || box.maxWidth < 480
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                field,
-                const SizedBox(height: 8),
-                Align(alignment: AlignmentDirectional.centerEnd, child: button),
-              ],
-            )
-          : Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: field),
-                const SizedBox(width: 12),
-                Padding(padding: const EdgeInsets.only(top: 2), child: button),
-              ],
-            ),
+        : FilledButton(onPressed: _dirty ? _submit : null, child: Text(l.save));
+    // The button goes under the field, which keeps the whole width.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        field,
+        const SizedBox(height: 8),
+        Align(alignment: AlignmentDirectional.centerEnd, child: button),
+      ],
     );
   }
 }
@@ -1838,12 +1949,303 @@ class _ProxyLoginState extends State<_ProxyLogin> {
                   dimension: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : FilledButton.tonal(
+              : FilledButton(
                   onPressed: _dirty ? _submit : null,
                   child: Text(l.save),
                 ),
         ),
       ],
+    );
+  }
+}
+
+/// The upstream proxy's card: a switch, and the address, port, and login, saved
+/// together. Off keeps them; on needs an address. What a paste may bring goes by
+/// itself: spaces, a scheme, the port with the address.
+class _UpstreamProxy extends StatefulWidget {
+  const _UpstreamProxy({
+    required this.enabled,
+    required this.address,
+    required this.username,
+    required this.password,
+    required this.ownListen,
+    required this.onSave,
+    required this.onTurnOff,
+  });
+
+  /// network.upstream_proxy_enabled.
+  final bool enabled;
+
+  /// network.upstream_proxy: host:port.
+  final String address;
+  final String username;
+  final String password;
+
+  /// This app's own proxy (proxy.listen), which cannot be the upstream one.
+  final String ownListen;
+  final Future<void> Function(
+    bool enabled,
+    String address,
+    String username,
+    String password,
+  )
+  onSave;
+  final Future<void> Function() onTurnOff;
+
+  @override
+  State<_UpstreamProxy> createState() => _UpstreamProxyState();
+}
+
+class _UpstreamProxyState extends State<_UpstreamProxy> {
+  late final _host = TextEditingController(
+    text: splitAddress(widget.address).$1,
+  );
+  late final _port = TextEditingController(
+    text: splitAddress(widget.address).$2,
+  );
+  late final _user = TextEditingController(text: widget.username);
+  late final _pass = TextEditingController(text: widget.password);
+  bool _show = false;
+  bool _saving = false;
+  String? _hostError;
+  String? _portError;
+  String? _loginError;
+
+  @override
+  void didUpdateWidget(_UpstreamProxy old) {
+    super.didUpdateWidget(old);
+    // Saved values come back from the core; keep unsaved typing.
+    if (old.address != widget.address &&
+        joinAddress(_host.text, _port.text) == old.address) {
+      final (host, port) = splitAddress(widget.address);
+      _host.text = host;
+      _port.text = port;
+    }
+    if (old.username != widget.username && _user.text == old.username) {
+      _user.text = widget.username;
+    }
+    if (old.password != widget.password && _pass.text == old.password) {
+      _pass.text = widget.password;
+    }
+  }
+
+  @override
+  void dispose() {
+    _host.dispose();
+    _port.dispose();
+    _user.dispose();
+    _pass.dispose();
+    super.dispose();
+  }
+
+  bool get _dirty =>
+      joinAddress(_host.text, _port.text) != widget.address ||
+      _user.text.trim() != widget.username ||
+      _pass.text.trim() != widget.password;
+
+  // A field left as it is keeps its caret: the user may go on typing.
+  void _clean(TextEditingController field, String text) {
+    if (field.text == text) return;
+    field.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+
+  /// Saves the fields; [turnOn] also turns the proxy on, which needs an address.
+  Future<void> _submit({bool turnOn = false}) async {
+    final l = AppLocalizations.of(context);
+    // The port may have come with the address.
+    final (host, withHost) = splitAddress(_host.text);
+    final port = withHost.isNotEmpty ? withHost : _port.text;
+    final user = _user.text.trim();
+    final pass = _pass.text.trim();
+    final number = int.tryParse(port);
+    const loopback = {'127.0.0.1', 'localhost', '::1', '0.0.0.0', '::'};
+    final empty = !turnOn && host.isEmpty && port.isEmpty;
+    setState(() {
+      _clean(_host, host);
+      _clean(_port, port);
+      _clean(_user, user);
+      _clean(_pass, pass);
+      _hostError = empty
+          ? null
+          : host.isEmpty
+          ? l.upstreamProxyInvalid
+          : loopback.contains(host) && number == portOf(widget.ownListen)
+          ? l.upstreamProxyOwn
+          : null;
+      _portError = empty || (number != null && number >= 1 && number <= 65535)
+          ? null
+          : l.upstreamProxyInvalidPort;
+      _loginError = user.isEmpty != pass.isEmpty ? l.loginBothOrNone : null;
+    });
+    if (_hostError != null || _portError != null || _loginError != null) return;
+    if (!turnOn && !_dirty) return;
+    setState(() => _saving = true);
+    await widget.onSave(
+      turnOn || widget.enabled,
+      joinAddress(host, port),
+      user,
+      pass,
+    );
+    if (mounted) setState(() => _saving = false);
+  }
+
+  Future<void> _toggle(bool on) async {
+    if (on) return _submit(turnOn: true);
+    setState(() {
+      _clearErrors();
+      _saving = true;
+    });
+    await widget.onTurnOff();
+    if (mounted) setState(() => _saving = false);
+  }
+
+  void _clearErrors() {
+    _hostError = null;
+    _portError = null;
+    _loginError = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    void changed(String _) => setState(_clearErrors);
+    // Fainter than the theme's hints, which pass for values here: Save would stay
+    // off under what looks like a filled-in address.
+    final example = TextStyle(
+      color: Theme.of(context).colorScheme.onSurfaceVariant
+          .withValues(alpha: 0.45),
+    );
+    // An address reads left to right in a right-to-left language too: the host,
+    // then the port, as in 127.0.0.1:1080. Tab goes in that order.
+    return Panel(
+      title: l.upstreamProxy,
+      icon: Icons.lan_outlined,
+      trailing: Semantics(
+        label: l.upstreamProxy,
+        child: Switch(
+          value: widget.enabled,
+          onChanged: _saving ? null : _toggle,
+        ),
+      ),
+      child: FocusTraversalGroup(
+        policy: WidgetOrderTraversalPolicy(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l.upstreamProxyHint,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              textDirection: TextDirection.ltr,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: TextField(
+                    controller: _host,
+                    textDirection: TextDirection.ltr,
+                    textAlign: TextAlign.left,
+                    keyboardType: TextInputType.url,
+                    autocorrect: false,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: l.upstreamProxyAddress,
+                      hintText: '127.0.0.1',
+                      hintStyle: example,
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      errorText: _hostError,
+                      errorMaxLines: 3,
+                      isDense: true,
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: changed,
+                    onSubmitted: (_) => _submit(),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 3,
+                  child: TextField(
+                    controller: _port,
+                    textDirection: TextDirection.ltr,
+                    textAlign: TextAlign.left,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      labelText: l.upstreamProxyPort,
+                      hintText: '1080',
+                      hintStyle: example,
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      errorText: _portError,
+                      errorMaxLines: 4,
+                      isDense: true,
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: changed,
+                    onSubmitted: (_) => _submit(),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _user,
+              textDirection: TextDirection.ltr,
+              textAlign: TextAlign.left,
+              autocorrect: false,
+              decoration: InputDecoration(
+                labelText: l.proxyUsername,
+                isDense: true,
+                border: const OutlineInputBorder(),
+              ),
+              onChanged: changed,
+              onSubmitted: (_) => _submit(),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _pass,
+              obscureText: !_show,
+              textDirection: TextDirection.ltr,
+              textAlign: TextAlign.left,
+              decoration: InputDecoration(
+                labelText: l.proxyPassword,
+                errorText: _loginError,
+                isDense: true,
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _show ? Icons.visibility_off : Icons.visibility,
+                    size: 18,
+                  ),
+                  onPressed: () => setState(() => _show = !_show),
+                ),
+              ),
+              onChanged: changed,
+              onSubmitted: (_) => _submit(),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: _saving
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : FilledButton(
+                      onPressed: _dirty ? _submit : null,
+                      child: Text(l.save),
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
