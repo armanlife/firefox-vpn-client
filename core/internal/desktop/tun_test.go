@@ -181,10 +181,12 @@ func session(t *testing.T, c *tunapi.Conn, closed chan<- struct{}) {
 	c.Send(tunapi.Message{Type: tunapi.TypeRouted})
 	m, err := c.Receive()
 	if err == nil && m.Type == tunapi.TypeClose {
-		c.Send(tunapi.Message{Type: tunapi.TypeClosed})
+		// Closed before the answer, as the service does: the core takes the
+		// answer to mean the TUN is gone.
 		if closed != nil {
 			close(closed)
 		}
+		c.Send(tunapi.Message{Type: tunapi.TypeClosed})
 	}
 }
 

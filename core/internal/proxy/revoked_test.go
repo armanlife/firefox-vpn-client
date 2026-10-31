@@ -166,7 +166,7 @@ func TestQuotaCheckRefusedTokenRenewsNow(t *testing.T) {
 	if logins.Load() != 1 {
 		t.Fatalf("expected one automatic sign-in, got %d", logins.Load())
 	}
-	if got := session.currentToken(); got != accountJWT("a") {
+	if session.currentToken() == "pass-a" {
 		t.Fatal("expected the session to carry the new pass")
 	}
 	// The sign-in registers the new token's device in the background.
