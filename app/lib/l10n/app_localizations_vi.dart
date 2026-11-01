@@ -453,6 +453,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get sectionGeneral => 'Chung';
 
   @override
+  String get appSettings => 'Cài đặt ứng dụng';
+
+  @override
   String get language => 'Ngôn ngữ';
 
   @override
@@ -1034,10 +1037,6 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get updateAllowInstall =>
-      'Cho phép Firefox VPN cài đặt ứng dụng, rồi nhấn «Cập nhật» lần nữa.';
-
-  @override
   String updateInstalling(String version) {
     return 'Đang cài đặt phiên bản $version. Ứng dụng sẽ đóng và mở lại.';
   }
@@ -1056,16 +1055,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String updateRolledBack(String version) {
     return 'Bản cập nhật lên phiên bản $version chưa hoàn tất nên ứng dụng đã quay về phiên bản trước.';
   }
-
-  @override
-  String get sectionUpdates => 'Cập nhật';
-
-  @override
-  String get inAppUpdates => 'Cập nhật trong ứng dụng';
-
-  @override
-  String get inAppUpdatesHint =>
-      'Phiên bản mới được tải về trong nền và trình cài đặt của Android mở ra.\nTắt: nút Tải xuống mở trình duyệt.';
 
   @override
   String get repoNotSet => 'Chưa thiết lập kho GitHub.';
@@ -1093,9 +1082,6 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get groupApp => 'Ứng dụng';
-
-  @override
-  String get groupServersAccounts => 'Máy chủ và tài khoản';
 
   @override
   String get groupNetwork => 'Mạng';

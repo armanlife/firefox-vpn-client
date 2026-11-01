@@ -219,17 +219,12 @@ class _UpdateAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-    listenable: Listenable.merge([
-      core,
-      Updates.failure,
-      Updates.androidInApp,
-      Updates.needsInstallPermission,
-    ]),
+    listenable: Listenable.merge([core, Updates.failure]),
     builder: (context, _) {
       final l = AppLocalizations.of(context);
       final muted = Theme.of(context).textTheme.bodySmall
           ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant);
-      final update = Updates.of(core.status);
+      final update = core.status?.update;
       Widget button(String label, IconData icon, VoidCallback? onPressed) =>
           SizedBox(
             width: double.infinity,
@@ -245,7 +240,7 @@ class _UpdateAction extends StatelessWidget {
             : button(
                 l.download,
                 Icons.download_rounded,
-                () => Updates.download(release),
+                () => openDownload(context, release),
               );
       }
       final mine = update.version == release.version;
@@ -277,9 +272,6 @@ class _UpdateAction extends StatelessWidget {
               message: failure,
               child: Text(l.updateFailed(release.version), style: muted),
             ),
-            const SizedBox(height: 8),
-          ] else if (Updates.needsInstallPermission.value) ...[
-            Text(l.updateAllowInstall, style: muted),
             const SizedBox(height: 8),
           ],
           button(

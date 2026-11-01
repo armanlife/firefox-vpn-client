@@ -13,7 +13,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,8 +24,6 @@ import (
 	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
 	"github.com/armanlife/firefox-vpn-client/core/internal/service"
 	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
-	"github.com/armanlife/firefox-vpn-client/core/internal/update"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
 )
 
 var (
@@ -67,14 +64,6 @@ const (
 // many peers would otherwise fill them.
 const tunMaxSessions = 3000
 
-// androidABI is the release's APK for the processor this core runs on: the
-// installed APK's own (a 32-bit APK on a 64-bit phone stays 32-bit).
-var androidABI = map[string]string{
-	"arm64": "arm64-v8a",
-	"arm":   "armeabi-v7a",
-	"amd64": "x86_64",
-}
-
 // Start runs the daemon with its data in dataDir (created when missing),
 // with the proxy on or off (SetOn). It returns once the daemon is started;
 // Run continues in the background.
@@ -97,6 +86,9 @@ func Start(dataDir string, on bool) error {
 	_ = os.Remove(paths.LocalToken)
 	tunConfigFile = filepath.Join(paths.Dir, "tun2socks.yml")
 	_ = os.Remove(tunConfigFile)
+	// What the app's in-app updates of 1.0.6 downloaded: nothing removes it
+	// now that the app no longer installs updates.
+	_ = os.RemoveAll(filepath.Join(paths.Dir, "update"))
 	if err := useAndroidRoots(paths.Dir); err != nil {
 		return err
 	}
@@ -110,12 +102,6 @@ func Start(dataDir string, on bool) error {
 	// Every app on the phone can reach its loopback: the API answers only
 	// this app (the local token) and a browser it signs in.
 	d.RequireLocalToken()
-	// The app's updates: the core downloads the APK of this processor and
-	// checks it against the release's signed list; the app hands it to
-	// Android's installer.
-	if abi := androidABI[runtime.GOARCH]; abi != "" && update.CanDownload(version.Current) == "" {
-		d.Updater = update.New(update.Options{DataDir: paths.Dir, Current: version.Current, Transports: d.UpdateTransports, Asset: update.APK(abi)})
-	}
 	if !on {
 		d.Off()
 	}

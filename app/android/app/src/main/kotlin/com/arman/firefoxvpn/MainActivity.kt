@@ -14,13 +14,10 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.util.concurrent.Executors
 import android.net.Uri
 import android.net.VpnService
 import android.os.Build
-import android.provider.Settings
-import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -76,29 +73,6 @@ class MainActivity : FlutterActivity() {
             ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
         if (requestedOrientation != wanted) requestedOrientation = wanted
-    }
-
-    /**
-     * Opens Android's installer for an update the core downloaded and
-     * checked (core/update/<version>/<apk>): "started"; "permission" when
-     * this app may not install apps yet, after opening the setting that
-     * allows it; "missing" without the file.
-     */
-    private fun installApk(path: String): String {
-        val updates = File(CoreService.dataDir(this), "update").canonicalFile
-        val file = File(path).canonicalFile
-        if (!file.isFile || !file.path.startsWith(updates.path + File.separator)) return "missing"
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !packageManager.canRequestPackageInstalls()) {
-            startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
-            return "permission"
-        }
-        val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
-        startActivity(
-            Intent(Intent.ACTION_VIEW)
-                .setDataAndType(uri, "application/vnd.android.package-archive")
-                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION),
-        )
-        return "started"
     }
 
     /** Whether this is a TV (Android TV, Google TV), worked with a remote. */
@@ -188,7 +162,6 @@ class MainActivity : FlutterActivity() {
                 // The phone's main processor type (arm64-v8a, armeabi-v7a, ...).
                 "abi" -> result.success(Build.SUPPORTED_ABIS.firstOrNull() ?: "")
                 "isTv" -> result.success(isTv(resources.configuration))
-                "installApk" -> result.success(installApk(call.argument<String>("path") ?: ""))
                 "openUrl" -> {
                     val url = call.argument<String>("url") ?: ""
                     val view = Intent(Intent.ACTION_VIEW, Uri.parse(url))

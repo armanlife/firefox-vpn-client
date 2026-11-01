@@ -453,6 +453,9 @@ class AppLocalizationsAz extends AppLocalizations {
   String get sectionGeneral => 'Ümumi';
 
   @override
+  String get appSettings => 'Tətbiq ayarları';
+
+  @override
   String get language => 'Dil';
 
   @override
@@ -1036,10 +1039,6 @@ class AppLocalizationsAz extends AppLocalizations {
   }
 
   @override
-  String get updateAllowInstall =>
-      'Firefox VPN-ə tətbiq quraşdırmağa icazə verin, sonra yenidən «Yenilə» düyməsini basın.';
-
-  @override
   String updateInstalling(String version) {
     return '$version versiyası quraşdırılır. Tətbiq bağlanıb yenidən açılacaq.';
   }
@@ -1058,16 +1057,6 @@ class AppLocalizationsAz extends AppLocalizations {
   String updateRolledBack(String version) {
     return '$version versiyasına yeniləmə başa çatmadı, ona görə tətbiq əvvəlki versiyaya qayıtdı.';
   }
-
-  @override
-  String get sectionUpdates => 'Yeniləmələr';
-
-  @override
-  String get inAppUpdates => 'Tətbiq daxilində yeniləmə';
-
-  @override
-  String get inAppUpdatesHint =>
-      'Yeni versiyalar arxa planda endirilir və Android quraşdırıcısı açılır.\nSöndürüldükdə: Endir düyməsi brauzeri açır.';
 
   @override
   String get repoNotSet => 'GitHub repozitoriyası hələ təyin edilməyib.';
@@ -1095,9 +1084,6 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get groupApp => 'Tətbiq';
-
-  @override
-  String get groupServersAccounts => 'Serverlər və hesablar';
 
   @override
   String get groupNetwork => 'Şəbəkə';

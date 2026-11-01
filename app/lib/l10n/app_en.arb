@@ -332,6 +332,7 @@
   "errRefused": "The core refused the app; it may belong to another copy.",
   "settingsTitle": "Settings",
   "sectionGeneral": "General",
+  "appSettings": "App settings",
   "language": "Language",
   "languageSystem": "System default",
   "theme": "Theme",
@@ -643,7 +644,6 @@
       }
     }
   },
-  "updateAllowInstall": "Allow Firefox VPN to install apps, then press Update again.",
   "updateInstalling": "Installing version {version}. The app will close and open again.",
   "@updateInstalling": {
     "placeholders": {
@@ -676,9 +676,6 @@
       }
     }
   },
-  "sectionUpdates": "Updates",
-  "inAppUpdates": "Update in the app",
-  "inAppUpdatesHint": "New versions download in the background and Android's installer opens.\nOff: the Download button opens the browser.",
   "repoNotSet": "The GitHub repository is not set yet.",
   "sourceCode": "Source code",
   "tapToConnect": "Click to connect",
@@ -688,7 +685,6 @@
   "proxyServiceActive": "Proxy service active",
   "navHome": "Home",
   "groupApp": "App",
-  "groupServersAccounts": "Servers and accounts",
   "groupNetwork": "Network",
   "stateOff": "Disconnected",
   "tapToConnectPhone": "Tap to connect",

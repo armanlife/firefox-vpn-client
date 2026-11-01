@@ -457,6 +457,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get sectionGeneral => 'Általános';
 
   @override
+  String get appSettings => 'Alkalmazás beállításai';
+
+  @override
   String get language => 'Nyelv';
 
   @override
@@ -1043,10 +1046,6 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get updateAllowInstall =>
-      'Engedélyezze a Firefox VPN-nek az alkalmazások telepítését, majd nyomja meg újra a „Frissítés” gombot.';
-
-  @override
   String updateInstalling(String version) {
     return 'A(z) $version verzió telepítése. Az alkalmazás bezárul, majd újra megnyílik.';
   }
@@ -1065,16 +1064,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String updateRolledBack(String version) {
     return 'A(z) $version verzióra frissítés nem fejeződött be, ezért az alkalmazás visszaállt az előző verzióra.';
   }
-
-  @override
-  String get sectionUpdates => 'Frissítések';
-
-  @override
-  String get inAppUpdates => 'Frissítés az alkalmazásban';
-
-  @override
-  String get inAppUpdatesHint =>
-      'Az új verziók a háttérben töltődnek le, és megnyílik az Android telepítője.\nKikapcsolva: a Letöltés gomb a böngészőt nyitja meg.';
 
   @override
   String get repoNotSet => 'A GitHub-tároló még nincs beállítva.';
@@ -1102,9 +1091,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get groupApp => 'Alkalmazás';
-
-  @override
-  String get groupServersAccounts => 'Szerverek és fiókok';
 
   @override
   String get groupNetwork => 'Hálózat';

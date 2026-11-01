@@ -451,6 +451,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get sectionGeneral => 'Umum';
 
   @override
+  String get appSettings => 'Pengaturan aplikasi';
+
+  @override
   String get language => 'Bahasa';
 
   @override
@@ -1035,10 +1038,6 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get updateAllowInstall =>
-      'Izinkan Firefox VPN memasang aplikasi, lalu tekan «Perbarui» lagi.';
-
-  @override
   String updateInstalling(String version) {
     return 'Memasang versi $version. Aplikasi akan tertutup lalu terbuka lagi.';
   }
@@ -1057,16 +1056,6 @@ class AppLocalizationsId extends AppLocalizations {
   String updateRolledBack(String version) {
     return 'Pembaruan ke versi $version tidak selesai, jadi aplikasi kembali ke versi sebelumnya.';
   }
-
-  @override
-  String get sectionUpdates => 'Pembaruan';
-
-  @override
-  String get inAppUpdates => 'Perbarui di aplikasi';
-
-  @override
-  String get inAppUpdatesHint =>
-      'Versi baru diunduh di latar belakang dan penginstal Android terbuka.\nMati: tombol Unduh membuka browser.';
 
   @override
   String get repoNotSet => 'Repositori GitHub belum diatur.';
@@ -1094,9 +1083,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get groupApp => 'Aplikasi';
-
-  @override
-  String get groupServersAccounts => 'Server dan akun';
 
   @override
   String get groupNetwork => 'Jaringan';

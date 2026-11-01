@@ -453,6 +453,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sectionGeneral => 'Genel';
 
   @override
+  String get appSettings => 'Uygulama ayarları';
+
+  @override
   String get language => 'Dil';
 
   @override
@@ -1035,10 +1038,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get updateAllowInstall =>
-      'Firefox VPN\'in uygulama yüklemesine izin verin, ardından yeniden «Güncelle»ye basın.';
-
-  @override
   String updateInstalling(String version) {
     return '$version sürümü kuruluyor. Uygulama kapanıp yeniden açılacak.';
   }
@@ -1057,16 +1056,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String updateRolledBack(String version) {
     return '$version sürümüne güncelleme tamamlanmadı, bu yüzden uygulama önceki sürüme döndü.';
   }
-
-  @override
-  String get sectionUpdates => 'Güncellemeler';
-
-  @override
-  String get inAppUpdates => 'Uygulama içinde güncelle';
-
-  @override
-  String get inAppUpdatesHint =>
-      'Yeni sürümler arka planda indirilir ve Android\'in yükleyicisi açılır.\nKapalıyken: İndir düğmesi tarayıcıyı açar.';
 
   @override
   String get repoNotSet => 'GitHub deposu henüz ayarlanmadı.';
@@ -1094,9 +1083,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get groupApp => 'Uygulama';
-
-  @override
-  String get groupServersAccounts => 'Sunucular ve hesaplar';
 
   @override
   String get groupNetwork => 'Ağ';

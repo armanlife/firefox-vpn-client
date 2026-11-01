@@ -49,10 +49,15 @@ class SettingsPage extends StatefulWidget {
     required this.settings,
     this.section,
     this.opening,
+    this.onOpenLogs,
   });
 
   final CoreController core;
   final AppSettings settings;
+
+  /// Opens the logs, which the computer's side menu has too: a row beside
+  /// Advanced, which would otherwise stand alone.
+  final VoidCallback? onOpenLogs;
 
   /// The section open at first, with the way back to the list (the
   /// computer's home page opens Connection).
@@ -82,17 +87,17 @@ enum SettingsSection {
 typedef SettingsEntry = (SettingsSection, IconData, String);
 
 /// The sections in the order a computer's list shows them, by group with its
-/// title (General stands alone, with none); TUN settings where the computer has
-/// the TUN mode ([tun]). Servers, accounts, logs, and About are in the side menu
-/// there; the phone's list has them among these groups.
-List<(String?, List<SettingsEntry>)> settingsGroups(
+/// title; TUN settings where the computer has the TUN mode ([tun]). Servers,
+/// accounts, logs, and About are in the side menu there; the phone's list has
+/// them among these groups.
+List<(String, List<SettingsEntry>)> settingsGroups(
   AppLocalizations l, {
   bool tun = false,
 }) => [
-  (null, [(SettingsSection.general, Icons.tune_rounded, l.sectionGeneral)]),
   (
-    l.groupNetwork,
+    l.sectionGeneral,
     [
+      (SettingsSection.general, Icons.tune_rounded, l.appSettings),
       (SettingsSection.connection, Icons.computer_rounded, l.sectionConnection),
       (SettingsSection.routing, Icons.alt_route_rounded, l.sectionRouting),
       (SettingsSection.dns, Icons.dns_rounded, l.sectionDns),
@@ -115,32 +120,28 @@ List<(String?, List<SettingsEntry>)> settingsGroups(
     ),
 ];
 
-/// A group in a list of settings: its title, if any, over a card of its rows.
+/// A group in a list of settings: its title over a card of its rows.
 class SettingsGroup extends StatelessWidget {
-  const SettingsGroup({super.key, this.title, required this.tiles});
+  const SettingsGroup({super.key, required this.title, required this.tiles});
 
-  final String? title;
+  final String title;
   final List<Widget> tiles;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final title = this.title;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (title == null)
-          const SizedBox(height: 12)
-        else
-          Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(8, 20, 8, 8),
-            child: Text(
-              title,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.primary,
-              ),
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(8, 20, 8, 8),
+          child: Text(
+            title,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.primary,
             ),
           ),
+        ),
         Card(
           margin: EdgeInsets.zero,
           clipBehavior: Clip.antiAlias,
@@ -346,6 +347,15 @@ class _SettingsPageState extends State<SettingsPage> {
       listenable: s,
       builder: (context, _) {
         if (open == null) {
+          final onOpenLogs = widget.onOpenLogs;
+          Widget row(IconData icon, String name, VoidCallback onTap) =>
+              ListTile(
+                leading: Icon(icon),
+                title: Text(name),
+                // Mirrors itself in right-to-left languages.
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: onTap,
+              );
           return ListView(
             padding: pagePadding(context),
             children: [
@@ -355,13 +365,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: title,
                   tiles: [
                     for (final (section, icon, name) in entries)
-                      ListTile(
-                        leading: Icon(icon),
-                        title: Text(name),
-                        // Mirrors itself in right-to-left languages.
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () => setState(() => _open = section),
-                      ),
+                      row(icon, name, () => setState(() => _open = section)),
+                    if (onOpenLogs != null &&
+                        entries.last.$1 == SettingsSection.advanced)
+                      row(Icons.receipt_long_outlined, l.navLogs, onOpenLogs),
                   ],
                 ),
             ],
@@ -389,13 +396,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
             if (!fixed) const SizedBox(height: 16),
-            if (open == SettingsSection.general) ...[
-              _general(l, s),
-              if (Platform.isAndroid) ...[
-                const SizedBox(height: 16),
-                _updates(l, s),
-              ],
-            ] else if (_config == null)
+            if (open == SettingsSection.general)
+              _general(l, s)
+            else if (_config == null)
               const LinearProgressIndicator()
             else
               switch (open) {
@@ -424,7 +427,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _general(AppLocalizations l, AppSettings s) => Panel(
-    title: l.sectionGeneral,
+    title: l.appSettings,
     icon: Icons.tune_rounded,
     child: Column(
       children: [
@@ -508,23 +511,6 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
       ],
-    ),
-  );
-
-  /// Android's updates, under General: whether they download in the app
-  /// (Android's installer always asks the user). A computer's always
-  /// install by themselves, with no setting.
-  Widget _updates(AppLocalizations l, AppSettings s) => Panel(
-    title: l.sectionUpdates,
-    icon: Icons.system_update_alt_rounded,
-    child: _Row(
-      icon: Icons.install_mobile_rounded,
-      label: l.inAppUpdates,
-      value: l.inAppUpdatesHint,
-      child: Switch(
-        value: s.inAppUpdates ?? true,
-        onChanged: (v) => s.update(inAppUpdates: v),
-      ),
     ),
   );
 

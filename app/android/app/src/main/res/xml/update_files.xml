@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- The files Android's installer may read: the core's downloaded updates
-     (core/internal/update, an APK checked against the signed release). -->
-<paths>
-    <files-path name="update" path="core/update/" />
-</paths>

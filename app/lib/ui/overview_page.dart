@@ -2026,12 +2026,10 @@ class _UpdateNotice extends StatelessWidget {
       Updates.available,
       Updates.failure,
       Updates.resultSeen,
-      Updates.androidInApp,
-      Updates.needsInstallPermission,
     ]),
     builder: (context, _) {
       final l = AppLocalizations.of(context);
-      final update = Updates.of(core.status);
+      final update = core.status?.update;
       final last = update?.last;
       if (last != null && !Updates.resultSeen.value) {
         return _UpdateBanner(
@@ -2058,7 +2056,7 @@ class _UpdateNotice extends StatelessWidget {
               : (
                   label: l.download,
                   icon: Icons.download_rounded,
-                  onPressed: () => Updates.download(release),
+                  onPressed: () => openDownload(context, release),
                 ),
           onClose: dismiss,
         );
@@ -2096,9 +2094,7 @@ class _UpdateNotice extends StatelessWidget {
       return _UpdateBanner(
         palette: palette,
         icon: Icons.system_update_rounded,
-        text: Updates.needsInstallPermission.value
-            ? l.updateAllowInstall
-            : mine && update.ready
+        text: mine && update.ready
             ? l.updateReady(release.version)
             : l.updateAvailable(release.version),
         action: (

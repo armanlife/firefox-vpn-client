@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../app_info.dart';
 import '../core/android_core.dart';
 import '../core/core_api.dart';
 import '../core/models.dart';
 import '../core/ports.dart';
 import '../core/remote_flags.dart';
+import '../core/updates.dart';
 import '../l10n/app_localizations.dart';
 import '../platform.dart';
 import 'country_names.dart';
@@ -789,6 +791,14 @@ Future<void> openLink(BuildContext context, String url) async {
       ],
     ),
   );
+}
+
+/// The Download button, where the app does not install updates itself:
+/// opens the release's file for this copy of the app ([downloadUrl]) as
+/// [openLink] does.
+Future<void> openDownload(BuildContext context, Release release) async {
+  final url = await downloadUrl(release);
+  if (context.mounted) await openLink(context, url);
 }
 
 /// No account yet: a large notice, with Add account where the page has no

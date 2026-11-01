@@ -110,6 +110,4 @@ dependencies {
     // The Go core: `gomobile bind -target=android -androidapi 24
     // -o app/android/app/libs/core.aar ./mobile` in core/ (see app/README.md).
     implementation(files("libs/core.aar"))
-    // FileProvider: the installer reads a downloaded update through it.
-    implementation("androidx.core:core:1.13.1")
 }

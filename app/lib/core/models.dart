@@ -336,7 +336,6 @@ class UpdateState {
       done = _int(j['done']),
       total = _int(j['total']),
       error = _str(j['error']),
-      file = _str(j['file']),
       last = switch (_mapOrNull(j['last'])) {
         final m? => UpdateResult.fromJson(m),
         null => null,
@@ -354,9 +353,6 @@ class UpdateState {
 
   /// Why the last download or install failed (the core's English).
   final String error;
-
-  /// The downloaded package once ready: Android's APK, for its installer.
-  final String file;
 
   /// What the update before this start did.
   final UpdateResult? last;

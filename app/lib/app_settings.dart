@@ -40,11 +40,6 @@ class AppSettings extends ChangeNotifier {
   String updateVersion = '';
   String updateUrl = '';
 
-  /// Android: new versions download in the app and open Android's
-  /// installer, rather than the Download button opening the browser
-  /// (Updates.androidInApp). Null until the user chooses: on.
-  bool? inAppUpdates;
-
   /// Starts the app in the tray when the user signs in to Windows; on
   /// unless the user turned it off.
   bool autostart = true;
@@ -178,10 +173,6 @@ class AppSettings extends ChangeNotifier {
         };
         s.autostart = j['autostart'] != false;
         s.autoConnect = j['auto_connect'] == true;
-        s.inAppUpdates = switch (j['in_app_updates']) {
-          final bool v => v,
-          _ => null,
-        };
         s.udpNotice = j['udp_notice'] != false;
         if (j['hidden_connection_columns'] case final List<Object?> v) {
           s.hiddenConnectionColumns = {...v.whereType<String>()};
@@ -209,14 +200,12 @@ class AppSettings extends ChangeNotifier {
     String? updateUrl,
     bool? autostart,
     bool? autoConnect,
-    bool? inAppUpdates,
     bool? udpNotice,
     Set<String>? hiddenConnectionColumns,
   }) {
     this.hiddenConnectionColumns =
         hiddenConnectionColumns ?? this.hiddenConnectionColumns;
     this.udpNotice = udpNotice ?? this.udpNotice;
-    this.inAppUpdates = inAppUpdates ?? this.inAppUpdates;
     this.autostart = autostart ?? this.autostart;
     this.autoConnect = autoConnect ?? this.autoConnect;
     this.showPublicIp = showPublicIp ?? this.showPublicIp;
@@ -252,7 +241,6 @@ class AppSettings extends ChangeNotifier {
           'update_url': updateUrl,
           'autostart': autostart,
           'auto_connect': autoConnect,
-          'in_app_updates': inAppUpdates,
           'udp_notice': udpNotice,
           'hidden_connection_columns': hiddenConnectionColumns.toList(),
         }),

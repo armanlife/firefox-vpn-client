@@ -216,13 +216,6 @@ class AndroidCore {
       await _channel.invokeMethod<String>('abi') ?? '';
 
   /// Opens [url] in the app that handles it (such as a tg:// link).
-  /// Opens Android's installer for the update the core downloaded
-  /// ([UpdateState.file]): "started"; "permission" when the app may not
-  /// install apps yet (Android's setting for it opened); "missing".
-  static Future<String> installApk(String path) async =>
-      await _channel.invokeMethod<String>('installApk', {'path': path}) ??
-      'missing';
-
   static Future<bool> openUrl(String url) async =>
       await _channel.invokeMethod<bool>('openUrl', {'url': url}) ?? false;
 }

@@ -452,6 +452,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get sectionGeneral => 'সাধারণ';
 
   @override
+  String get appSettings => 'অ্যাপ সেটিংস';
+
+  @override
   String get language => 'ভাষা';
 
   @override
@@ -1033,10 +1036,6 @@ class AppLocalizationsBn extends AppLocalizations {
   }
 
   @override
-  String get updateAllowInstall =>
-      'Firefox VPN-কে অ্যাপ ইনস্টল করার অনুমতি দিন, তারপর আবার «আপডেট করুন» চাপুন।';
-
-  @override
   String updateInstalling(String version) {
     return 'সংস্করণ $version ইনস্টল হচ্ছে। অ্যাপটি বন্ধ হয়ে আবার খুলবে।';
   }
@@ -1055,16 +1054,6 @@ class AppLocalizationsBn extends AppLocalizations {
   String updateRolledBack(String version) {
     return 'সংস্করণ $version-এ আপডেট শেষ হয়নি, তাই অ্যাপটি আগের সংস্করণে ফিরে গেছে।';
   }
-
-  @override
-  String get sectionUpdates => 'আপডেট';
-
-  @override
-  String get inAppUpdates => 'অ্যাপের ভেতরে আপডেট';
-
-  @override
-  String get inAppUpdatesHint =>
-      'নতুন সংস্করণ পটভূমিতে ডাউনলোড হয় এবং Android-এর ইনস্টলার খোলে।\nবন্ধ থাকলে: ডাউনলোড বোতাম ব্রাউজার খোলে।';
 
   @override
   String get repoNotSet => 'GitHub রিপোজিটরি এখনও সেট করা হয়নি।';
@@ -1092,9 +1081,6 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get groupApp => 'অ্যাপ';
-
-  @override
-  String get groupServersAccounts => 'সার্ভার ও অ্যাকাউন্ট';
 
   @override
   String get groupNetwork => 'নেটওয়ার্ক';

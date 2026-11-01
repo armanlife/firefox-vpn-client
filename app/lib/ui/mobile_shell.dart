@@ -187,7 +187,7 @@ class _SettingsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    Widget group(String? title, List<Widget> tiles) =>
+    Widget group(String title, List<Widget> tiles) =>
         SettingsGroup(title: title, tiles: tiles);
     Widget tile(IconData icon, String title, VoidCallback onTap) => ListTile(
       leading: Icon(icon),
@@ -209,16 +209,10 @@ class _SettingsList extends StatelessWidget {
       children: [
         PageTitle(l.settingsTitle),
         // Language and theme first, what someone looks for before anything
-        // else; then which country and account, how the traffic goes, what
-        // helps when Mozilla is blocked, and the app itself.
-        group(null, [
-          section(
-            SettingsSection.general,
-            Icons.tune_rounded,
-            l.sectionGeneral,
-          ),
-        ]),
-        group(l.groupServersAccounts, [
+        // else, with which country and account; then how the traffic goes,
+        // what helps when Mozilla is blocked, and the app itself.
+        group(l.sectionGeneral, [
+          section(SettingsSection.general, Icons.tune_rounded, l.appSettings),
           tile(Icons.public_rounded, l.navServers, onOpenServers),
           tile(Icons.people_outline_rounded, l.navAccounts, onOpenAccounts),
         ]),

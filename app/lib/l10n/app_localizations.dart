@@ -855,6 +855,12 @@ abstract class AppLocalizations {
   /// **'General'**
   String get sectionGeneral;
 
+  /// No description provided for @appSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'App settings'**
+  String get appSettings;
+
   /// No description provided for @language.
   ///
   /// In en, this message translates to:
@@ -1911,12 +1917,6 @@ abstract class AppLocalizations {
   /// **'Version {version} is ready to install.'**
   String updateReady(String version);
 
-  /// No description provided for @updateAllowInstall.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow Firefox VPN to install apps, then press Update again.'**
-  String get updateAllowInstall;
-
   /// No description provided for @updateInstalling.
   ///
   /// In en, this message translates to:
@@ -1940,24 +1940,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The update to version {version} didn\'t finish, so the app went back to the previous version.'**
   String updateRolledBack(String version);
-
-  /// No description provided for @sectionUpdates.
-  ///
-  /// In en, this message translates to:
-  /// **'Updates'**
-  String get sectionUpdates;
-
-  /// No description provided for @inAppUpdates.
-  ///
-  /// In en, this message translates to:
-  /// **'Update in the app'**
-  String get inAppUpdates;
-
-  /// No description provided for @inAppUpdatesHint.
-  ///
-  /// In en, this message translates to:
-  /// **'New versions download in the background and Android\'s installer opens.\nOff: the Download button opens the browser.'**
-  String get inAppUpdatesHint;
 
   /// No description provided for @repoNotSet.
   ///
@@ -2012,12 +1994,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'App'**
   String get groupApp;
-
-  /// No description provided for @groupServersAccounts.
-  ///
-  /// In en, this message translates to:
-  /// **'Servers and accounts'**
-  String get groupServersAccounts;
 
   /// No description provided for @groupNetwork.
   ///

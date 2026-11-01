@@ -241,6 +241,7 @@ class _ShellState extends State<Shell> {
                       core: core,
                       settings: widget.settings,
                       opening: _settingsOpening,
+                      onOpenLogs: () => setState(() => _page = _Page.logs),
                     ),
                     _Page.logs => LogsPage(
                       core: core,

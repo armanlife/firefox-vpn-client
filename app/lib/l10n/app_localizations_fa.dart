@@ -451,6 +451,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get sectionGeneral => 'عمومی';
 
   @override
+  String get appSettings => 'تنظیمات برنامه';
+
+  @override
   String get language => 'زبان';
 
   @override
@@ -1030,10 +1033,6 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get updateAllowInstall =>
-      'به Firefox VPN اجازه نصب برنامه بدهید و دوباره «به‌روزرسانی» را بزنید.';
-
-  @override
   String updateInstalling(String version) {
     return 'در حال نصب نسخه $version؛ برنامه بسته و دوباره باز می‌شود.';
   }
@@ -1052,16 +1051,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String updateRolledBack(String version) {
     return 'به‌روزرسانی به نسخه $version کامل نشد و برنامه به نسخه قبلی برگشت.';
   }
-
-  @override
-  String get sectionUpdates => 'به‌روزرسانی‌ها';
-
-  @override
-  String get inAppUpdates => 'به‌روزرسانی داخل برنامه';
-
-  @override
-  String get inAppUpdatesHint =>
-      'نسخه جدید در پس‌زمینه دانلود می‌شود و صفحه نصب اندروید باز می‌شود.\nخاموش: دکمه دانلود مرورگر را باز می‌کند.';
 
   @override
   String get repoNotSet => 'آدرس مخزن گیت‌هاب هنوز تنظیم نشده است.';
@@ -1089,9 +1078,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get groupApp => 'برنامه';
-
-  @override
-  String get groupServersAccounts => 'سرور و حساب';
 
   @override
   String get groupNetwork => 'شبکه';

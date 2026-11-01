@@ -452,6 +452,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionGeneral => 'General';
 
   @override
+  String get appSettings => 'App settings';
+
+  @override
   String get language => 'Language';
 
   @override
@@ -1037,10 +1040,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get updateAllowInstall =>
-      'Allow Firefox VPN to install apps, then press Update again.';
-
-  @override
   String updateInstalling(String version) {
     return 'Installing version $version. The app will close and open again.';
   }
@@ -1059,16 +1058,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String updateRolledBack(String version) {
     return 'The update to version $version didn\'t finish, so the app went back to the previous version.';
   }
-
-  @override
-  String get sectionUpdates => 'Updates';
-
-  @override
-  String get inAppUpdates => 'Update in the app';
-
-  @override
-  String get inAppUpdatesHint =>
-      'New versions download in the background and Android\'s installer opens.\nOff: the Download button opens the browser.';
 
   @override
   String get repoNotSet => 'The GitHub repository is not set yet.';
@@ -1096,9 +1085,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupApp => 'App';
-
-  @override
-  String get groupServersAccounts => 'Servers and accounts';
 
   @override
   String get groupNetwork => 'Network';

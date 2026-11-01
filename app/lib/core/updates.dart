@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 
 import '../app_info.dart';
 import '../app_settings.dart';
-import '../platform.dart';
 import 'android_core.dart';
 import 'core_api.dart';
 import 'core_controller.dart';
@@ -83,10 +82,8 @@ String? updateProxy(CoreStatus? status) {
 /// runs, and the app closes and opens again as the new version. With
 /// automatic updates (on unless turned off), a version found downloads in
 /// the background and installs the next time the app starts. When the core
-/// cannot install it, the notice opens the download. Android downloads it
-/// in the app (the core fetches and checks the APK in the background) and
-/// hands it to Android's installer; with Update in the app turned off, the
-/// Download button opens the browser (in the app still where none opens).
+/// cannot install it, and on Android, whose core does not update, the notice
+/// opens the download.
 abstract final class Updates {
   /// How long a successful look holds.
   static const every = Duration(days: 5);
@@ -101,24 +98,6 @@ abstract final class Updates {
   /// Why the app's last request to install failed, when the core could not
   /// say it in its status.
   static final failure = ValueNotifier<String?>(null);
-
-  /// Android downloads and installs updates in the app ([of]): as the
-  /// settings say (AppSettings.inAppUpdates, on by default), or once the
-  /// browser did not open the download.
-  static final androidInApp = ValueNotifier<bool>(false);
-
-  /// The browser did not open the download in this run.
-  static bool _noBrowser = false;
-
-  /// Android's installer waits for the user to let the app install apps:
-  /// the setting for it opened, and Update is to be pressed again.
-  static final needsInstallPermission = ValueNotifier<bool>(false);
-
-  /// The core's update when the app installs updates itself: always on a
-  /// computer whose core can, on Android only in the app
-  /// ([androidInApp]); null when the Download button opens the browser.
-  static UpdateState? of(CoreStatus? status) =>
-      Platform.isAndroid && !androidInApp.value ? null : status?.update;
 
   /// The notice of what the last update did was closed.
   static final resultSeen = ValueNotifier<bool>(false);
@@ -159,10 +138,6 @@ abstract final class Updates {
     if (githubRepo.isEmpty || _timer != null) return;
     _core = core;
     _settings = settings;
-    if (Platform.isAndroid) {
-      settings.addListener(_androidMode);
-      _androidMode();
-    }
     _startArgs = [
       for (final a in args)
         if (a == '--autostart' ||
@@ -185,8 +160,6 @@ abstract final class Updates {
     _first?.cancel();
     _timer?.cancel();
     _core?.removeListener(_onStatus);
-    _settings?.removeListener(_androidMode);
-    _noBrowser = false;
     _first = _timer = _core = _settings = _wanted = null;
     _started = false;
     _startArgs = const [];
@@ -194,8 +167,6 @@ abstract final class Updates {
     available.value = null;
     installingAtStart.value = false;
     failure.value = null;
-    androidInApp.value = false;
-    needsInstallPermission.value = false;
     resultSeen.value = false;
     quitApp = null;
     windowHidden = () => false;
@@ -206,16 +177,14 @@ abstract final class Updates {
   /// downloaded, and a version found downloads by itself.
   static void _onStatus() {
     final core = _core, settings = _settings;
-    final update = of(core?.status);
+    final update = core?.status?.update;
     if (core == null || settings == null || update == null) return;
     if (!_started) {
       _started = true;
       // Not right after an update that failed (the old version started
       // again): the next start tries again, so a lasting failure is no loop.
-      // Android's installer asks the user, so not at a start.
       final justFailed = update.last != null && !update.last!.ok;
-      if (!Platform.isAndroid &&
-          update.ready &&
+      if (update.ready &&
           !justFailed &&
           newerVersion(update.version, appVersion)) {
         installingAtStart.value = true;
@@ -243,7 +212,7 @@ abstract final class Updates {
   static void _downloadInBackground() {
     final core = _core, settings = _settings;
     final release = available.value;
-    final update = of(core?.status);
+    final update = core?.status?.update;
     if (core == null || settings == null || release == null || update == null) {
       return;
     }
@@ -266,7 +235,7 @@ abstract final class Updates {
     final core = _core;
     if (core == null) return;
     failure.value = null;
-    final current = of(core.status);
+    final current = core.status?.update;
     if (current != null &&
         current.ready &&
         current.version == release.version) {
@@ -282,50 +251,10 @@ abstract final class Updates {
     }
   }
 
-  /// The Download button, where the app does not install updates itself:
-  /// opens the release's file ([downloadUrl]) in the browser. On Android,
-  /// when none opens it, the app downloads and installs it itself.
-  static Future<void> download(Release release) async {
-    final url = await downloadUrl(release);
-    if (!Platform.isAndroid) {
-      await openUrl(url);
-      return;
-    }
-    if (await AndroidCore.openUrl(url)) return;
-    _noBrowser = true;
-    _androidMode();
-    await update(release);
-  }
-
-  /// Follows the settings' choice of Android's in-app updates; turned on
-  /// with a version found, it downloads (with automatic updates).
-  static void _androidMode() {
-    final settings = _settings;
-    if (settings == null) return;
-    final inApp = (settings.inAppUpdates ?? true) || _noBrowser;
-    if (inApp == androidInApp.value) return;
-    androidInApp.value = inApp;
-    _downloadInBackground();
-  }
-
-  /// Installs the downloaded [update]: on Android through its installer,
-  /// elsewhere by the core, the app closing and opening again.
-  static Future<bool> _installReady(UpdateState update) async {
-    if (!Platform.isAndroid) {
-      return _install(update.version, _restartArgs());
-    }
-    final String result;
-    try {
-      result = await AndroidCore.installApk(update.file);
-    } on Exception catch (e) {
-      failure.value = '$e';
-      return false;
-    }
-    needsInstallPermission.value = result == 'permission';
-    if (result == 'started' || result == 'permission') return true;
-    failure.value = 'the downloaded file is missing';
-    return false;
-  }
+  /// Installs the downloaded [update] by the core, the app closing and
+  /// opening again.
+  static Future<bool> _installReady(UpdateState update) =>
+      _install(update.version, _restartArgs());
 
   /// The arguments of the next start after an install now: in the tray if
   /// the window is there, and with this copy's own data folder.

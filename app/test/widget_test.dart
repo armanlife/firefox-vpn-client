@@ -1075,7 +1075,7 @@ void main() {
     final tops = [
       for (final name in [
         'General',
-        'Servers and accounts',
+        'App settings',
         'Servers',
         'Accounts',
         'Network',
@@ -1187,21 +1187,28 @@ void main() {
     await tester.pumpAndSettle();
 
     final list = find.byType(SettingsGroup);
-    expect(list, findsNWidgets(4));
+    expect(list, findsNWidgets(3));
     String texts(int i) => tester
         .widgetList<Text>(
           find.descendant(of: list.at(i), matching: find.byType(Text)),
         )
         .map((t) => t.data)
         .join(', ');
-    expect(texts(0), 'General');
-    expect(texts(1), 'Network, Connection, Routing, DNS');
+    expect(texts(0), 'General, App settings, Connection, Routing, DNS');
     expect(
-      texts(2),
+      texts(1),
       'If Mozilla is blocked, Relay server, TLS fragmentation, '
       'Upstream proxy',
     );
-    expect(texts(3), 'App, Advanced');
+    expect(texts(2), 'App, Advanced, Logs');
+
+    // Logs, in the side menu too, open that same page.
+    await tester.tap(
+      find.descendant(of: list.at(2), matching: find.text('Logs')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('proxy started'), findsOneWidget);
+    expect(list, findsNothing);
 
     await tester.pumpWidget(const SizedBox());
     core.dispose();
@@ -1753,7 +1760,7 @@ void main() {
     expect(find.text('DNS'), findsOneWidget);
 
     // Choices open in a dialog in the middle of the window.
-    await tester.tap(find.text('General'));
+    await tester.tap(find.text('App settings'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('System default'));
     await tester.pumpAndSettle();
@@ -1873,13 +1880,13 @@ void main() {
     expect(find.text('alice@example.com'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.text('Servers and accounts'), findsOneWidget);
+    expect(find.text('App settings'), findsOneWidget);
 
     // Back on the Settings tab goes Home rather than out of the app.
     final popped = await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(popped, isTrue);
-    expect(find.text('Servers and accounts'), findsNothing);
+    expect(find.text('App settings'), findsNothing);
     expect(find.text('Data used'), findsOneWidget);
 
     // Logs cleared stay cleared when the page opens again.
@@ -1923,7 +1930,7 @@ void main() {
 
     await tester.tap(find.text('تنظیمات').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('عمومی'));
+    await tester.tap(find.text('تنظیمات برنامه'));
     await tester.pumpAndSettle();
     // One row per setting: the name on the right (the start), the switch
     // at the end, on the left.

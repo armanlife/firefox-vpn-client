@@ -86,11 +86,12 @@ banner() {
 }
 
 # processor_name: the processor by the name its files carry (amd64,
-# arm64), else the kernel's.
+# arm64, armv7), else the kernel's.
 processor_name() {
   case "$(uname -m)" in
     x86_64 | amd64) echo amd64 ;;
     aarch64 | arm64) echo arm64 ;;
+    armv7l | armv8l) echo armv7 ;;
     *) uname -m ;;
   esac
 }
@@ -160,6 +161,7 @@ arch() {
   case "$(uname -m)" in
     x86_64 | amd64) echo amd64 ;;
     aarch64 | arm64) echo arm64 ;;
+    armv7l | armv8l) echo armv7 ;;
     *) die "no build for $(uname -m)" ;;
   esac
 }
@@ -454,6 +456,7 @@ linux_system_parts() {
 
 install_linux_app() {
   local file
+  [ "$(arch)" != armv7 ] || die "the app has no 32-bit ARM build; install the service: curl -fsSL $RAW | bash -s -- server"
   file="Firefox-VPN-Linux-$(arch).tar.gz"
   download "$file"
   tar -xzf "$tmp/$file" -C "$tmp"

@@ -439,6 +439,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sectionGeneral => '常规';
 
   @override
+  String get appSettings => '应用设置';
+
+  @override
   String get language => '语言';
 
   @override
@@ -1007,9 +1010,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get updateAllowInstall => '请允许 Firefox VPN 安装应用，然后再次点击“更新”。';
-
-  @override
   String updateInstalling(String version) {
     return '正在安装版本 $version，应用将关闭并重新打开。';
   }
@@ -1028,16 +1028,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String updateRolledBack(String version) {
     return '更新到版本 $version 未能完成，应用已恢复到之前的版本。';
   }
-
-  @override
-  String get sectionUpdates => '更新';
-
-  @override
-  String get inAppUpdates => '在应用内更新';
-
-  @override
-  String get inAppUpdatesHint =>
-      '新版本在后台下载，并打开 Android 的安装程序。\n关闭时：“下载”按钮会打开浏览器。';
 
   @override
   String get repoNotSet => '尚未设置 GitHub 仓库。';
@@ -1065,9 +1055,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get groupApp => '应用';
-
-  @override
-  String get groupServersAccounts => '服务器和账户';
 
   @override
   String get groupNetwork => '网络';
@@ -1940,6 +1927,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get sectionGeneral => '一般';
 
   @override
+  String get appSettings => '應用程式設定';
+
+  @override
   String get language => '語言';
 
   @override
@@ -2507,9 +2497,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   }
 
   @override
-  String get updateAllowInstall => '請允許 Firefox VPN 安裝應用程式，然後再次按「更新」。';
-
-  @override
   String updateInstalling(String version) {
     return '正在安裝版本 $version，應用程式將關閉並重新開啟。';
   }
@@ -2528,16 +2515,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String updateRolledBack(String version) {
     return '更新至版本 $version 未能完成，應用程式已恢復為先前的版本。';
   }
-
-  @override
-  String get sectionUpdates => '更新';
-
-  @override
-  String get inAppUpdates => '在應用程式內更新';
-
-  @override
-  String get inAppUpdatesHint =>
-      '新版本在背景下載，並開啟 Android 的安裝程式。\n關閉時：「下載」按鈕會開啟瀏覽器。';
 
   @override
   String get repoNotSet => '尚未設定 GitHub 儲存庫。';
@@ -2565,9 +2542,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get groupApp => '應用程式';
-
-  @override
-  String get groupServersAccounts => '伺服器和帳戶';
 
   @override
   String get groupNetwork => '網路';
