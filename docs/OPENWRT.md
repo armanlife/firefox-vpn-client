@@ -22,26 +22,21 @@ Your router becomes a **proxy** (SOCKS5 and HTTP, one port) with a **web panel**
 | RAM | 128 MB or more |
 | Free storage | 20 MB |
 
-Check the processor:
-
-```sh
-grep DISTRIB_ARCH /etc/openwrt_release
-```
-
-`x86_64` → use **amd64** · `aarch64_…` → use **arm64** · `arm_cortex-a…` → use **armv7**
-
-On **armv7**, encryption runs without hardware help, so the speed may be low. A router whose processor has no floating point unit cannot run it: the core says so when it starts.
-
 Tested on a Xiaomi Redmi Router AX6S: 12 MB of RAM idle, 20 MB with traffic.
 
 ## 1. Get the core
 
-**Way A: on the router** (for another processor, write `amd64` or `armv7` instead of `arm64`):
+**Way A: on the router.** Copy all of this and paste it. It picks the right file for your router:
 
 ```sh
 mkdir -p /root/firefox-vpn && cd /root/firefox-vpn
-wget -O core.tar.gz https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-arm64.tar.gz
-tar -xzf core.tar.gz && mv firefox-vpn-core-linux-arm64/firefox-vpn-core . && rm -r core.tar.gz firefox-vpn-core-linux-arm64
+case "$(uname -m)" in
+  aarch64) arch=arm64 ;;
+  x86_64) arch=amd64 ;;
+  armv7*) arch=armv7 ;;
+esac
+wget -O core.tar.gz "https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-$arch.tar.gz"
+tar -xzf core.tar.gz && mv "firefox-vpn-core-linux-$arch/firefox-vpn-core" . && rm -r core.tar.gz "firefox-vpn-core-linux-$arch"
 chmod +x firefox-vpn-core
 ```
 
@@ -50,10 +45,12 @@ chmod +x firefox-vpn-core
 
 **Way B: from a computer**
 
-1. Download [arm64](https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-arm64.tar.gz), [amd64](https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-amd64.tar.gz), or [armv7](https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-armv7.tar.gz) and unpack it.
-2. Open [Bitvise SSH Client](https://www.bitvise.com/ssh-client-download) or [WinSCP](https://winscp.net/): router address, port 22, user `root`.
-3. Put `firefox-vpn-core` in `/root/firefox-vpn/` (make the folder).
-4. On the router: `chmod +x /root/firefox-vpn/firefox-vpn-core`
+1. On the router, check the processor: `grep DISTRIB_ARCH /etc/openwrt_release`
+   `x86_64` → **amd64** · `aarch64_…` → **arm64** · `arm_cortex-a…` → **armv7**
+2. Download [arm64](https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-arm64.tar.gz), [amd64](https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-amd64.tar.gz), or [armv7](https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-armv7.tar.gz) and unpack it.
+3. Open [Bitvise SSH Client](https://www.bitvise.com/ssh-client-download) or [WinSCP](https://winscp.net/): router address, port 22, user `root`.
+4. Put `firefox-vpn-core` in `/root/firefox-vpn/` (make the folder).
+5. On the router: `chmod +x /root/firefox-vpn/firefox-vpn-core`
 
 The file window does not open? Install `openssh-sftp-server` on the router, or pick **SCP** in WinSCP.
 
