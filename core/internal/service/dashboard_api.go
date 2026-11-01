@@ -301,12 +301,14 @@ func (d *Daemon) accountViews() ([]AccountView, error) {
 	}
 	active, hasActive := d.mgr.Active()
 	cfg := d.config()
+	now := time.Now()
 	views := make([]AccountView, 0, len(cfg.Accounts.Order))
 	for i, ref := range cfg.Accounts.Order {
 		acc, ok := byID[ref.ID]
 		if !ok {
 			continue
 		}
+		acc = acc.AfterReset(now)
 		v := AccountView{
 			ID: acc.ID, Name: acc.Name(), Email: acc.Email, Position: i + 1, Enabled: ref.Enabled,
 			HasPassword: d.store.HasPassword(acc.ID), DeviceRegistered: acc.DeviceID != "",

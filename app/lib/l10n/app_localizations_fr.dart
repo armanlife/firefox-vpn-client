@@ -458,9 +458,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sectionGeneral => 'Général';
 
   @override
-  String get appSettings => 'Paramètres de l\'application';
-
-  @override
   String get language => 'Langue';
 
   @override

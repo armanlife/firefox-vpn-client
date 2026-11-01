@@ -451,9 +451,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get sectionGeneral => 'Umum';
 
   @override
-  String get appSettings => 'Pengaturan aplikasi';
-
-  @override
   String get language => 'Bahasa';
 
   @override

@@ -100,6 +100,29 @@ type Account struct {
 	DeviceToken string `json:"device_token,omitempty"`
 }
 
+// AfterReset is the account as it stands at now, for showing it: once its
+// quota's reset has passed, the month it last read is over, so nothing of it
+// counts and an account set aside for it is back. It takes no request (a core
+// at rest asks Mozilla nothing); the next reading brings the real numbers and
+// the next reset.
+func (a Account) AfterReset(now time.Time) Account {
+	u := a.Usage
+	if u == nil || u.Unlimited || u.ResetAt.IsZero() || now.Before(u.ResetAt) {
+		return a
+	}
+	if a.Status == StatusReserved && now.Before(a.RetryAt) {
+		return a
+	}
+	fresh := *u
+	fresh.RemainingBytes, fresh.ResetAt = fresh.LimitBytes, time.Time{}
+	a.Usage = &fresh
+	if a.Status == StatusReserved {
+		a.Status, a.Reason, a.RetryAt = StatusReady, "", time.Time{}
+		a.ReasonCode, a.ReasonDetail = "", ""
+	}
+	return a
+}
+
 // Name returns the most readable identifier of the account.
 func (a Account) Name() string {
 	switch {

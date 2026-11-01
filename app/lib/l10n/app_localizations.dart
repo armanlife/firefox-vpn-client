@@ -855,12 +855,6 @@ abstract class AppLocalizations {
   /// **'General'**
   String get sectionGeneral;
 
-  /// No description provided for @appSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'App settings'**
-  String get appSettings;
-
   /// No description provided for @language.
   ///
   /// In en, this message translates to:

@@ -452,9 +452,6 @@ class AppLocalizationsBn extends AppLocalizations {
   String get sectionGeneral => 'সাধারণ';
 
   @override
-  String get appSettings => 'অ্যাপ সেটিংস';
-
-  @override
   String get language => 'ভাষা';
 
   @override

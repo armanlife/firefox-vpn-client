@@ -267,7 +267,8 @@ func (m *Manager) activateLocked(id string, acc *Account) error {
 // another account can take over (ReasonQuotaThreshold), the account is
 // reserved until its quota reset and reached is true. With no other
 // account to switch to, it keeps going to the end of its quota: the
-// threshold is there to switch in time, not to stop early.
+// threshold is there to switch in time, not to stop early. A reserved
+// account whose reading has room again (its quota reset) is ready again.
 func (m *Manager) ObserveUsage(id string, usage Usage) (reached bool, err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -286,6 +287,9 @@ func (m *Manager) ObserveUsage(id string, usage Usage) (reached bool, err error)
 	case m.policy.ThresholdReached(&usage) && m.otherUsableLocked(id, m.now()):
 		m.reserveLocked(acc, Why{Code: ReasonQuotaThreshold, Text: fmt.Sprintf("used %s of %s (switch threshold %g%%)", formatBytes(usage.UsedBytes()), formatBytes(usage.LimitBytes), m.policy.ThresholdPercent)}, usage.ResetAt)
 		reached = true
+	case acc.Status == StatusReserved && !m.policy.ThresholdReached(&usage):
+		acc.Status, acc.Reason, acc.RetryAt = StatusReady, "", time.Time{}
+		acc.ReasonCode, acc.ReasonDetail = "", ""
 	}
 	return reached, m.store.SaveState(*acc)
 }

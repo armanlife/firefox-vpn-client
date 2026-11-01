@@ -451,9 +451,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get sectionGeneral => 'عمومی';
 
   @override
-  String get appSettings => 'تنظیمات برنامه';
-
-  @override
   String get language => 'زبان';
 
   @override

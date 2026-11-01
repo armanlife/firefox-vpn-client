@@ -17,7 +17,7 @@ VPN logic; it is a client of the core's dashboard API on loopback
 - One copy per data folder: launching the app again brings the running
   window up, also from the tray (a named mutex and a broadcast message in
   `windows/runner/main.cpp`).
-- Start with Windows (Settings > App settings) is on by default: the app writes
+- Start with Windows (Settings > General) is on by default: the app writes
   the current user's Run key to start itself with `--autostart`, which
   keeps the window in the tray. Each version that runs points the entry at
   itself. Copies started with `--data-dir` (development, tests) leave the
@@ -100,7 +100,7 @@ Arguments: `--data-dir=<path>` (overrides the above) and `--core=<path>`
   ("System proxy") or Clear system proxy ("Proxy"). The tray menu is
   short: Open, Proxy service only, Set system proxy, Quit. Notifications
   show while the window is in the tray.
-- Developer mode (Settings > App settings) adds the technical details: the
+- Developer mode (Settings > General) adds the technical details: the
   connection test's stages and total, server addresses, and the Logs tab.
 - About shows the versions and checks GitHub for a newer release
   (`githubRepo` in `lib/app_info.dart`, empty until the repository exists).

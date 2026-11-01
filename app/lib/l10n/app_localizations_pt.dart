@@ -454,9 +454,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sectionGeneral => 'Geral';
 
   @override
-  String get appSettings => 'Configurações do app';
-
-  @override
   String get language => 'Idioma';
 
   @override

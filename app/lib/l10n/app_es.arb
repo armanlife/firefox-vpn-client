@@ -122,7 +122,6 @@
   "errRefused": "El núcleo rechazó la app; puede que pertenezca a otra copia.",
   "settingsTitle": "Ajustes",
   "sectionGeneral": "General",
-  "appSettings": "Ajustes de la app",
   "language": "Idioma",
   "languageSystem": "Predeterminado del sistema",
   "theme": "Tema",

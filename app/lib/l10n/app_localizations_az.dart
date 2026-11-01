@@ -453,9 +453,6 @@ class AppLocalizationsAz extends AppLocalizations {
   String get sectionGeneral => 'Ümumi';
 
   @override
-  String get appSettings => 'Tətbiq ayarları';
-
-  @override
   String get language => 'Dil';
 
   @override

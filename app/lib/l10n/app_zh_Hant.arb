@@ -122,7 +122,6 @@
   "errRefused": "核心拒絕連線，可能屬於另一個正在執行的副本。",
   "settingsTitle": "設定",
   "sectionGeneral": "一般",
-  "appSettings": "應用程式設定",
   "language": "語言",
   "languageSystem": "系統預設",
   "theme": "主題",

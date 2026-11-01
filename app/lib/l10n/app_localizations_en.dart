@@ -452,9 +452,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionGeneral => 'General';
 
   @override
-  String get appSettings => 'App settings';
-
-  @override
   String get language => 'Language';
 
   @override

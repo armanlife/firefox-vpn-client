@@ -212,7 +212,11 @@ class _SettingsList extends StatelessWidget {
         // else, with which country and account; then how the traffic goes,
         // what helps when Mozilla is blocked, and the app itself.
         group(l.sectionGeneral, [
-          section(SettingsSection.general, Icons.tune_rounded, l.appSettings),
+          section(
+            SettingsSection.general,
+            Icons.tune_rounded,
+            l.sectionGeneral,
+          ),
           tile(Icons.public_rounded, l.navServers, onOpenServers),
           tile(Icons.people_outline_rounded, l.navAccounts, onOpenAccounts),
         ]),

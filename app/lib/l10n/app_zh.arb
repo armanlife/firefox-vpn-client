@@ -122,7 +122,6 @@
   "errRefused": "核心拒绝了本应用的连接，它可能属于另一个正在运行的副本。",
   "settingsTitle": "设置",
   "sectionGeneral": "常规",
-  "appSettings": "应用设置",
   "language": "语言",
   "languageSystem": "跟随系统",
   "theme": "主题",

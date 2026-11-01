@@ -457,9 +457,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get sectionGeneral => 'Általános';
 
   @override
-  String get appSettings => 'Alkalmazás beállításai';
-
-  @override
   String get language => 'Nyelv';
 
   @override

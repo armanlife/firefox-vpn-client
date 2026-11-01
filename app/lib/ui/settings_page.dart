@@ -97,7 +97,7 @@ List<(String, List<SettingsEntry>)> settingsGroups(
   (
     l.sectionGeneral,
     [
-      (SettingsSection.general, Icons.tune_rounded, l.appSettings),
+      (SettingsSection.general, Icons.tune_rounded, l.sectionGeneral),
       (SettingsSection.connection, Icons.computer_rounded, l.sectionConnection),
       (SettingsSection.routing, Icons.alt_route_rounded, l.sectionRouting),
       (SettingsSection.dns, Icons.dns_rounded, l.sectionDns),
@@ -427,7 +427,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _general(AppLocalizations l, AppSettings s) => Panel(
-    title: l.appSettings,
+    title: l.sectionGeneral,
     icon: Icons.tune_rounded,
     child: Column(
       children: [

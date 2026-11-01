@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
 	"github.com/armanlife/firefox-vpn-client/core/internal/config"
 	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
 	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
@@ -209,6 +210,35 @@ func TestDashboardSettingsValidateAndApply(t *testing.T) {
 	saved, _, err := config.Load(d.paths.Config)
 	if err != nil || saved.Accounts.SwitchThresholdPercent != 80 {
 		t.Fatalf("expected the threshold to be saved, got %v %v", saved.Accounts, err)
+	}
+}
+
+// An account whose quota reset has passed stops showing as used up by itself,
+// with no request to read it again.
+func TestAPassedResetShowsWithoutARefresh(t *testing.T) {
+	d := newTestDaemon(t)
+	id := addTestAccount(t, d, "a")
+	acc, err := d.store.Get(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	past := time.Now().Add(-time.Hour)
+	acc.Status, acc.Reason, acc.ReasonCode, acc.RetryAt = accounts.StatusReserved, "monthly quota exhausted", accounts.ReasonQuotaExhausted, past
+	acc.Usage = &accounts.Usage{LimitBytes: 50 << 30, ResetAt: past}
+	if err := d.store.Save(acc); err != nil {
+		t.Fatal(err)
+	}
+
+	c := newDashboardClient(t, d)
+	type accountsBody struct {
+		Accounts []AccountView `json:"accounts"`
+	}
+	got := decodeBody[accountsBody](t, c.do(http.MethodGet, "/api/accounts", nil)).Accounts[0]
+	if got.Status != string(accounts.StatusReady) || got.Reason != "" || got.ReasonCode != "" || !got.RetryAt.IsZero() {
+		t.Fatalf("the account %+v", got)
+	}
+	if got.UsedPercent != 0 || !got.Usage.ResetAt.IsZero() {
+		t.Fatalf("used %v%%, usage %+v", got.UsedPercent, got.Usage)
 	}
 }
 

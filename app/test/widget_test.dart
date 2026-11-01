@@ -1075,7 +1075,6 @@ void main() {
     final tops = [
       for (final name in [
         'General',
-        'App settings',
         'Servers',
         'Accounts',
         'Network',
@@ -1090,9 +1089,11 @@ void main() {
         'Logs',
         'About',
       ])
-        tester.getTopLeft(find.text(name)).dy,
+        tester.getTopLeft(find.text(name).first).dy,
     ];
     expect(tops, [...tops]..sort());
+    // The group's title and its first row.
+    expect(find.text('General'), findsNWidgets(2));
 
     // The relay server has a row of its own, and is not under Connection too.
     await tester.tap(find.text('Relay server'));
@@ -1194,7 +1195,7 @@ void main() {
         )
         .map((t) => t.data)
         .join(', ');
-    expect(texts(0), 'General, App settings, Connection, Routing, DNS');
+    expect(texts(0), 'General, General, Connection, Routing, DNS');
     expect(
       texts(1),
       'If Mozilla is blocked, Relay server, TLS fragmentation, '
@@ -1760,7 +1761,7 @@ void main() {
     expect(find.text('DNS'), findsOneWidget);
 
     // Choices open in a dialog in the middle of the window.
-    await tester.tap(find.text('App settings'));
+    await tester.tap(find.text('General').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('System default'));
     await tester.pumpAndSettle();
@@ -1880,13 +1881,13 @@ void main() {
     expect(find.text('alice@example.com'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
-    expect(find.text('App settings'), findsOneWidget);
+    expect(find.text('Network'), findsOneWidget);
 
     // Back on the Settings tab goes Home rather than out of the app.
     final popped = await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(popped, isTrue);
-    expect(find.text('App settings'), findsNothing);
+    expect(find.text('Network'), findsNothing);
     expect(find.text('Data used'), findsOneWidget);
 
     // Logs cleared stay cleared when the page opens again.
@@ -1930,7 +1931,7 @@ void main() {
 
     await tester.tap(find.text('تنظیمات').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('تنظیمات برنامه'));
+    await tester.tap(find.text('عمومی').last);
     await tester.pumpAndSettle();
     // One row per setting: the name on the right (the start), the switch
     // at the end, on the left.

@@ -332,7 +332,6 @@
   "errRefused": "The core refused the app; it may belong to another copy.",
   "settingsTitle": "Settings",
   "sectionGeneral": "General",
-  "appSettings": "App settings",
   "language": "Language",
   "languageSystem": "System default",
   "theme": "Theme",

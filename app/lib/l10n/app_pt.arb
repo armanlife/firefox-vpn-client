@@ -122,7 +122,6 @@
   "errRefused": "O núcleo recusou a conexão; talvez ele pertença a outra cópia do app.",
   "settingsTitle": "Configurações",
   "sectionGeneral": "Geral",
-  "appSettings": "Configurações do app",
   "language": "Idioma",
   "languageSystem": "Padrão do sistema",
   "theme": "Tema",

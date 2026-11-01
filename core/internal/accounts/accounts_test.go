@@ -143,6 +143,80 @@ func TestManagerStaysOnActiveAccountAfterHigherPriorityReset(t *testing.T) {
 	}
 }
 
+// Once the reset has passed the account shows as back, with nothing used,
+// though nothing asked Mozilla and the stored reading is as it was.
+func TestAnAccountIsBackOnceItsQuotaResetPassed(t *testing.T) {
+	mgr, accs := newTestManager(t, "a@example.com", "b@example.com")
+	clock := time.Now()
+	mgr.now = func() time.Time { return clock }
+	reset := clock.Add(time.Hour)
+	if _, err := mgr.ObserveUsage(accs[0].ID, usage(50, reset)); err != nil {
+		t.Fatal(err)
+	}
+	acc := mgr.Accounts()[0]
+
+	if got := acc.AfterReset(reset.Add(-time.Minute)); got.Status != StatusReserved || got.Usage.UsedBytes() != 50*gib {
+		t.Fatalf("before the reset %+v %+v", got, got.Usage)
+	}
+	got := acc.AfterReset(reset)
+	if got.Status != StatusReady || got.Reason != "" || got.ReasonCode != "" || !got.RetryAt.IsZero() {
+		t.Fatalf("after the reset %+v", got)
+	}
+	if got.Usage.UsedBytes() != 0 || got.Usage.LimitBytes != 50*gib || !got.Usage.ResetAt.IsZero() {
+		t.Fatalf("usage after the reset %+v", got.Usage)
+	}
+	if acc.Status != StatusReserved || acc.Usage.UsedBytes() != 50*gib {
+		t.Fatalf("the stored account changed: %+v %+v", acc, acc.Usage)
+	}
+
+	// Held longer than the reset (Mozilla's reading was past its own reset
+	// already): as the rotation sees it, not back yet.
+	held := Account{Status: StatusReserved, RetryAt: reset.Add(time.Hour), Usage: &Usage{LimitBytes: 50 * gib, ResetAt: reset}}
+	if got := held.AfterReset(reset); got.Status != StatusReserved || got.Usage.UsedBytes() != 50*gib {
+		t.Fatalf("held %+v %+v", got, got.Usage)
+	}
+	// Other states and unknown data stay.
+	for _, other := range []Account{
+		{Status: StatusReauthRequired, Usage: &Usage{LimitBytes: 50 * gib, ResetAt: reset}},
+		{Status: StatusReady},
+		{Status: StatusReady, Usage: &Usage{Unlimited: true}},
+	} {
+		if got := other.AfterReset(reset); got.Status != other.Status {
+			t.Fatalf("%+v became %+v", other, got)
+		}
+	}
+}
+
+// A reading with room brings a reserved account back at once (Refresh quota
+// after the reset); one still over the threshold leaves it aside.
+func TestAReadingWithRoomBringsAReservedAccountBack(t *testing.T) {
+	mgr, accs := newTestManager(t, "a@example.com", "b@example.com")
+	reset := time.Now().Add(time.Hour)
+	if _, err := mgr.ObserveUsage(accs[0].ID, usage(46, reset)); err != nil {
+		t.Fatal(err)
+	}
+	if err := mgr.Activate(accs[1].ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := mgr.ObserveUsage(accs[0].ID, usage(46, reset)); err != nil {
+		t.Fatal(err)
+	}
+	if got := mgr.Accounts()[0]; got.Status != StatusReserved {
+		t.Fatalf("over the threshold %+v", got)
+	}
+	if _, err := mgr.ObserveUsage(accs[0].ID, usage(1, reset.Add(720*time.Hour))); err != nil {
+		t.Fatal(err)
+	}
+	got := mgr.Accounts()[0]
+	if got.Status != StatusReady || got.Reason != "" || got.ReasonCode != "" || !got.RetryAt.IsZero() {
+		t.Fatalf("with room %+v", got)
+	}
+	// The account in use stays in use.
+	if active, _ := mgr.Active(); active.ID != accs[1].ID {
+		t.Fatalf("active %s", active.ID)
+	}
+}
+
 func TestManagerReportsEarliestRetryWhenAllReserved(t *testing.T) {
 	mgr, accs := newTestManager(t, "a@example.com", "b@example.com", "c@example.com")
 	now := time.Now()

@@ -439,9 +439,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sectionGeneral => '常规';
 
   @override
-  String get appSettings => '应用设置';
-
-  @override
   String get language => '语言';
 
   @override
@@ -1925,9 +1922,6 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get sectionGeneral => '一般';
-
-  @override
-  String get appSettings => '應用程式設定';
 
   @override
   String get language => '語言';

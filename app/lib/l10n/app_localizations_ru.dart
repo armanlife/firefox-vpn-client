@@ -455,9 +455,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sectionGeneral => 'Общие';
 
   @override
-  String get appSettings => 'Настройки приложения';
-
-  @override
   String get language => 'Язык';
 
   @override

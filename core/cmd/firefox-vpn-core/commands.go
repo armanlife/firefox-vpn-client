@@ -125,6 +125,7 @@ func writeAccountList(out io.Writer, p paint, list []accounts.Account, activeID 
 		width = max(width, len(acc.Name()))
 	}
 	for i, acc := range list {
+		acc = acc.AfterReset(now)
 		mark := " "
 		if acc.ID == activeID {
 			mark = p.green("●")

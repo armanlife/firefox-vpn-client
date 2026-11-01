@@ -122,7 +122,6 @@
   "errRefused": "Le moteur a refusé l'application ; il appartient peut-être à une autre installation.",
   "settingsTitle": "Paramètres",
   "sectionGeneral": "Général",
-  "appSettings": "Paramètres de l'application",
   "language": "Langue",
   "languageSystem": "Langue du système",
   "theme": "Thème",

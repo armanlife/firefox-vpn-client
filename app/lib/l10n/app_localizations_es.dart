@@ -456,9 +456,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sectionGeneral => 'General';
 
   @override
-  String get appSettings => 'Ajustes de la app';
-
-  @override
   String get language => 'Idioma';
 
   @override

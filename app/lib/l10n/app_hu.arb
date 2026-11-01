@@ -122,7 +122,6 @@
   "errRefused": "A magprogram elutasította az alkalmazást; lehet, hogy egy másik példányhoz tartozik.",
   "settingsTitle": "Beállítások",
   "sectionGeneral": "Általános",
-  "appSettings": "Alkalmazás beállításai",
   "language": "Nyelv",
   "languageSystem": "Rendszer nyelve",
   "theme": "Téma",

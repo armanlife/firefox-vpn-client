@@ -99,6 +99,8 @@ Rules:
 4. Failures that affect every account alike (network errors, Guardian 5xx, HTTP 451) do not switch accounts.
 5. When no account is usable, new tunnels stop once the current pass expires; the status file reports `last_error=no_usable_account` with `next_attempt_at`, and the daemon retries at the earliest quota reset (capped at six hours). Before that, an account set aside at the threshold with quota left is used again, so no quota goes unused. This includes an account set aside a moment before: when the account that was to take over at the threshold cannot supply a pass (it must sign in again, Guardian refuses it, or the request fails for every account alike), the account set aside goes on with the pass it supplied and is ready and active again. The same holds when a quota check set it aside: it goes on with its current pass, and the switch is tried again at the next check or renewal.
 
+6. What is shown follows the reset by itself: once it has passed, an account shows as ready with nothing used and no reset date (`Account.AfterReset`, in `GET /accounts` and the account list), until the next reading gives the real numbers. This asks Mozilla nothing, so a core at rest stays at rest. A reading with room (**Refresh quota**, or its next pass) also makes a reserved account ready again.
+
 The active account id survives restarts in `user-data/state.json`. `status.json` adds `active_account` (label or email) to the fields documented in [CONFIGURATION.md](CONFIGURATION.md).
 
 ## Source map
