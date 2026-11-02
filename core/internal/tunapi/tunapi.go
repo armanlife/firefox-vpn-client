@@ -74,6 +74,9 @@ const (
 	CodeBadRequest = "bad_request"
 	// CodeOpenFailed: the TUN adapter could not be created.
 	CodeOpenFailed = "open_failed"
+	// CodeNoDriver: the adapter could not be created for want of the
+	// kernel's TUN driver, which the service could not load.
+	CodeNoDriver = "no_driver"
 	// CodeRouteFailed: the routes, the stack, or the DNS rules failed.
 	CodeRouteFailed = "route_failed"
 	// CodeAdapterLost: the adapter went away while the TUN ran (disabled in

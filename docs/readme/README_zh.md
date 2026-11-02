@@ -43,7 +43,7 @@
 
 ⚡ 基于 HTTP/2 和 HTTP/3 的快速、稳定连接
 
-🔀 智能分流：国内网站直连，更快且不消耗流量
+🔀 智能分流（Split Tunneling）：选择不通过 VPN 的网站和应用
 
 🧱 如果 Mozilla 被封锁：TLS 分片、上游 SOCKS5 代理和中继服务器
 
@@ -112,6 +112,9 @@ curl -fsSL https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/i
 $ sudo firefox-vpn
 
   Firefox VPN
+  ────────────────────────────────────────────────────────────────────────────
+    Service     ● running
+    Autostart   on
   ────────────────────────────────────────────────────────────────────────────
    0) Exit
   ────────────────────────────────────────────────────────────────────────────

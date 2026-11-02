@@ -865,6 +865,13 @@ class AppLocalizationsAz extends AppLocalizations {
       'Server adını (SNI) bir neçə TCP paketinə bölür';
 
   @override
+  String get tlsFragmentRecord => 'TLS qeydi';
+
+  @override
+  String get tlsFragmentRecordHint =>
+      'Server adını (SNI) iki TLS qeydinə bölür';
+
+  @override
   String get tlsFragmentOffHint => 'Adi TLS bağlantısı';
 
   @override
@@ -1405,6 +1412,10 @@ class AppLocalizationsAz extends AppLocalizations {
   @override
   String get tunBusy =>
       'Firefox VPN-in başqa nüsxəsi TUN rejimindən istifadə edir.';
+
+  @override
+  String get tunNoDriver =>
+      'Sistemin TUN sürücüsü əlçatan deyil. Kompüteri yenidən başladın və yenidən cəhd edin.';
 
   @override
   String get tunInstall => 'Quraşdır';

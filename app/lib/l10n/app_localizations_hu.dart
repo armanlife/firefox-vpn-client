@@ -871,6 +871,13 @@ class AppLocalizationsHu extends AppLocalizations {
       'Több TCP-csomagra osztja a kiszolgálónevet (SNI)';
 
   @override
+  String get tlsFragmentRecord => 'TLS-rekord';
+
+  @override
+  String get tlsFragmentRecordHint =>
+      'Két TLS-rekordra osztja a kiszolgálónevet (SNI)';
+
+  @override
   String get tlsFragmentOffHint => 'Normál TLS-kapcsolat';
 
   @override
@@ -1418,6 +1425,10 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get tunBusy =>
       'A Firefox VPN egy másik példánya használja a TUN módot.';
+
+  @override
+  String get tunNoDriver =>
+      'A rendszer TUN-illesztőprogramja nem érhető el. Indítsa újra a számítógépet, és próbálja újra.';
 
   @override
   String get tunInstall => 'Telepítés';

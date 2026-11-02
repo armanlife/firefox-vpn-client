@@ -865,6 +865,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Membagi nama server (SNI) ke beberapa paket TCP';
 
   @override
+  String get tlsFragmentRecord => 'Rekaman TLS';
+
+  @override
+  String get tlsFragmentRecordHint =>
+      'Membagi nama server (SNI) ke dua rekaman TLS';
+
+  @override
   String get tlsFragmentOffHint => 'Koneksi TLS biasa';
 
   @override
@@ -1404,6 +1411,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get tunBusy => 'Salinan lain Firefox VPN sedang memakai mode TUN.';
+
+  @override
+  String get tunNoDriver =>
+      'Driver TUN sistem tidak tersedia. Mulai ulang komputer lalu coba lagi.';
 
   @override
   String get tunInstall => 'Pasang';

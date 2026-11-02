@@ -55,6 +55,7 @@
     <symbol id="i-flag" viewBox="0 0 24 24"><path d="M14.4 6 14 4H5v17h2v-7h5.6l.4 2h7V6z"/></symbol>
     <symbol id="i-link" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></symbol>
     <symbol id="i-percent" viewBox="0 0 24 24"><path d="M7.5 11C9.43 11 11 9.43 11 7.5S9.43 4 7.5 4 4 5.57 4 7.5 5.57 11 7.5 11zm0-5C8.33 6 9 6.67 9 7.5S8.33 9 7.5 9 6 8.33 6 7.5 6.67 6 7.5 6zM4.0025 18.5832 18.59 3.9955l1.4142 1.4142L5.4167 19.9974zM16.5 13c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5zm0 5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></symbol>
+    <symbol id="i-github" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></symbol>
     <symbol id="i-server" viewBox="0 0 24 24"><path d="M2 20h20v-4H2v4zm2-3h2v2H4v-2zM2 4v4h20V4H2zm4 3H4V5h2v2zm-4 7h20v-4H2v4zm2-3h2v2H4v-2z"/></symbol>
   </svg>
 
@@ -108,6 +109,7 @@
           </div>
         </div>
         <div class="version-tag" id="version-tag" title="Program version"></div>
+        <a class="version-tag repo-link" href="https://github.com/armanlife/firefox-vpn-client" target="_blank" rel="noopener noreferrer"><svg aria-hidden="true"><use href="#i-github"/></svg><span>GitHub</span></a>
       </div>
     </aside>
 
@@ -207,7 +209,10 @@
         <section id="view-accounts" class="view" hidden>
           <div class="toolbar-row">
             <p class="muted" id="accounts-hint"></p>
-            <button id="add-account" class="btn primary"><svg><use href="#i-plus"/></svg><span>Add account</span></button>
+            <div class="hero-actions">
+              <a class="btn" href="https://accounts.firefox.com/" target="_blank" rel="noopener noreferrer"><svg><use href="#i-link"/></svg><span>Create account</span></a>
+              <button id="add-account" class="btn primary"><svg><use href="#i-plus"/></svg><span>Add account</span></button>
+            </div>
           </div>
           <div id="account-list" class="account-list"></div>
         </section>
@@ -597,6 +602,7 @@
                         <option value="off">Off</option>
                         <option value="first-byte">First byte</option>
                         <option value="sni">Server name (SNI)</option>
+                        <option value="record">TLS record</option>
                       </select>
                     </span>
                   </div>
@@ -734,6 +740,7 @@
       <div id="signin-start">
         <label class="field"><span>Email</span><input name="email" type="email" autocomplete="off" required></label>
         <label class="field"><span>Password</span><input name="password" class="secret" autocomplete="off" spellcheck="false" autocapitalize="off" data-reveal data-1p-ignore data-lpignore="true" data-bwignore required></label>
+        <p class="muted small">Don't have a Firefox Account? <a href="https://accounts.firefox.com/" target="_blank" rel="noopener noreferrer">Create one</a></p>
         <p class="muted small">The password is saved encrypted in the data folder. When the account's tokens stop working and cannot be renewed, the program uses it to sign in again by itself (Auto re-login).</p>
       </div>
       <div id="signin-step" hidden>

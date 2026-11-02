@@ -867,6 +867,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Разбивает имя сервера (SNI) на несколько TCP-пакетов';
 
   @override
+  String get tlsFragmentRecord => 'Запись TLS';
+
+  @override
+  String get tlsFragmentRecordHint =>
+      'Разбивает имя сервера (SNI) на две записи TLS';
+
+  @override
   String get tlsFragmentOffHint => 'Обычное подключение TLS';
 
   @override
@@ -1411,6 +1418,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tunBusy => 'Режимом TUN пользуется другая копия Firefox VPN.';
+
+  @override
+  String get tunNoDriver =>
+      'Драйвер TUN в системе недоступен. Перезагрузите компьютер и повторите попытку.';
 
   @override
   String get tunInstall => 'Установить';

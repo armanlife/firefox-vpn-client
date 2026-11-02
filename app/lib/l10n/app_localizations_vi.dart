@@ -865,6 +865,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tlsFragmentSniHint => 'Chia tên máy chủ (SNI) thành nhiều gói TCP';
 
   @override
+  String get tlsFragmentRecord => 'Bản ghi TLS';
+
+  @override
+  String get tlsFragmentRecordHint =>
+      'Chia tên máy chủ (SNI) thành hai bản ghi TLS';
+
+  @override
   String get tlsFragmentOffHint => 'Kết nối TLS thông thường';
 
   @override
@@ -1403,6 +1410,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tunBusy => 'Một bản Firefox VPN khác đang dùng chế độ TUN.';
+
+  @override
+  String get tunNoDriver =>
+      'Trình điều khiển TUN của hệ thống không khả dụng. Hãy khởi động lại máy tính rồi thử lại.';
 
   @override
   String get tunInstall => 'Cài đặt';

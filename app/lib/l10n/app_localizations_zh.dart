@@ -841,6 +841,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tlsFragmentSniHint => '将服务器名称 (SNI) 拆分到多个 TCP 数据包';
 
   @override
+  String get tlsFragmentRecord => 'TLS 记录';
+
+  @override
+  String get tlsFragmentRecordHint => '将服务器名称 (SNI) 拆分到两条 TLS 记录';
+
+  @override
   String get tlsFragmentOffHint => '普通 TLS 连接';
 
   @override
@@ -1350,6 +1356,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tunBusy => '另一个 Firefox VPN 副本正在使用 TUN 模式。';
+
+  @override
+  String get tunNoDriver => '系统的 TUN 驱动不可用。请重启电脑后重试。';
 
   @override
   String get tunInstall => '安装';
@@ -2325,6 +2334,12 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get tlsFragmentSniHint => '將伺服器名稱 (SNI) 拆分到多個 TCP 封包';
 
   @override
+  String get tlsFragmentRecord => 'TLS 記錄';
+
+  @override
+  String get tlsFragmentRecordHint => '將伺服器名稱 (SNI) 拆分到兩筆 TLS 記錄';
+
+  @override
   String get tlsFragmentOffHint => '一般 TLS 連線';
 
   @override
@@ -2837,6 +2852,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get tunBusy => '另一個 Firefox VPN 副本正在使用 TUN 模式。';
+
+  @override
+  String get tunNoDriver => '系統的 TUN 驅動程式無法使用。請重新啟動電腦後再試一次。';
 
   @override
   String get tunInstall => '安裝';

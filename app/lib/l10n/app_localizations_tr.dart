@@ -865,6 +865,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Sunucu adını (SNI) birkaç TCP paketine böler';
 
   @override
+  String get tlsFragmentRecord => 'TLS kaydı';
+
+  @override
+  String get tlsFragmentRecordHint =>
+      'Sunucu adını (SNI) iki TLS kaydına böler';
+
+  @override
   String get tlsFragmentOffHint => 'Normal TLS bağlantısı';
 
   @override
@@ -1406,6 +1413,10 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get tunBusy =>
       'Firefox VPN\'in başka bir kopyası TUN modunu kullanıyor.';
+
+  @override
+  String get tunNoDriver =>
+      'Sistemin TUN sürücüsü kullanılamıyor. Bilgisayarı yeniden başlatıp tekrar deneyin.';
 
   @override
   String get tunInstall => 'Yükle';

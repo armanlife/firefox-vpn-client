@@ -8,6 +8,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/binary"
 	"io"
 	"math/big"
 	"net"
@@ -115,6 +116,52 @@ func TestConnSplitsOnlyHellos(t *testing.T) {
 	}
 }
 
+// Record sends two records in one write: together they carry the hello's
+// message, cut inside the name, and the caller is told its own length.
+func TestRecordMakesTwoRecords(t *testing.T) {
+	t.Cleanup(func() { Set(Off) })
+	Set(Record)
+	rec := &recordingConn{}
+	hello := clientHello(t, "example.com")
+	n, err := Wrap(rec).Write(hello)
+	if err != nil || n != len(hello) {
+		t.Fatalf("Write = %d, %v; want %d", n, err, len(hello))
+	}
+	if len(rec.writes) != 1 {
+		t.Fatalf("the hello went out in %d writes", len(rec.writes))
+	}
+	out := rec.writes[0]
+	first := int(binary.BigEndian.Uint16(out[3:]))
+	second := out[5+first:]
+	if !bytes.Equal(out[:3], hello[:3]) || !bytes.Equal(second[:3], hello[:3]) {
+		t.Fatalf("record headers %x and %x, want %x", out[:3], second[:3], hello[:3])
+	}
+	if int(binary.BigEndian.Uint16(second[3:])) != len(second)-5 {
+		t.Fatal("the second record's length is wrong")
+	}
+	if message := append(append([]byte(nil), out[5:5+first]...), second[5:]...); !bytes.Equal(message, hello[5:]) {
+		t.Fatal("the message changed")
+	}
+	if !bytes.HasSuffix(out[5:5+first], []byte("e")) || !bytes.HasPrefix(second[5:], []byte("xample.com")) {
+		t.Fatal("the cut is not inside the name")
+	}
+}
+
+// What does not parse goes out whole.
+func TestRecordLeavesWhatDoesNotParse(t *testing.T) {
+	t.Cleanup(func() { Set(Off) })
+	Set(Record)
+	hello := clientHello(t, "example.com")
+	short := hello[:len(hello)-1]
+	rec := &recordingConn{}
+	if n, err := Wrap(rec).Write(short); err != nil || n != len(short) {
+		t.Fatalf("Write = %d, %v", n, err)
+	}
+	if len(rec.writes) != 1 || !bytes.Equal(rec.writes[0], short) {
+		t.Fatal("a partial record was changed")
+	}
+}
+
 func TestOffSendsTheHelloWhole(t *testing.T) {
 	t.Cleanup(func() { Set(Off) })
 	hello := clientHello(t, "example.com")
@@ -131,7 +178,7 @@ func TestOffSendsTheHelloWhole(t *testing.T) {
 }
 
 func TestValid(t *testing.T) {
-	for _, mode := range []string{"", Off, SNI, FirstByte} {
+	for _, mode := range []string{"", Off, SNI, FirstByte, Record} {
 		if !Valid(mode) {
 			t.Errorf("%q is refused", mode)
 		}
@@ -167,7 +214,7 @@ func TestHandshakeCompletesEachWay(t *testing.T) {
 			}()
 		}
 	}()
-	for _, way := range []string{Off, SNI, FirstByte} {
+	for _, way := range []string{Off, SNI, FirstByte, Record} {
 		Set(way)
 		raw, err := net.DialTimeout("tcp", ln.Addr().String(), 5*time.Second)
 		if err != nil {

@@ -867,6 +867,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Splits the server name (SNI) across TCP packets';
 
   @override
+  String get tlsFragmentRecord => 'TLS record';
+
+  @override
+  String get tlsFragmentRecordHint =>
+      'Splits the server name (SNI) across two TLS records';
+
+  @override
   String get tlsFragmentOffHint => 'Normal TLS connection';
 
   @override
@@ -1406,6 +1413,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tunBusy => 'Another copy of Firefox VPN is using TUN mode.';
+
+  @override
+  String get tunNoDriver =>
+      'The system\'s TUN driver isn\'t available. Restart the computer and try again.';
 
   @override
   String get tunInstall => 'Install';

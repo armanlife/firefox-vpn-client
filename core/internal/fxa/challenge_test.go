@@ -6,8 +6,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
 )
 
 func TestSolvePowFindsSuffix(t *testing.T) {
@@ -93,5 +97,30 @@ func TestChallengeSlotWaiterGivesUp(t *testing.T) {
 	}
 	if len(challengeSolveSlot) != 1 {
 		t.Fatal("the waiter must not take or release the holder's slot")
+	}
+}
+
+// The solver's requests carry the User-Agent the API calls do.
+func TestChallengeRequestsCarryFirefoxUserAgent(t *testing.T) {
+	var got []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = append(got, r.Header.Get("User-Agent"))
+		_, _ = w.Write([]byte(`{"auth":"a"}`))
+	}))
+	defer server.Close()
+	ctx := context.Background()
+	if _, err := fetchText(ctx, server.Client(), server.URL+"/"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := fetchPAT(ctx, server.Client(), server.URL, "token"); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("requests seen: %d", len(got))
+	}
+	for _, ua := range got {
+		if ua != controlplane.FirefoxUserAgent() {
+			t.Fatalf("User-Agent %q, want %q", ua, controlplane.FirefoxUserAgent())
+		}
 	}
 }

@@ -86,6 +86,9 @@ const (
 	TunCodeAppOutdated = "app_outdated"
 	// TunCodeBusy: another copy of the program's TUN runs.
 	TunCodeBusy = "busy"
+	// TunCodeNoDriver: the kernel has no TUN driver (usually a kernel update,
+	// until the computer restarts); retried.
+	TunCodeNoDriver = "no_driver"
 	// TunCodeFailed: the adapter, its routes, or the DNS filters failed;
 	// the message says why. Retried.
 	TunCodeFailed = "failed"

@@ -34,8 +34,6 @@ const (
 	// fst-post-back ({ch, tok} responses). Fastly issues a new image after
 	// a wrong CAPTCHA answer, so rounds also bound CAPTCHA retries.
 	maxPostBackRounds = 8
-
-	fastlySolverUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 )
 
 var (
@@ -91,7 +89,8 @@ type fastlyPostBackResponse struct {
 // cookie jar. The solver shares the control plane client's transport so that
 // the request exits through the same proxy (and therefore the same exit IP)
 // as the subsequent API call: the issued cookie is bound to the exit IP that
-// solved the challenge.
+// solved the challenge. It also carries the API calls' User-Agent, so the client
+// that earns the cookie is the one that presents it.
 func solveFastlyChallenge(ctx context.Context) error {
 	select {
 	case challengeSolveSlot <- struct{}{}:
@@ -187,7 +186,7 @@ func solveChallengeOnHost(ctx context.Context, base string) error {
 		}
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Accept", "application/json")
-		req.Header.Set("User-Agent", fastlySolverUserAgent)
+		req.Header.Set("User-Agent", controlplane.FirefoxUserAgent())
 		req.Header.Set("Origin", baseOrigin(base+prefix))
 
 		resp, err := client.Do(req)
@@ -247,7 +246,7 @@ func fetchText(ctx context.Context, client *http.Client, rawURL string) (string,
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("User-Agent", fastlySolverUserAgent)
+	req.Header.Set("User-Agent", controlplane.FirefoxUserAgent())
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 
 	resp, err := client.Do(req)
@@ -368,7 +367,7 @@ func fetchPAT(ctx context.Context, client *http.Client, prefixURL, token string)
 	}
 	req.Header.Set("Accept", "text/plain")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", fastlySolverUserAgent)
+	req.Header.Set("User-Agent", controlplane.FirefoxUserAgent())
 	req.Header.Set("Origin", baseOrigin(prefixURL))
 
 	resp, err := client.Do(req)

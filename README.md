@@ -43,7 +43,7 @@ For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 
 ⚡ Fast, stable connections over HTTP/2 and HTTP/3
 
-🔀 Smart routing: local sites open directly, faster and without using data
+🔀 Smart routing (split tunneling): choose the sites and apps that skip the VPN
 
 🧱 If Mozilla is blocked: TLS fragmentation, upstream SOCKS5 proxy, and a relay server
 
@@ -112,6 +112,9 @@ On the server, run `sudo firefox-vpn` to open the management menu:
 $ sudo firefox-vpn
 
   Firefox VPN
+  ────────────────────────────────────────────────────────────────────────────
+    Service     ● running
+    Autostart   on
   ────────────────────────────────────────────────────────────────────────────
    0) Exit
   ────────────────────────────────────────────────────────────────────────────

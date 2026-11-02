@@ -61,6 +61,7 @@ Relevant tests include `TestProxySessionPoolPinsClientToOneSession`, `TestProxyS
 - Switching between timeout and 502 categories clears the other set.
 - Repeating the same failing target does not accumulate distinct-target evidence.
 - Git over SSH to GitHub (`github.com:22`) is sent through Mozilla to `ssh.github.com:443`, GitHub's SSH server on the HTTPS port, with the same protocol and host keys (`throughMozilla` in `route.go`); a direct route keeps port 22.
+- Google's push server, which delivers the notifications of Android and Chrome (`mtalk.google.com` and `altN-mtalk.google.com` on 5228-5230 or 443, `pushServer`), is connected directly first (`openPush`, 5 seconds at most): its one long connection then neither waits for nor breaks with the session to Mozilla, and uses no quota. When it cannot be reached directly, it and the next ones go through Mozilla for 10 minutes, on port 443, where the same server speaks the same protocol. A routing rule for these names wins.
 - A 502 for a port other than 80, 443, 8080, or 8443 is Mozilla's proxy refusing the port (`portRefused`, `upstreamPorts`): it neither counts nor clears anything. Before this, a few requests to such ports retired a healthy session and, through the rebuild cooldown, stopped every connection for about a minute.
 
 `shouldRebuildProxySession` then distinguishes authentication/session failures from ordinary destination errors:
@@ -111,9 +112,15 @@ The H2 keepalive (`runKeepAlive`) counts a PING as missed only when no data arri
 
 H2 transport also configures read-idle 30 seconds, PING timeout 15 seconds, and write-byte timeout 30 seconds. H3 sets initial packet size to 1200 bytes and tries resolved addresses with bounded attempts. Keep certificate-chain/hostname validation and protocol negotiation checks intact.
 
-New TLS connections resume an earlier session (`upstreamTLSSessions`, `upstreamH3TLSSessions`), which saves a whole handshake when the network cuts connections. The ClientHello goes out as `network.hello_split` says (`internal/hellosplit`, under the TLS of the sessions below and of the control plane's and the relay's connections): `off`, the default, sends it whole; `first-byte` cuts it after the first byte; `sni` cuts it after the first letter of the server's name. The user chooses; nothing moves between them by itself. The name stays the real one: Mozilla's proxy refuses any other.
+HTTP/2 connections to Mozilla send the ClientHello of desktop Firefox (`firefoxHello` in `upstream_tls.go`: the same lists in the same order), so they look like the Firefox their User-Agent names. If that handshake fails, the connection is tried again with Go's own TLS, which then stays until the program restarts (`upstreamGoTLS`). HTTP/3 and the control plane use Go's TLS.
+
+New TLS connections resume an earlier session (`upstreamTLSSessions`, `upstreamFirefoxSessions`, `upstreamH3TLSSessions`), which saves a whole handshake when the network cuts connections. The ClientHello goes out as `network.hello_split` says (`internal/hellosplit`, under the TLS of the sessions below and of the control plane's and the relay's connections): `off`, the default, sends it whole; `first-byte` cuts it after the first byte; `sni` cuts it after the first letter of the server's name; `record` makes two TLS records of it, cut at the same place, so TCP reassembly alone does not show the whole name. The user chooses; nothing moves between them by itself. The name stays the real one: Mozilla's proxy refuses any other.
 
 The live audit verified H2. Local H3 passed, while live H3 timed out; this does not establish a single cause for the timeout.
+
+## The local network
+
+Mozilla's proxy cannot reach the local network, so an address of it (private, link-local, or this machine's) goes directly even with routing off or its lists not loaded (`proxy.LocalAddress`, `RoutedOpener.decide`), and on any port in the VPN (`TunnelAllows`). A Block rule still wins. UDP to the local network stays refused in the VPN (`TunnelAllowsUDP`). Only an address counts: a name goes where the routing sends it.
 
 ## UDP (CONNECT-UDP)
 

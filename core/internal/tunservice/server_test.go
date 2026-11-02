@@ -60,6 +60,10 @@ type harness struct {
 	// noIPv6 makes an adapter with IPv6 fail to open, as on a computer
 	// with IPv6 turned off.
 	noIPv6 atomic.Bool
+	// noDriver makes every open fail for want of the kernel's driver; opens
+	// counts those tries.
+	noDriver atomic.Bool
+	opens    atomic.Int32
 	// stranger: the clients are a user who did not install the service.
 	stranger atomic.Bool
 	ln       *pipeListener
@@ -79,6 +83,10 @@ func newHarness(t *testing.T, cfg Config) *harness {
 	cfg.Self = `C:\Program Files\Firefox VPN\firefox-vpn-tun.exe`
 	h.s = NewServer(cfg)
 	h.s.openDevice = func(c tunstack.Config) (device, error) {
+		if h.noDriver.Load() {
+			h.opens.Add(1)
+			return nil, tunstack.ErrNoDriver
+		}
 		if h.noIPv6.Load() && c.Inet6.IsValid() {
 			return nil, errors.New("set ipv6 address: Element not found.")
 		}
@@ -240,6 +248,21 @@ func TestTheTUNEndsWithTheCoresConnection(t *testing.T) {
 	hello(t, c2)
 	if reply := roundTrip(t, c2, openMessage); reply.Type != tunapi.TypeOpened {
 		t.Fatalf("open after the first core left: %+v", reply)
+	}
+}
+
+// Without the kernel's driver the client is told so, after one try: opening
+// without IPv6 would not help, and would ask the kernel again.
+func TestWithoutTheDriverTheClientIsTold(t *testing.T) {
+	h := newHarness(t, Config{})
+	h.noDriver.Store(true)
+	c := h.dial(t)
+	hello(t, c)
+	if reply := roundTrip(t, c, openMessage); reply.Type != tunapi.TypeError || reply.Code != tunapi.CodeNoDriver {
+		t.Fatalf("open: %+v", reply)
+	}
+	if got := h.opens.Load(); got != 1 {
+		t.Fatalf("opened %d times", got)
 	}
 }
 

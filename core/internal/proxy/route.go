@@ -27,6 +27,14 @@ var ErrThisMachine = fmt.Errorf("%w: the proxy does not connect to this machine 
 // directDialTimeout bounds a direct connection.
 const directDialTimeout = 15 * time.Second
 
+// pushDirectTimeout bounds the direct try of Google's push server, and
+// pushThroughMozillaFor is how long its connections then go through Mozilla
+// without trying directly again.
+const (
+	pushDirectTimeout     = 5 * time.Second
+	pushThroughMozillaFor = 10 * time.Minute
+)
+
 // RouteCounts counts connections by route since the proxy started.
 type RouteCounts struct {
 	Proxy   int64 `json:"proxy"`
@@ -36,8 +44,9 @@ type RouteCounts struct {
 
 // RoutedOpener opens each tunnel through Mozilla's proxy, directly through
 // the local network, or not at all, as its router decides. Without a
-// router everything goes through the proxy. The router can be replaced
-// while connections are open.
+// router everything goes through the proxy, and with or without one, an address
+// of the local network that no rule blocks goes directly (LocalAddress). The
+// router can be replaced while connections are open.
 type RoutedOpener struct {
 	upstream tunnelOpener
 	router   atomic.Pointer[routing.Router]
@@ -50,8 +59,11 @@ type RoutedOpener struct {
 	// exchange answers the DNS a client sends through the proxy, which
 	// Mozilla does not carry (DNSPort), with DNS over HTTPS through
 	// Mozilla; tests replace it.
-	exchange                 ExchangeFunc
-	dnsNoted                 atomic.Bool
+	exchange ExchangeFunc
+	dnsNoted atomic.Bool
+	// pushViaMozillaUntil (Unix nanoseconds) is set when Google's push
+	// server could not be reached directly (openPush).
+	pushViaMozillaUntil      atomic.Int64
 	proxied, direct, blocked atomic.Int64
 	meter                    *trafficMeter
 	// closed: the engine stopped, and its clients' UDP associations must end,
@@ -98,6 +110,29 @@ func refuseThisMachine(_, address string, _ syscall.RawConn) error {
 		}
 	}
 	return nil
+}
+
+// LocalAddress reports whether host is an address of this machine or the local
+// network, which Mozilla's proxy cannot reach.
+func LocalAddress(host string) bool {
+	ip, err := netip.ParseAddr(host)
+	if err != nil {
+		return false
+	}
+	ip = ip.Unmap()
+	return ip.IsPrivate() || ip.IsLoopback() || ip.IsLinkLocalUnicast()
+}
+
+// decide is where a connection to host goes.
+func (o *RoutedOpener) decide(host string) routing.Action {
+	action := routing.Proxy
+	if r := o.router.Load(); r != nil {
+		action = r.Decide(context.Background(), host, o.lookup)
+	}
+	if action == routing.Proxy && LocalAddress(host) {
+		return routing.Direct
+	}
+	return action
 }
 
 // remoteClient reports whether a client key (the client's IP, see
@@ -161,53 +196,120 @@ func (o *RoutedOpener) OpenTunnel(authority string) (net.Conn, error) {
 // throughMozilla is authority as it can go through Mozilla, which connects
 // to web ports only: git over SSH to GitHub (github.com:22) goes to
 // ssh.github.com:443, GitHub's SSH server on the HTTPS port, with the same
-// protocol and host keys.
+// protocol and host keys; Google's push server on its own ports goes to
+// the same server's port 443, which speaks the same protocol (pushServer).
 func throughMozilla(authority string) string {
 	if strings.EqualFold(authority, githubSSH) {
 		logx.Debug("GitHub's SSH through port 443 target=%s", logx.Target(authority))
 		return "ssh.github.com:443"
+	}
+	if host, ok := pushServer(authority); ok {
+		return net.JoinHostPort(host, "443")
 	}
 	return authority
 }
 
 const githubSSH = "github.com:22"
 
+// pushServer reports whether authority is Google's push server, which
+// delivers Android's notifications (Firebase Cloud Messaging): mtalk.google.com
+// or a backup altN-mtalk.google.com, on its ports 5228-5230 or 443. It returns
+// the host in lower case.
+func pushServer(authority string) (string, bool) {
+	host, port, err := net.SplitHostPort(authority)
+	if err != nil {
+		return "", false
+	}
+	switch port {
+	case "443", "5228", "5229", "5230":
+	default:
+		return "", false
+	}
+	host = strings.ToLower(strings.TrimSuffix(host, "."))
+	if host == "mtalk.google.com" {
+		return host, true
+	}
+	n, ok := strings.CutPrefix(host, "alt")
+	if !ok {
+		return "", false
+	}
+	n, ok = strings.CutSuffix(n, "-mtalk.google.com")
+	if !ok || n == "" || strings.Trim(n, "0123456789") != "" {
+		return "", false
+	}
+	return host, true
+}
+
 // Carried reports whether a connection to host:port can go through
-// Mozilla's proxy: one of its ports, or GitHub's SSH (throughMozilla).
+// Mozilla's proxy: one of its ports, GitHub's SSH, or Google's push server
+// (throughMozilla).
 func Carried(host, port string) bool {
-	return PortAllowed(port) || strings.EqualFold(net.JoinHostPort(host, port), githubSSH)
+	authority := net.JoinHostPort(host, port)
+	if _, ok := pushServer(authority); ok {
+		return true
+	}
+	return PortAllowed(port) || strings.EqualFold(authority, githubSSH)
+}
+
+// openPush connects to Google's push server directly: it keeps one long
+// connection open for the notifications of every app, which then neither
+// waits for nor breaks with the connection to Mozilla. When it cannot be
+// reached directly within pushDirectTimeout, it and the next ones go
+// through Mozilla on port 443 for pushThroughMozillaFor. ok is false when
+// the connection is to go through Mozilla.
+func (o *RoutedOpener) openPush(authority, clientKey string) (conn net.Conn, ok bool) {
+	if time.Now().UnixNano() < o.pushViaMozillaUntil.Load() {
+		return nil, false
+	}
+	dial := o.dial
+	if remoteClient(clientKey) && o.dialRemote != nil {
+		dial = o.dialRemote
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), pushDirectTimeout)
+	defer cancel()
+	conn, err := dial(ctx, "tcp", authority)
+	if err != nil {
+		o.pushViaMozillaUntil.Store(time.Now().Add(pushThroughMozillaFor).UnixNano())
+		logx.Info("Google's push server could not be reached directly; notifications go through Mozilla for %s target=%s err=%s", pushThroughMozillaFor, logx.Target(authority), logx.Err(err))
+		return nil, false
+	}
+	o.direct.Add(1)
+	logx.Debug("Google's push server directly target=%s", logx.Target(authority))
+	return countRouted(conn, &o.meter.directUp, &o.meter.directDown, RouteDirect), true
 }
 
 // OpenTunnelForClient keeps the client affinity of the upstream pool.
 func (o *RoutedOpener) OpenTunnelForClient(authority, clientKey string) (net.Conn, error) {
-	if r := o.router.Load(); r != nil {
-		host, _, err := net.SplitHostPort(authority)
-		if err == nil {
-			switch r.Decide(context.Background(), host, o.lookup) {
-			case routing.Direct:
-				o.direct.Add(1)
-				logx.Debug("route direct target=%s", logx.Target(authority))
-				ctx, cancel := context.WithTimeout(context.Background(), directDialTimeout)
-				defer cancel()
-				dial := o.dial
-				if remoteClient(clientKey) && o.dialRemote != nil {
-					dial = o.dialRemote
-				}
-				conn, err := dial(ctx, "tcp", authority)
-				if errors.Is(err, ErrThisMachine) {
-					o.direct.Add(-1)
-					o.blocked.Add(1)
-					logx.Debug("route blocked: this machine itself target=%s", logx.Target(authority))
-				}
-				if err != nil {
-					return nil, err
-				}
-				return countRouted(conn, &o.meter.directUp, &o.meter.directDown, RouteDirect), nil
-			case routing.Block:
-				o.blocked.Add(1)
-				logx.Debug("route blocked target=%s", logx.Target(authority))
-				return nil, ErrBlockedByRule
+	if host, _, err := net.SplitHostPort(authority); err == nil {
+		switch o.decide(host) {
+		case routing.Direct:
+			o.direct.Add(1)
+			logx.Debug("route direct target=%s", logx.Target(authority))
+			ctx, cancel := context.WithTimeout(context.Background(), directDialTimeout)
+			defer cancel()
+			dial := o.dial
+			if remoteClient(clientKey) && o.dialRemote != nil {
+				dial = o.dialRemote
 			}
+			conn, err := dial(ctx, "tcp", authority)
+			if errors.Is(err, ErrThisMachine) {
+				o.direct.Add(-1)
+				o.blocked.Add(1)
+				logx.Debug("route blocked: this machine itself target=%s", logx.Target(authority))
+			}
+			if err != nil {
+				return nil, err
+			}
+			return countRouted(conn, &o.meter.directUp, &o.meter.directDown, RouteDirect), nil
+		case routing.Block:
+			o.blocked.Add(1)
+			logx.Debug("route blocked target=%s", logx.Target(authority))
+			return nil, ErrBlockedByRule
+		}
+	}
+	if _, push := pushServer(authority); push {
+		if conn, ok := o.openPush(authority, clientKey); ok {
+			return conn, nil
 		}
 	}
 	o.proxied.Add(1)

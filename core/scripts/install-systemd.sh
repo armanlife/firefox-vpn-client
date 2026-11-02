@@ -325,8 +325,20 @@ cmd_panel_info() {
   fi
 }
 
-# menu: the everyday commands by number, for the command without
-# arguments on a terminal; it runs the one picked.
+# menu_state: the service and its autostart, at the top of the menu.
+menu_state() {
+  local auto=off
+  [ "$(systemctl is-enabled "${SERVICE_NAME}.service" 2>/dev/null || true)" != enabled ] || auto=on
+  if systemctl is-active --quiet "${SERVICE_NAME}.service"; then
+    printf '    %-11s %s●%s %srunning%s\n' "Service" "$GREEN" "$OFF" "$BOLD" "$OFF"
+  else
+    printf '    %-11s %s●%s %sstopped%s\n' "Service" "$RED" "$OFF" "$BOLD" "$OFF"
+  fi
+  printf '    %-11s %s\n' "Autostart" "$auto"
+}
+
+# menu: the service's state and the everyday commands by number, for the
+# command without arguments on a terminal; it runs the one picked.
 menu() {
   local reply
   # The commands in groups, "-" between them (a rule in the menu):
@@ -358,6 +370,8 @@ menu() {
   while :; do
     cmds=()
     printf '\n  %s%sFirefox VPN%s\n' "$BOLD" "$FOX" "$OFF"
+    printf '%s\n' "$rule"
+    menu_state
     printf '%s\n' "$rule"
     printf '  %s 0)%s Exit\n' "$CYAN" "$OFF"
     printf '%s\n' "$rule"

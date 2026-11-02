@@ -105,6 +105,7 @@ String connectionModeHint(
     TunCode.outdated => (l.tunOutdated, true, true),
     TunCode.appOutdated => (l.tunAppOutdated, false, false),
     TunCode.busy => (l.tunBusy, false, false),
+    TunCode.noDriver => (l.tunNoDriver, false, false),
     TunCode.lost => (l.tunLost, false, false),
     _ => (l.tunFailed, false, false),
   };

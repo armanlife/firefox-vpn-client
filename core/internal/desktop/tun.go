@@ -236,8 +236,13 @@ func (t *tunSync) start(ctx context.Context) {
 		t.host.CloseTunListener()
 		code := service.TunCodeFailed
 		var e *tunapi.Error
-		if errors.As(err, &e) && e.Code == tunapi.CodeBusy {
-			code = service.TunCodeBusy
+		if errors.As(err, &e) {
+			switch e.Code {
+			case tunapi.CodeBusy:
+				code = service.TunCodeBusy
+			case tunapi.CodeNoDriver:
+				code = service.TunCodeNoDriver
+			}
 		}
 		t.fail(&tunError{code: code, err: err}, serviceVersion)
 		return
@@ -466,7 +471,7 @@ var tunRetryDelay = func(code string, failures int) time.Duration {
 	switch code {
 	case service.TunCodeMissing:
 		return 2 * time.Second
-	case service.TunCodeAppOutdated, service.TunCodeOutdated:
+	case service.TunCodeAppOutdated, service.TunCodeOutdated, service.TunCodeNoDriver:
 		return time.Minute
 	case service.TunCodeBusy, service.TunCodeNotRunning:
 		return 5 * time.Second

@@ -701,6 +701,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 l.tlsFragmentFirstByteHint,
               ),
               ('sni', l.tlsFragmentSni, l.tlsFragmentSniHint),
+              ('record', l.tlsFragmentRecord, l.tlsFragmentRecordHint),
             ])
               RadioListTile<String>(
                 value: value,

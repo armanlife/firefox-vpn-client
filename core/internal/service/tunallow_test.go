@@ -23,6 +23,10 @@ func TestTunnelAllowsMozillaPortsAndDirectDestinations(t *testing.T) {
 	if !d.TunnelAllows("github.com", "22") || !d.TunnelAllows("GitHub.com", "22") {
 		t.Error("GitHub's SSH is refused")
 	}
+	// Android's notifications: Google's push server on its own ports.
+	if !d.TunnelAllows("mtalk.google.com", "5228") || !d.TunnelAllows("alt1-mtalk.google.com", "5230") {
+		t.Error("Google's push server is refused")
+	}
 	writeTestGeoIP(t, d, map[string][]string{"private": {"10.0.0.0/8"}})
 	d.applyRouting(config.Routing{Enabled: true, Direct: []string{"domain:bank.test"}})
 	if d.currentRouter() == nil {
@@ -33,6 +37,19 @@ func TestTunnelAllowsMozillaPortsAndDirectDestinations(t *testing.T) {
 	}
 	if d.TunnelAllows("chat.example", "5222") {
 		t.Fatal("a proxied destination keeps Mozilla's ports")
+	}
+}
+
+// A printer or a shared folder is reachable on its own port with routing off.
+func TestTunnelAllowsTheLocalNetworkOnAnyPort(t *testing.T) {
+	d := newTestDaemon(t)
+	for _, host := range []string{"192.168.1.20", "10.0.0.5", "fd00::5"} {
+		if !d.TunnelAllows(host, "9100") {
+			t.Errorf("%s:9100 is refused", host)
+		}
+	}
+	if d.TunnelAllows("8.8.8.8", "9100") {
+		t.Error("an internet address keeps Mozilla's ports")
 	}
 }
 

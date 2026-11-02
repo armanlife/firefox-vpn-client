@@ -2858,6 +2858,11 @@ void main() {
           null,
         ),
         ('busy', 'Another copy of Firefox VPN is using TUN mode.', null),
+        (
+          'no_driver',
+          "The system's TUN driver isn't available. Restart the computer and try again.",
+          null,
+        ),
         ('lost', 'TUN mode stopped unexpectedly. Trying again…', null),
         ('failed', "TUN mode couldn't start. Trying again…", null),
       ]) {

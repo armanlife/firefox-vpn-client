@@ -864,6 +864,13 @@ class AppLocalizationsBn extends AppLocalizations {
       'সার্ভারের নাম (SNI) কয়েকটি TCP প্যাকেটে ভাগ করে';
 
   @override
+  String get tlsFragmentRecord => 'TLS রেকর্ড';
+
+  @override
+  String get tlsFragmentRecordHint =>
+      'সার্ভারের নাম (SNI) দুটি TLS রেকর্ডে ভাগ করে';
+
+  @override
   String get tlsFragmentOffHint => 'সাধারণ TLS সংযোগ';
 
   @override
@@ -1402,6 +1409,10 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get tunBusy => 'Firefox VPN-এর অন্য একটি কপি TUN মোড ব্যবহার করছে।';
+
+  @override
+  String get tunNoDriver =>
+      'সিস্টেমের TUN ড্রাইভার পাওয়া যাচ্ছে না। কম্পিউটার রিস্টার্ট করে আবার চেষ্টা করুন।';
 
   @override
   String get tunInstall => 'ইনস্টল করুন';

@@ -26,6 +26,71 @@ func (o *countingOpener) OpenTunnel(string) (net.Conn, error) {
 	return a, nil
 }
 
+// With routing off, or its lists not loaded, the local network still goes
+// directly and the rest through Mozilla; a rule that blocks an address wins.
+func TestLocalAddressesGoDirectly(t *testing.T) {
+	t.Parallel()
+
+	upstream := &countingOpener{}
+	routed := NewRoutedOpener(upstream)
+	var dialed []string
+	routed.dial = func(_ context.Context, network, address string) (net.Conn, error) {
+		dialed = append(dialed, network+" "+address)
+		a, b := net.Pipe()
+		_ = b.Close()
+		return a, nil
+	}
+	local := []string{"192.168.1.1:80", "10.0.0.2:9100", "172.16.5.5:445", "[fd00::1]:80", "[fe80::1]:80", "169.254.1.1:80"}
+	for _, target := range local {
+		conn, err := routed.OpenTunnel(target)
+		if err != nil {
+			t.Fatalf("%s: %v", target, err)
+		}
+		_ = conn.Close()
+	}
+	if len(dialed) != len(local) {
+		t.Fatalf("direct connections %q, want %d", dialed, len(local))
+	}
+	for _, target := range []string{"8.8.8.8:443", "printer.example:443", "172.32.0.1:443"} {
+		dialed = nil
+		conn, err := routed.OpenTunnel(target)
+		if err != nil {
+			t.Fatalf("%s: %v", target, err)
+		}
+		_ = conn.Close()
+		if len(dialed) != 0 {
+			t.Fatalf("%s went directly", target)
+		}
+	}
+	dialed = nil
+	tunnel, err := routed.OpenUDP("192.168.1.1:5353", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = tunnel.Close()
+	if len(dialed) != 1 || dialed[0] != "udp 192.168.1.1:5353" {
+		t.Fatalf("UDP dialed %q", dialed)
+	}
+
+	router, err := routing.New(routing.Config{Block: []string{"192.168.1.9"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	routed.SetRouter(router)
+	if _, err := routed.OpenTunnel("192.168.1.9:80"); !errors.Is(err, ErrBlockedByRule) {
+		t.Fatalf("a blocked local address: %v", err)
+	}
+	dialed = nil
+	conn, err := routed.OpenTunnel("192.168.1.1:80")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = conn.Close()
+	if len(dialed) != 1 {
+		t.Fatal("rules that do not mention a local address must leave it direct")
+	}
+}
+
 func TestRoutedOpenerFollowsRules(t *testing.T) {
 	t.Parallel()
 
@@ -99,6 +164,71 @@ func TestGitHubSSHGoesThroughPort443(t *testing.T) {
 	_, _ = routed.OpenTunnel("github.com:22")
 	if !slices.Equal(dialed, []string{"github.com:22"}) {
 		t.Fatalf("direct dials %v; a direct route keeps port 22", dialed)
+	}
+}
+
+// Google's push server goes directly; when it cannot be reached so, it and
+// the next ones go through Mozilla on port 443 for a while.
+func TestGooglePushGoesDirectlyElseThroughPort443(t *testing.T) {
+	t.Parallel()
+
+	for authority, want := range map[string]bool{
+		"mtalk.google.com:5228": true, "MTALK.google.com.:5230": true, "alt3-mtalk.google.com:5229": true,
+		"mtalk.google.com:443": true, "mtalk.google.com:80": false, "alt-mtalk.google.com:5228": false,
+		"altx-mtalk.google.com:5228": false, "evil-mtalk.google.com:5228": false, "example.com:5228": false,
+	} {
+		if _, got := pushServer(authority); got != want {
+			t.Errorf("pushServer(%s) = %v, want %v", authority, got, want)
+		}
+	}
+	if !Carried("mtalk.google.com", "5228") || Carried("example.com", "5228") {
+		t.Fatal("Carried: the push server's ports only for the push server")
+	}
+
+	upstream := &recordingOpener{}
+	routed := NewRoutedOpener(upstream)
+	var dialed []string
+	reachable := true
+	routed.dial = func(_ context.Context, _, address string) (net.Conn, error) {
+		dialed = append(dialed, address)
+		if !reachable {
+			return nil, errors.New("no route in the test")
+		}
+		a, b := net.Pipe()
+		_ = b.Close()
+		return a, nil
+	}
+	conn, err := routed.OpenTunnel("mtalk.google.com:5228")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = conn.Close()
+	if !slices.Equal(dialed, []string{"mtalk.google.com:5228"}) || len(upstream.targets) != 0 {
+		t.Fatalf("direct dials %v, through Mozilla %v; want the push server directly", dialed, upstream.targets)
+	}
+
+	reachable, dialed = false, nil
+	_, _ = routed.OpenTunnel("mtalk.google.com:5228")
+	_, _ = routed.OpenTunnel("alt2-mtalk.google.com:5229")
+	if !slices.Equal(dialed, []string{"mtalk.google.com:5228"}) {
+		t.Fatalf("direct dials %v; after a failure the next one must not try directly", dialed)
+	}
+	want := []string{"mtalk.google.com:443", "alt2-mtalk.google.com:443"}
+	if !slices.Equal(upstream.targets, want) {
+		t.Fatalf("through Mozilla %v, want %v", upstream.targets, want)
+	}
+	if c := routed.Counts(); c.Direct != 1 || c.Proxy != 2 {
+		t.Fatalf("counts %+v", c)
+	}
+
+	// A rule wins: blocked stays blocked.
+	router, err := routing.New(routing.Config{Block: []string{"domain:mtalk.google.com"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	routed.SetRouter(router)
+	if _, err := routed.OpenTunnel("mtalk.google.com:5228"); !errors.Is(err, ErrBlockedByRule) {
+		t.Fatalf("a blocking rule: %v", err)
 	}
 }
 

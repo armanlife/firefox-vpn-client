@@ -306,6 +306,9 @@ func (s *Server) open(c *tunapi.Conn, m tunapi.Message, protocol int) tunapi.Mes
 		}
 		s.mu.Unlock()
 		logx.Error("opening the TUN adapter failed err=%s", logx.Err(err))
+		if errors.Is(err, tunstack.ErrNoDriver) {
+			return tunapi.Errorf(tunapi.CodeNoDriver, "%s", err)
+		}
 		return tunapi.Errorf(tunapi.CodeOpenFailed, "%s", err)
 	}
 	if !current {

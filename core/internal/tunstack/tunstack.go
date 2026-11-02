@@ -207,12 +207,23 @@ func Open(cfg Config) (*Device, error) {
 	}
 	platformOptions(&options, cfg)
 	t, err := tun.New(options)
+	if missingDriver(err) {
+		loadDriver()
+		t, err = tun.New(options)
+	}
+	if missingDriver(err) {
+		return nil, fmt.Errorf("%w (%v)", ErrNoDriver, err)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("creating the TUN adapter: %w", err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Device{cfg: cfg, options: options, tun: t, finder: finder, ctx: ctx, cancel: cancel}, nil
 }
+
+// ErrNoDriver: the kernel has no TUN driver, even after asking it to load
+// one: usually a kernel update, until the computer restarts.
+var ErrNoDriver = errors.New("the system's TUN driver is not available; restart the computer and try again")
 
 // Start runs the stack on the device and routes everything into it.
 func (d *Device) Start() error {

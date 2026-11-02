@@ -322,6 +322,7 @@ abstract final class TunCode {
   static const outdated = 'outdated';
   static const appOutdated = 'app_outdated';
   static const busy = 'busy';
+  static const noDriver = 'no_driver';
   static const failed = 'failed';
   static const lost = 'lost';
 }

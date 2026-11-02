@@ -118,7 +118,7 @@ func newSession(s *Server, owner *tunapi.Conn, client string, protocol int, m tu
 		},
 	}
 	dev, err := s.openDevice(cfg)
-	if err != nil {
+	if err != nil && !errors.Is(err, tunstack.ErrNoDriver) {
 		// IPv6 may be turned off on the computer (DisabledComponents), and
 		// the adapter then gets no IPv6 address.
 		logx.Warn("opening the TUN adapter with IPv6 failed; opening it without, with IPv6 blocked err=%s", logx.Err(err))

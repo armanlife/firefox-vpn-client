@@ -865,6 +865,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tlsFragmentSniHint => 'يقسّم اسم الخادم (SNI) على عدة حزم TCP';
 
   @override
+  String get tlsFragmentRecord => 'سجل TLS';
+
+  @override
+  String get tlsFragmentRecordHint => 'يقسّم اسم الخادم (SNI) على سجلَّي TLS';
+
+  @override
   String get tlsFragmentOffHint => 'اتصال TLS عادي';
 
   @override
@@ -1416,6 +1422,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tunBusy => 'نسخة أخرى من Firefox VPN تستخدم وضع TUN.';
+
+  @override
+  String get tunNoDriver =>
+      'برنامج تشغيل TUN في النظام غير متوفر. أعد تشغيل الكمبيوتر وحاول مرة أخرى.';
 
   @override
   String get tunInstall => 'تثبيت';

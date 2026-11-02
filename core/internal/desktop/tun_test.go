@@ -490,6 +490,20 @@ func TestAServiceOfAnotherProtocol(t *testing.T) {
 	}
 }
 
+// No TUN driver in the kernel has a code of its own, for the app's advice.
+func TestAMissingDriverIsReported(t *testing.T) {
+	host, svc := setup(t, true)
+	svc.handlers <- func(c *tunapi.Conn) {
+		expect(t, c, tunapi.TypeHello)
+		c.Send(tunapi.Hello("2.0.0"))
+		expect(t, c, tunapi.TypeOpen)
+		c.Send(tunapi.Errorf(tunapi.CodeNoDriver, "the system's TUN driver is not available"))
+	}
+	host.wanted.Store(true)
+	defer runSync(t, host, "")()
+	waitState(t, host, service.TunError, service.TunCodeNoDriver)
+}
+
 func TestAnotherCopysTUNMakesItBusy(t *testing.T) {
 	host, svc := setup(t, true)
 	svc.handlers <- func(c *tunapi.Conn) {

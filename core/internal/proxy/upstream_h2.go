@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -17,9 +16,7 @@ import (
 	"golang.org/x/net/http2"
 
 	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
-	"github.com/armanlife/firefox-vpn-client/core/internal/hellosplit"
 	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/resolver"
 )
 
 // The keepalive PINGs the connection this often and waits this long for
@@ -56,7 +53,7 @@ const (
 var errProxyHTTP2Unavailable = errors.New("proxy did not negotiate HTTP/2")
 
 type h2ProxySession struct {
-	raw       *tls.Conn
+	raw       net.Conn
 	cc        *http2.ClientConn
 	watched   *watchedConn
 	opened    time.Time
@@ -148,37 +145,6 @@ func newUpstreamH2Transport() (*http2.Transport, error) {
 	transport.PingTimeout = 15 * time.Second
 	transport.WriteByteTimeout = 30 * time.Second
 	return transport, nil
-}
-
-// upstreamTLSSessions lets a new connection to a server resume TLS, which
-// saves the time of a whole handshake when the network cuts connections and
-// the program reconnects.
-var upstreamTLSSessions = tls.NewLRUClientSessionCache(32)
-
-// dialUpstreamTLS connects to proxyHost and completes TLS with proxyURL's
-// name, for HTTP/2.
-func dialUpstreamTLS(ctx context.Context, proxyURL *url.URL, proxyHost string) (*tls.Conn, *watchedConn, error) {
-	dialed, err := resolver.Dial(ctx, "tcp", proxyHost)
-	if err != nil {
-		return nil, nil, err
-	}
-	raw := newWatchedConn(hellosplit.Wrap(dialed))
-	proxyTLS := tls.Client(raw, &tls.Config{
-		RootCAs:            upstreamRoots.Load(),
-		ServerName:         proxyURL.Hostname(),
-		MinVersion:         tls.VersionTLS12,
-		NextProtos:         []string{"h2"},
-		ClientSessionCache: upstreamTLSSessions,
-	})
-	if err := proxyTLS.HandshakeContext(ctx); err != nil {
-		_ = raw.Close()
-		return nil, nil, err
-	}
-	if proxyTLS.ConnectionState().NegotiatedProtocol != "h2" {
-		_ = proxyTLS.Close()
-		return nil, nil, errProxyHTTP2Unavailable
-	}
-	return proxyTLS, raw, nil
 }
 
 // runKeepAlive pings the upstream connection periodically so a silently

@@ -2,7 +2,9 @@
 // to Mozilla across several TCP segments, so that a network filtering by
 // server name, whose inspection does not put segments back together, does
 // not read the name. The server gets the same bytes and the name stays the
-// real one (Mozilla's proxy refuses any other).
+// real one (Mozilla's proxy refuses any other). It can also go out as two TLS
+// records, for an inspection that does put segments together but reads only the
+// first record.
 //
 // network.hello_split chooses how (Set); by default the ClientHello goes out
 // whole.
@@ -18,11 +20,13 @@ import (
 )
 
 // The network.hello_split choices. SNI cuts the name after its first
-// letter; FirstByte cuts the record after its first byte.
+// letter; FirstByte cuts the record after its first byte; Record makes two
+// records of the hello, cut after the name's first letter.
 const (
 	Off       = "off"
 	SNI       = "sni"
 	FirstByte = "first-byte"
+	Record    = "record"
 )
 
 // configured is network.hello_split; nil means Off.
@@ -32,7 +36,7 @@ var configured atomic.Pointer[string]
 // Off).
 func Valid(mode string) bool {
 	switch mode {
-	case "", Off, SNI, FirstByte:
+	case "", Off, SNI, FirstByte, Record:
 		return true
 	}
 	return false
@@ -75,6 +79,9 @@ func (c *splitConn) Write(p []byte) (int, error) {
 	if !isClientHello(p) {
 		return c.Conn.Write(p)
 	}
+	if c.way == Record {
+		return c.writeRecords(p)
+	}
 	segments, err := segments(p, c.way)
 	if err != nil {
 		logx.Debug("not splitting a ClientHello err=%s", logx.Err(err))
@@ -89,6 +96,41 @@ func (c *splitConn) Write(p []byte) (int, error) {
 		}
 	}
 	return total, nil
+}
+
+// writeRecords sends p, a whole ClientHello record, as two records. It is
+// longer on the wire than p, and reports p's length: TLS counts what it gave.
+func (c *splitConn) writeRecords(p []byte) (int, error) {
+	out, err := records(p)
+	if err != nil {
+		logx.Debug("not splitting a ClientHello err=%s", logx.Err(err))
+		return c.Conn.Write(p)
+	}
+	if _, err := c.Conn.Write(out); err != nil {
+		return 0, err
+	}
+	return len(p), nil
+}
+
+// records makes two TLS records of p, a whole ClientHello record, cut after
+// the first letter of the server's name.
+func records(p []byte) ([]byte, error) {
+	const headerLen = 5
+	if int(binary.BigEndian.Uint16(p[3:])) != len(p)-headerLen {
+		return nil, errors.New("not one whole record")
+	}
+	start, err := nameOffset(p)
+	if err != nil {
+		return nil, err
+	}
+	cut := start + 1
+	out := make([]byte, 0, len(p)+headerLen)
+	out = append(out, p[:3]...)
+	out = binary.BigEndian.AppendUint16(out, uint16(cut-headerLen))
+	out = append(out, p[headerLen:cut]...)
+	out = append(out, p[:3]...)
+	out = binary.BigEndian.AppendUint16(out, uint16(len(p)-cut))
+	return append(out, p[cut:]...), nil
 }
 
 // isClientHello reports whether p starts a TLS handshake record holding a

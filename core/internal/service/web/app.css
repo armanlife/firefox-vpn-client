@@ -215,6 +215,9 @@ input.secret:not(.revealed) { -webkit-text-security: disc; }
 .mini-title { font-weight: 600; font-size: .88rem; }
 .mini-sub { font-size: .76rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
 .version-tag { font: 600 .74rem var(--mono); color: var(--faint); text-align: center; letter-spacing: .02em; }
+.version-tag.repo-link { display: flex; align-items: center; justify-content: center; gap: .35rem; color: var(--accent); }
+.version-tag.repo-link svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
+.version-tag.repo-link:hover { text-decoration: underline; }
 
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--faint); flex: none; }
 .running .dot, .dot.running { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-soft); }

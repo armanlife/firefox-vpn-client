@@ -316,31 +316,29 @@ func (o *RoutedOpener) OpenUDP(authority, clientKey string) (UDPTunnel, error) {
 	if err != nil {
 		return nil, err
 	}
-	if r := o.router.Load(); r != nil {
-		switch r.Decide(context.Background(), host, o.lookup) {
-		case routing.Direct:
-			o.direct.Add(1)
-			logx.Debug("route direct target=%s udp", logx.Target(authority))
-			ctx, cancel := context.WithTimeout(context.Background(), directDialTimeout)
-			defer cancel()
-			dial := o.dial
-			if remoteClient(clientKey) && o.dialRemote != nil {
-				dial = o.dialRemote
-			}
-			conn, err := dial(ctx, "udp", authority)
-			if err != nil {
-				if errors.Is(err, ErrThisMachine) {
-					o.direct.Add(-1)
-					o.blocked.Add(1)
-				}
-				return nil, err
-			}
-			return countedUDPTunnel{UDPTunnel: connUDPTunnel{conn}, up: &o.meter.directUp, down: &o.meter.directDown, route: RouteDirect}, nil
-		case routing.Block:
-			o.blocked.Add(1)
-			logx.Debug("route blocked target=%s udp", logx.Target(authority))
-			return nil, ErrBlockedByRule
+	switch o.decide(host) {
+	case routing.Direct:
+		o.direct.Add(1)
+		logx.Debug("route direct target=%s udp", logx.Target(authority))
+		ctx, cancel := context.WithTimeout(context.Background(), directDialTimeout)
+		defer cancel()
+		dial := o.dial
+		if remoteClient(clientKey) && o.dialRemote != nil {
+			dial = o.dialRemote
 		}
+		conn, err := dial(ctx, "udp", authority)
+		if err != nil {
+			if errors.Is(err, ErrThisMachine) {
+				o.direct.Add(-1)
+				o.blocked.Add(1)
+			}
+			return nil, err
+		}
+		return countedUDPTunnel{UDPTunnel: connUDPTunnel{conn}, up: &o.meter.directUp, down: &o.meter.directDown, route: RouteDirect}, nil
+	case routing.Block:
+		o.blocked.Add(1)
+		logx.Debug("route blocked target=%s udp", logx.Target(authority))
+		return nil, ErrBlockedByRule
 	}
 	o.proxied.Add(1)
 	if port == DNSPort && o.exchange != nil {

@@ -1611,6 +1611,18 @@ abstract class AppLocalizations {
   /// **'Splits the server name (SNI) across TCP packets'**
   String get tlsFragmentSniHint;
 
+  /// No description provided for @tlsFragmentRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'TLS record'**
+  String get tlsFragmentRecord;
+
+  /// No description provided for @tlsFragmentRecordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Splits the server name (SNI) across two TLS records'**
+  String get tlsFragmentRecordHint;
+
   /// No description provided for @tlsFragmentOffHint.
   ///
   /// In en, this message translates to:
@@ -2504,6 +2516,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Another copy of Firefox VPN is using TUN mode.'**
   String get tunBusy;
+
+  /// No description provided for @tunNoDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'The system\'s TUN driver isn\'t available. Restart the computer and try again.'**
+  String get tunNoDriver;
 
   /// No description provided for @tunInstall.
   ///

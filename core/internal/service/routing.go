@@ -115,7 +115,8 @@ func (d *Daemon) DirectApps() []string {
 // TunnelAllows reports whether the VPN (the phone's, or the computer's TUN
 // mode) sends a connection to host:port to the proxy: DNS, which the proxy
 // answers itself; a port Mozilla's proxy carries (and GitHub's SSH, which goes
-// to its HTTPS port); or a destination the routing sends directly (any port).
+// to its HTTPS port); or a destination that goes directly (any port): the local
+// network's, or one the routing sends so.
 // Others are refused at once rather than tried: Mozilla would refuse them, and
 // they must not go out directly. So are the addresses that lead nowhere
 // (tunnelDeadEnd), so that the app asks for the name again.
@@ -126,7 +127,7 @@ func (d *Daemon) TunnelAllows(host, port string) bool {
 	if ip, err := netip.ParseAddr(host); err == nil && tunnelDeadEnd(ip) {
 		return false
 	}
-	if proxy.Carried(host, port) {
+	if proxy.Carried(host, port) || proxy.LocalAddress(host) {
 		return true
 	}
 	r := d.currentRouter()

@@ -860,6 +860,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get tlsFragmentSniHint => 'تقسیم نام سرور (SNI) بین چند بسته TCP';
 
   @override
+  String get tlsFragmentRecord => 'دو تکه کردن TLS';
+
+  @override
+  String get tlsFragmentRecordHint => 'ارسال نام سرور (SNI) در دو تکه TLS';
+
+  @override
   String get tlsFragmentOffHint => 'اتصال عادی TLS';
 
   @override
@@ -1395,6 +1401,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get tunBusy => 'حالت TUN را نسخه دیگری از Firefox VPN استفاده می‌کند.';
+
+  @override
+  String get tunNoDriver =>
+      'درایور TUN سیستم در دسترس نیست. سیستم را ری‌استارت کنید و دوباره امتحان کنید.';
 
   @override
   String get tunInstall => 'نصب';
