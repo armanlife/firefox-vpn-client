@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/guardian"
 )
 
 func TestProxyControllerWritesStatusFile(t *testing.T) {

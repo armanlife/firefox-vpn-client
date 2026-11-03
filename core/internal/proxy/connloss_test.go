@@ -18,7 +18,7 @@ import (
 
 	"golang.org/x/net/http2"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
 )
 
 // cuttableConn carries its connection until cut, then carries nothing,

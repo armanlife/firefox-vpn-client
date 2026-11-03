@@ -10,8 +10,8 @@ import (
 
 	"golang.org/x/sys/windows/registry"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/config"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/service"
 )
 
 // useTestProxyKeys points the system proxy code at temporary keys under

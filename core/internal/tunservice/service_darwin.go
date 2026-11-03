@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunapi"
 )
 
 // InstallDir is the installed service's folder.

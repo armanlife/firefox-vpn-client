@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunapi"
 )
 
 // InstallDir is the installed service's folder.
@@ -19,7 +19,7 @@ const unitName = tunapi.ServiceName + ".service"
 // good (stopForGood).
 const unit = `[Unit]
 Description=Firefox VPN TUN
-Documentation=https://github.com/armanlife/firefox-vpn-client
+Documentation=https://github.com/astwdnya/firefox-vpn-client
 After=network.target
 
 [Service]

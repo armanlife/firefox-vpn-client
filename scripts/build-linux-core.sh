@@ -17,7 +17,7 @@ for arch in amd64 arm64 armv7; do
   stage="$(mktemp -d)"
   mkdir "$stage/$name"
   (cd "$root/core" && CGO_ENABLED=0 GOOS=linux GOARCH="${arch/armv7/arm}" GOARM=7 go build -trimpath \
-    -ldflags "-s -w -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$version" \
+    -ldflags "-s -w -X github.com/astwdnya/firefox-vpn-client/core/internal/version.Current=$version" \
     -o "$stage/$name/firefox-vpn-core" ./cmd/firefox-vpn-core)
   install -m 0755 "$root/core/scripts/install-systemd.sh" "$stage/$name/install-systemd.sh"
   install -m 0644 "$root/LICENSE" "$stage/$name/LICENSE"

@@ -12,13 +12,13 @@ import (
 
 	"golang.org/x/term"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
-	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
-	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/accounts"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/config"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/fxa"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/guardian"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/proxy"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/service"
 )
 
 // runAddAccount signs in interactively and stores the account at the end

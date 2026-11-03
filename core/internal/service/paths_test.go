@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/accounts"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/config"
 )
 
 func TestReconcileAccountOrder(t *testing.T) {

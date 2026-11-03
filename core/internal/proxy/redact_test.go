@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
 )
 
 func TestLogErrRedactsConnectHTTPBodyUnlessVerbose(t *testing.T) {

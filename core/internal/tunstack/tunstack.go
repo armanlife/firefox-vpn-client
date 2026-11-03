@@ -28,7 +28,7 @@ import (
 	M "github.com/sagernet/sing/common/metadata"
 	N "github.com/sagernet/sing/common/network"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
 )
 
 // Config is the device.

@@ -15,7 +15,7 @@ import (
 // Key is the base64 Ed25519 public key that updates must be signed with,
 // set by the build:
 //
-//	-ldflags "-X github.com/armanlife/firefox-vpn-client/core/internal/signing.Key=..."
+//	-ldflags "-X github.com/astwdnya/firefox-vpn-client/core/internal/signing.Key=..."
 //
 // The release build uses the release key, whose private half only CI holds
 // (the secret FIREFOX_VPN_SIGNING_KEY); a local build may use a developer

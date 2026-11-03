@@ -5,7 +5,7 @@ package desktop
 import (
 	"errors"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/service"
 )
 
 func RunTray(service.DataPaths, bool) error {

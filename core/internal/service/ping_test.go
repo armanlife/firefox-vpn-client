@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/proxy"
 )
 
 // Without a running proxy a measurement needs an account for its pass.

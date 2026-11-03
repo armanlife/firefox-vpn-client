@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tun"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunapi"
 )
 
 // appSource is an app's connection on the adapter, as the stack sees it.

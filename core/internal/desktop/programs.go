@@ -4,8 +4,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/service"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunapi"
 )
 
 // ownPrograms are this app's own executables, which never skip the VPN by

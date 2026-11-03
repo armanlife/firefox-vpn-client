@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/controlplane"
 )
 
 // ErrnoRequestBlocked is FxA's "request blocked" errno: the sign-in looks

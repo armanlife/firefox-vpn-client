@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/signing"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/signing"
 )
 
 // The tests make the Windows zip on every system; untar_test.go tries the

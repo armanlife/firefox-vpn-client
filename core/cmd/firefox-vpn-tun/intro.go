@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/version"
 )
 
 // projectURL is where people find the app this service belongs to.
-const projectURL = "https://github.com/armanlife/firefox-vpn-client"
+const projectURL = "https://github.com/astwdnya/firefox-vpn-client"
 
 // intro is what the service says when it is started with no command, as
 // someone does who opens it by hand: what it is.

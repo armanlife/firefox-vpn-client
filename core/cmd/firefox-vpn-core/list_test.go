@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/accounts"
 )
 
 func TestAccountList(t *testing.T) {

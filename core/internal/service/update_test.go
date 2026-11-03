@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/update"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/update"
 )
 
 // Only the app on this computer may download or install an update, and

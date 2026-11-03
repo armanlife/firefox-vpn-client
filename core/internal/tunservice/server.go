@@ -14,10 +14,10 @@ import (
 	"net/netip"
 	"sync"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunstack"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tun"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunapi"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunstack"
 )
 
 // adapterMTU is the TUN adapter's MTU; AdapterName (adapter_*.go) its name.

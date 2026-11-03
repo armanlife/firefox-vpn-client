@@ -17,11 +17,11 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/config"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/proxy"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/service"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/version"
 
 	"golang.org/x/term"
 )

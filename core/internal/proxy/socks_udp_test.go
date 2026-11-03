@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/routing"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/routing"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tun"
 )
 
 // fakeUDPTunnel echoes its packets, with its target in front.

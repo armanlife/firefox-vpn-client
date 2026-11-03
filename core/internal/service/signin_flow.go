@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/fxa"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/proxy"
 )
 
 const (

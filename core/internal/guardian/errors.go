@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/controlplane"
 )
 
 var (

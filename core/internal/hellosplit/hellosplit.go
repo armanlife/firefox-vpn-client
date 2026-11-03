@@ -16,7 +16,7 @@ import (
 	"net"
 	"sync/atomic"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
 )
 
 // The network.hello_split choices. SNI cuts the name after its first

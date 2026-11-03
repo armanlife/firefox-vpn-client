@@ -9,6 +9,7 @@ import '../core/core_api.dart';
 import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
+import '../platform.dart' show isPhone;
 import 'about_page.dart';
 import 'accounts_page.dart';
 import 'focus_ring.dart';
@@ -256,10 +257,10 @@ class _ShellState extends State<Shell> {
         _page = pages[i];
         _settingsOpening = null;
       });
-      // Android (a phone, or a tablet in either orientation) and a narrow
-      // window: the phone layout, Home and Settings. The computer layout
-      // offers computer-only choices, such as Windows' system proxy.
-      if (Platform.isAndroid || MediaQuery.sizeOf(context).width < 640) {
+      // A phone (Android or iOS), or a tablet in either orientation, and a
+      // narrow window: the phone layout, Home and Settings. The computer
+      // layout offers computer-only choices, such as Windows' system proxy.
+      if (isPhone || MediaQuery.sizeOf(context).width < 640) {
         return MobileShell(
           core: core,
           settings: widget.settings,

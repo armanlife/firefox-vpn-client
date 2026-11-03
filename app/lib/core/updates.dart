@@ -25,6 +25,8 @@ Future<String> downloadUrl(Release release) async {
   if (Platform.isAndroid) {
     final abi = await AndroidCore.abi().catchError((Object _) => '');
     name = apkName(abi);
+  } else if (Platform.isIOS) {
+    name = 'iOS-unsigned.ipa';
   } else if (Platform.isWindows) {
     final dir = File(Platform.resolvedExecutable).parent.path;
     final installed = File('$dir${Platform.pathSeparator}unins000.exe');

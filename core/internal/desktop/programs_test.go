@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/service"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunapi"
 )
 
 // The running programs include this test, once each by name, in order of

@@ -11,9 +11,9 @@
 
 <div align="center">
 
-[![Downloads](https://img.shields.io/github/downloads/armanlife/firefox-vpn-client/total?style=flat-square&logo=github&label=Downloads)](https://github.com/armanlife/firefox-vpn-client/releases)
-[![Last Version](https://img.shields.io/github/v/release/armanlife/firefox-vpn-client?style=flat-square&label=Version)](https://github.com/armanlife/firefox-vpn-client/releases/latest)
-[![License](https://img.shields.io/github/license/armanlife/firefox-vpn-client?style=flat-square&label=License)](LICENSE)
+[![Downloads](https://img.shields.io/github/downloads/astwdnya/firefox-vpn-client/total?style=flat-square&logo=github&label=Downloads)](https://github.com/astwdnya/firefox-vpn-client/releases)
+[![Last Version](https://img.shields.io/github/v/release/astwdnya/firefox-vpn-client?style=flat-square&label=Version)](https://github.com/astwdnya/firefox-vpn-client/releases/latest)
+[![License](https://img.shields.io/github/license/astwdnya/firefox-vpn-client?style=flat-square&label=License)](LICENSE)
 
 </div>
 
@@ -23,13 +23,13 @@
 
 Every Firefox Account comes with **50 GB of free data a month**, and the **multi-account** feature multiplies it: when one runs out, the next connects **automatically**.
 
-For **Android, Windows, macOS, and Linux**; completely free, with no ads.
+For **Android, iOS, Windows, macOS, and Linux**; completely free, with no ads.
 
-<p align="center"><a href="https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/docs/screenshots/main.webp" target="_blank"><img src="docs/screenshots/main.webp" width="720" alt="Firefox VPN"></a></p>
+<p align="center"><a href="https://raw.githubusercontent.com/astwdnya/firefox-vpn-client/main/docs/screenshots/main.webp" target="_blank"><img src="docs/screenshots/main.webp" width="720" alt="Firefox VPN"></a></p>
 
 ## 🚀 Main features
 
-✈️ Cross-platform: Android, Windows, macOS, and Linux
+✈️ Cross-platform: Android, iOS, Windows, macOS, and Linux
 
 📺 Android TV: works with the remote control
 
@@ -72,18 +72,20 @@ For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 <tr><th>System</th><th>Download</th></tr>
 </thead>
 <tbody>
-<tr><td>Android</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-universal.apk"><img src="https://img.shields.io/badge/APK-Universal-1a7f37?logo=android&logoColor=white" alt="APK Universal"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-arm64-v8a.apk"><img src="https://img.shields.io/badge/APK-ARMv8-2da44e?logo=android&logoColor=white" alt="APK ARMv8"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-armeabi-v7a.apk"><img src="https://img.shields.io/badge/APK-ARMv7-4ac26b?logo=android&logoColor=white" alt="APK ARMv7"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-x86_64.apk"><img src="https://img.shields.io/badge/APK-x64-6fdd8b?logo=android&logoColor=white" alt="APK x64"></a></td></tr>
-<tr><td>Android TV</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-universal.apk"><img src="https://img.shields.io/badge/APK-Universal-1a7f37?logo=android&logoColor=white" alt="APK Universal"></a></td></tr>
-<tr><td>Windows</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Windows-Setup-x64.exe"><img src="https://img.shields.io/badge/Setup-x64-0550ae?logo=windows&logoColor=white" alt="Setup x64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Windows-x64.zip"><img src="https://img.shields.io/badge/Portable-x64-0969da" alt="Portable x64"></a></td></tr>
-<tr><td>macOS</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-macOS.dmg"><img src="https://img.shields.io/badge/DMG-Universal-24292f?logo=apple&logoColor=white" alt="DMG Universal"></a></td></tr>
-<tr><td rowspan="2">Linux</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-amd64.tar.gz"><img src="https://img.shields.io/badge/App-amd64-e36209?logo=linux&logoColor=white" alt="App amd64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-arm64.tar.gz"><img src="https://img.shields.io/badge/App-ARM64-e36209?logo=linux&logoColor=white" alt="App ARM64"></a></td></tr>
-<tr><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-amd64.tar.gz"><img src="https://img.shields.io/badge/Core-amd64-f0883e?logo=linux&logoColor=white" alt="Core amd64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-arm64.tar.gz"><img src="https://img.shields.io/badge/Core-ARM64-f6a35e?logo=linux&logoColor=white" alt="Core ARM64"></a></td></tr>
+<tr><td>Android</td><td><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-universal.apk"><img src="https://img.shields.io/badge/APK-Universal-1a7f37?logo=android&logoColor=white" alt="APK Universal"></a><br><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-arm64-v8a.apk"><img src="https://img.shields.io/badge/APK-ARMv8-2da44e?logo=android&logoColor=white" alt="APK ARMv8"></a><br><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-armeabi-v7a.apk"><img src="https://img.shields.io/badge/APK-ARMv7-4ac26b?logo=android&logoColor=white" alt="APK ARMv7"></a><br><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-x86_64.apk"><img src="https://img.shields.io/badge/APK-x64-6fdd8b?logo=android&logoColor=white" alt="APK x64"></a></td></tr>
+<tr><td>Android TV</td><td><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-universal.apk"><img src="https://img.shields.io/badge/APK-Universal-1a7f37?logo=android&logoColor=white" alt="APK Universal"></a></td></tr>
+<tr><td>iOS</td><td><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/Firefox-VPN-iOS-unsigned.ipa"><img src="https://img.shields.io/badge/IPA-unsigned-000000?logo=apple&logoColor=white" alt="IPA unsigned"></a><br><a href="docs/IOS.md"><img src="https://img.shields.io/badge/Signing_guide-docs%2FIOS-586069" alt="Signing guide"></a></td></tr>
+<tr><td>Windows</td><td><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/Firefox-VPN-Windows-Setup-x64.exe"><img src="https://img.shields.io/badge/Setup-x64-0550ae?logo=windows&logoColor=white" alt="Setup x64"></a><br><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/Firefox-VPN-Windows-x64.zip"><img src="https://img.shields.io/badge/Portable-x64-0969da" alt="Portable x64"></a></td></tr>
+<tr><td>macOS</td><td><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/Firefox-VPN-macOS.dmg"><img src="https://img.shields.io/badge/DMG-Universal-24292f?logo=apple&logoColor=white" alt="DMG Universal"></a></td></tr>
+<tr><td rowspan="2">Linux</td><td><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-amd64.tar.gz"><img src="https://img.shields.io/badge/App-amd64-e36209?logo=linux&logoColor=white" alt="App amd64"></a><br><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-arm64.tar.gz"><img src="https://img.shields.io/badge/App-ARM64-e36209?logo=linux&logoColor=white" alt="App ARM64"></a></td></tr>
+<tr><td><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-amd64.tar.gz"><img src="https://img.shields.io/badge/Core-amd64-f0883e?logo=linux&logoColor=white" alt="Core amd64"></a><br><a href="https://github.com/astwdnya/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-arm64.tar.gz"><img src="https://img.shields.io/badge/Core-ARM64-f6a35e?logo=linux&logoColor=white" alt="Core ARM64"></a></td></tr>
 </tbody>
 </table>
 
 **Which file should I download?**
 
 - **Android:** if you are not sure, take **Universal**; it installs on every phone. **ARMv8** is for most of today's phones and is smaller.
+- **iOS:** the IPA is **unsigned** and needs your own certificate: the [iOS guide](docs/IOS.md) has every step, from signing to the first connection.
 - **Windows:** **Setup** is a normal installer; **Portable** needs no install and runs from any folder.
 - **Linux:** **App** for a Linux desktop (with a graphical environment); **Core** for a server (without a graphical environment, with a web panel).
 
@@ -92,7 +94,7 @@ For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 > Windows and Android users don't need this section: take the installer from the "Download" table above.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/astwdnya/firefox-vpn-client/main/install.sh | bash
 ```
 
 ### 🌐 Web panel
@@ -142,6 +144,10 @@ $ sudo firefox-vpn
 ## OpenWrt routers
 
 To install on an OpenWrt router, see the [OpenWrt guide](docs/OPENWRT.md).
+
+## iOS
+
+The IPA comes **unsigned** from the release, and the same UI, accounts, servers, smart routing, and settings as the other platforms; the VPN itself is the system's packet tunnel (a Network Extension that runs the same Go core). Two things iOS does differently: the IPA needs your signature before a phone installs it (a free Apple ID is enough for 7 days at a time; a paid developer certificate for a year), and per-app routing is Android's alone — iOS has no such control. The [iOS guide](docs/IOS.md) has the signing steps and the details.
 
 ## Known limitations
 

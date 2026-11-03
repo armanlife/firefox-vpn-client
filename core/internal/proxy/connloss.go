@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
 )
 
 // watchedConn is the TCP connection under an upstream session's TLS. It

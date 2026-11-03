@@ -7,7 +7,7 @@ import (
 	"flag"
 	"os"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunservice"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunservice"
 )
 
 // run runs a command. The init system (the service manager, systemd,

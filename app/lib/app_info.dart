@@ -8,7 +8,7 @@ const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: '0.0.0');
 
 /// The GitHub repository, "owner/name", for the source link and the update
 /// check.
-const githubRepo = 'armanlife/firefox-vpn-client';
+const githubRepo = 'astwdnya/firefox-vpn-client';
 
 /// A newer release on GitHub.
 class Release {
@@ -56,6 +56,7 @@ String? releaseFilePart(String os) => switch (os) {
   'linux' => linuxName(Platform.version),
   'macos' => 'macOS.tar.gz',
   'android' => 'Android-universal.apk',
+  'ios' => 'iOS-unsigned.ipa',
   _ => null,
 };
 

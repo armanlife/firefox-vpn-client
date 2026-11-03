@@ -18,11 +18,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
-	"github.com/armanlife/firefox-vpn-client/core/internal/hellosplit"
-	"github.com/armanlife/firefox-vpn-client/core/internal/resolver"
-	"github.com/armanlife/firefox-vpn-client/core/internal/routing"
-	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/guardian"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/hellosplit"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/resolver"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/routing"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/securefile"
 )
 
 // CurrentVersion is the config schema version written by this build.

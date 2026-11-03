@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/signing"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/signing"
 )
 
 // Updates of the service must be signed with the key built into it

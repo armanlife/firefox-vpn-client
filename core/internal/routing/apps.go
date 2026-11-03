@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/securefile"
 )
 
 // AppListURL is where a region's phone apps that should connect directly

@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
-	"github.com/armanlife/firefox-vpn-client/core/internal/resolver"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/config"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/proxy"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/resolver"
 )
 
 const dnsTestTimeout = 8 * time.Second

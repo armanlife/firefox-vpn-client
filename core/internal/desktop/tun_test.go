@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/config"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/proxy"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/service"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunapi"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/version"
 )
 
 // fakeHost is the daemon as tunSync sees it, recording what it was told.

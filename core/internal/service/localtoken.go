@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/securefile"
 )
 
 // localTokenHeader carries the local API token. Local clients that can read

@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunstack"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tun"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunapi"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunstack"
 )
 
 // fakeDevice stands for the adapter.

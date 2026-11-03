@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/proxy"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tun"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/tunapi"
 )
 
 // testUDPPorts is the shape of the core's list, without QUIC.

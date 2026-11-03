@@ -70,8 +70,8 @@ try {
     $env:APP_VERSION = $version
     go generate ./cmd/firefox-vpn-core
     if ($LASTEXITCODE -ne 0) { throw 'go generate failed' }
-    $ldflags = "-s -w -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$version"
-    if ($public) { $ldflags += " -X github.com/armanlife/firefox-vpn-client/core/internal/signing.Key=$public" }
+    $ldflags = "-s -w -X github.com/astwdnya/firefox-vpn-client/core/internal/version.Current=$version"
+    if ($public) { $ldflags += " -X github.com/astwdnya/firefox-vpn-client/core/internal/signing.Key=$public" }
     go build -trimpath -ldflags $ldflags -o "$out\core\firefox-vpn-core.exe" ./cmd/firefox-vpn-core
     if ($LASTEXITCODE -ne 0) { throw 'go build failed' }
     & "$PSScriptRoot\build-windows-tun.ps1" -Version $version -Out "$out\core" -PublicKey $public

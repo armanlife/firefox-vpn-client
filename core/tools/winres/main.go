@@ -20,8 +20,8 @@ import (
 	"github.com/tc-hib/winres"
 	winversion "github.com/tc-hib/winres/version"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/desktop"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/desktop"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/version"
 )
 
 // program is what each executable's version information says.

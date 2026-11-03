@@ -32,7 +32,7 @@ if (-not $env:GOTOOLCHAIN) {
     if ([version]$have -lt [version]$need) { $env:GOTOOLCHAIN = "go$need+auto" }
 }
 
-$ldflags = "-s -w -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$version"
+$ldflags = "-s -w -X github.com/astwdnya/firefox-vpn-client/core/internal/version.Current=$version"
 
 Push-Location "$root\core"
 try {

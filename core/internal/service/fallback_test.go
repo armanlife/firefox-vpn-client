@@ -3,8 +3,8 @@ package service
 import (
 	"testing"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
-	"github.com/armanlife/firefox-vpn-client/core/internal/serverlist"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/proxy"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/serverlist"
 )
 
 func oneServerCountry(code, host string) serverlist.Country {

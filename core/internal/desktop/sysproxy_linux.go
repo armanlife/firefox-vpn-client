@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/securefile"
 )
 
 // The desktop's proxy setting: GNOME's (gsettings org.gnome.system.proxy),

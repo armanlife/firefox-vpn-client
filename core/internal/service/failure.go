@@ -5,10 +5,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/netcheck"
-	"github.com/armanlife/firefox-vpn-client/core/internal/netstate"
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
-	"github.com/armanlife/firefox-vpn-client/core/internal/resolver"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/netcheck"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/netstate"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/proxy"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/resolver"
 )
 
 // failureCode is proxy.FailureCode for err, made sure for failures that may

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/serverlist"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/serverlist"
 )
 
 // The server list is saved when it is fetched, shown at once on the next

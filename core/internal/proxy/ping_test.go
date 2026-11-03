@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/serverlist"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/serverlist"
 )
 
 func pingTestCountries() []serverlist.Country {

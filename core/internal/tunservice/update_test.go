@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/signing"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/signing"
 )
 
 // signedFile writes an executable and its signature by priv.

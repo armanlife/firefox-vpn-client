@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/securefile"
 )
 
 // Default list sources, both from Chocolate4U/Iran-v2ray-rules; together

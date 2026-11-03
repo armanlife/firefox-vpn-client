@@ -113,7 +113,7 @@ List<(String, List<SettingsEntry>)> settingsGroups(
     ],
   ),
   // The app's port and the web dashboard: computers only.
-  if (!Platform.isAndroid)
+  if (!isPhone)
     (
       l.groupApp,
       [(SettingsSection.advanced, Icons.build_outlined, l.sectionAdvanced)],
@@ -453,7 +453,7 @@ class _SettingsPageState extends State<SettingsPage> {
             (ThemeMode.dark, l.themeDark, null),
           ],
         ),
-        if (!Platform.isAndroid)
+        if (!isPhone)
           _Choice<CloseAction>(
             icon: Icons.close_rounded,
             title: l.closeBehavior,
@@ -542,7 +542,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ],
               ),
               // The phone never sleeps (the core turns it off there).
-              if (!Platform.isAndroid) _sleepChoice(l),
+              if (!isPhone) _sleepChoice(l),
             ],
           ),
         ),

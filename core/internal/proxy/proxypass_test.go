@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
-	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/fxa"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/guardian"
 )
 
 func TestIsQuotaExhausted(t *testing.T) {

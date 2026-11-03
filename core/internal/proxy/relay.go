@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
 )
 
 const (

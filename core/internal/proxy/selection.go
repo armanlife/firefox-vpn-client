@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/serverlist"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/serverlist"
 )
 
 type Candidate struct {

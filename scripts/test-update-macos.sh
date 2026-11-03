@@ -20,7 +20,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 version="$(sed -n 's/^version:[[:space:]]*\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' "$root/app/pubspec.yaml")"
 next="${version%.*}.$((${version##*.} + 1))"
-module=github.com/armanlife/firefox-vpn-client/core
+module=github.com/astwdnya/firefox-vpn-client/core
 out="${1:-$root/dist/update-test}"
 app="/Applications/Firefox VPN.app"
 data="$HOME/Library/Application Support/Firefox VPN Client"

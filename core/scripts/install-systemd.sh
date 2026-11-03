@@ -23,8 +23,8 @@ DATA_DIR="$INSTALL_DIR/user-data"
 # update runs the release's installer, which downloads the newest core,
 # keeps the data folder (accounts, settings, logins), and replaces this
 # command too; RELEASES_URL/latest leads to the newest release's tag.
-INSTALLER_URL="${INSTALLER_URL:-https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/install.sh}"
-RELEASES_URL="${RELEASES_URL:-https://github.com/armanlife/firefox-vpn-client/releases}"
+INSTALLER_URL="${INSTALLER_URL:-https://raw.githubusercontent.com/astwdnya/firefox-vpn-client/main/install.sh}"
+RELEASES_URL="${RELEASES_URL:-https://github.com/astwdnya/firefox-vpn-client/releases}"
 
 # The command being run, for the messages.
 COMMAND_NAME="${1:-}"

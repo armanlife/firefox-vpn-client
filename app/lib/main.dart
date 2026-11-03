@@ -7,6 +7,7 @@ import 'app_settings.dart';
 import 'core/android_core.dart';
 import 'core/core_api.dart';
 import 'core/core_controller.dart';
+import 'core/ios_core.dart';
 import 'core/updates.dart';
 import 'core/core_process.dart';
 import 'core/ports.dart';
@@ -21,6 +22,7 @@ import 'ui/app.dart';
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isAndroid) return runAndroid();
+  if (Platform.isIOS) return runIos();
   final dataDir = CoreLocator.dataDir(args);
   final settings = await AppSettings.load(dataDir);
   final process = CoreProcess(
@@ -82,6 +84,28 @@ Future<void> runAndroid() async {
   final core = CoreController(
     AndroidCore(dataDir).connect,
     turnOn: AndroidCore.setOn,
+  )..start();
+  AppLifecycleListener(
+    onResume: core.retryNow,
+    onShow: () => core.onScreen = true,
+    onHide: () => core.onScreen = false,
+  );
+  Updates.start(core, settings);
+  runApp(VpnApp(core: core, settings: settings));
+}
+
+/// iOS: the core runs in this app's process (with the proxy off) while the
+/// VPN is off; turned on, the tunnel extension runs its own core, and the
+/// app talks to it through the same API (AppDelegate.swift, ios_core.dart).
+Future<void> runIos() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Edge to edge: the home page's hero colors the status bar.
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  final dataDir = await IosCore.dataDir();
+  final settings = await AppSettings.load(dataDir);
+  final core = CoreController(
+    IosCore(dataDir).connect,
+    turnOn: IosCore.setOn,
   )..start();
   AppLifecycleListener(
     onResume: core.retryNow,

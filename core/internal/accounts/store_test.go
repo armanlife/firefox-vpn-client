@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/fxa"
 )
 
 // The manager's saves keep the device record that another writer stored

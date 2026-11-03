@@ -26,7 +26,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 version="$(sed -n 's/^version:[[:space:]]*\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' "$root/app/pubspec.yaml")"
 [ -n "$version" ] || { echo "no version in app/pubspec.yaml" >&2; exit 1; }
-module=github.com/armanlife/firefox-vpn-client/core
+module=github.com/astwdnya/firefox-vpn-client/core
 
 public=""
 if [ -n "${FIREFOX_VPN_SIGNING_KEY:-}${FIREFOX_VPN_SIGNING_KEY_FILE:-}" ]; then

@@ -13,8 +13,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/hellosplit"
-	"github.com/armanlife/firefox-vpn-client/core/internal/resolver"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/hellosplit"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/resolver"
 )
 
 const (

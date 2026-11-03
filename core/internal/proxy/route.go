@@ -11,10 +11,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/egress"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/resolver"
-	"github.com/armanlife/firefox-vpn-client/core/internal/routing"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/egress"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/resolver"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/routing"
 )
 
 // ErrBlockedByRule is a connection refused by a routing rule.

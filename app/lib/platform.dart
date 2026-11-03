@@ -1,7 +1,12 @@
 import 'dart:io';
 
 import 'core/android_core.dart';
+import 'core/ios_core.dart';
 import 'desktop/desktop_bridge.dart';
+
+/// Whether this is a phone build (Android or iOS): the mobile shell, and
+/// none of the desktop's choices (the tray, the system proxy, the TUN).
+bool get isPhone => Platform.isAndroid || Platform.isIOS;
 
 /// Opens [url] in the system's handler: the browser, or the app for a
 /// scheme such as tg://; false when nothing on Android opens it (a TV has
@@ -10,6 +15,8 @@ import 'desktop/desktop_bridge.dart';
 Future<bool> openUrl(String url) async {
   if (Platform.isAndroid) {
     return AndroidCore.openUrl(url);
+  } else if (Platform.isIOS) {
+    return IosCore.openUrl(url);
   } else if (Platform.isWindows) {
     await DesktopBridge.openUrl(url);
   } else if (Platform.isMacOS) {

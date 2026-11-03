@@ -13,11 +13,11 @@ import (
 
 	"golang.org/x/term"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/desktop"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
-	"github.com/armanlife/firefox-vpn-client/core/internal/update"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/desktop"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/service"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/update"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/version"
 )
 
 func main() {

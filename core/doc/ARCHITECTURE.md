@@ -4,7 +4,7 @@ Read this for code ownership and call paths. See [sessions](SESSIONS.md) for con
 
 ## Packages and dependencies
 
-The module is `github.com/armanlife/firefox-vpn-client/core`. The module root holds only `go.mod`, `go.sum`, and documentation entry points; there is no Go code there. There is no Firefox extension. The desktop TUN mode has a second executable, the TUN service (`cmd/firefox-vpn-tun`), which holds the TUN adapter with the system's rights and talks to the core over a local channel (`internal/tunapi`).
+The module is `github.com/astwdnya/firefox-vpn-client/core`. The module root holds only `go.mod`, `go.sum`, and documentation entry points; there is no Go code there. There is no Firefox extension. The desktop TUN mode has a second executable, the TUN service (`cmd/firefox-vpn-tun`), which holds the TUN adapter with the system's rights and talks to the core over a local channel (`internal/tunapi`).
 
 ```text
 cmd/firefox-vpn-core/      package main: flags, run modes, one-shot commands (add/list accounts,

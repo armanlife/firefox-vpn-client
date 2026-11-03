@@ -13,7 +13,7 @@ import (
 
 	"golang.org/x/net/dns/dnsmessage"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/routing"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/routing"
 )
 
 func dnsQuery(t *testing.T, id uint16, host string, qtype dnsmessage.Type) []byte {

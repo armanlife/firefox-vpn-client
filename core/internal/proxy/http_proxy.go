@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/egress"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/egress"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
 )
 
 // The SOCKS5 port also serves HTTP proxy clients (the Windows system proxy

@@ -12,8 +12,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
-	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/controlplane"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/securefile"
 )
 
 const remoteSettingsURL = "https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/vpn-serverlist/records"

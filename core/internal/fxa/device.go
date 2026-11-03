@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/controlplane"
 )
 
 // DeviceName is how this program appears in the account's connected

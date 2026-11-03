@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/proxy"
 )
 
 func shortConnectWindow(t *testing.T) {

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +8,7 @@ import '../core/core_api.dart';
 import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
+import '../platform.dart' show isPhone;
 import 'connections_view.dart';
 import 'format.dart';
 import 'widgets.dart';
@@ -327,7 +327,7 @@ class _LogsPageState extends State<LogsPage> {
         children: [
           PageTitle(l.navLogs),
           const SizedBox(height: 16),
-          if (widget.connections ?? !Platform.isAndroid) ...[
+          if (widget.connections ?? !isPhone) ...[
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: SegmentedButton<bool>(

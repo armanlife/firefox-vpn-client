@@ -27,7 +27,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/version"
 )
 
 // Exit statuses.

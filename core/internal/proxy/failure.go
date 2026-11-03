@@ -11,9 +11,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
-	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
-	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/accounts"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/fxa"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/guardian"
 )
 
 // Failure codes say why a connection through Mozilla failed, so the apps

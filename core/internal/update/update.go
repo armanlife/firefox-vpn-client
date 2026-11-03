@@ -61,9 +61,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/signing"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/signing"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/version"
 )
 
 // The states of Status.
@@ -115,7 +115,7 @@ func AppDir(exe string) string {
 
 // releasesURL is where GitHub serves a release's files:
 // <releasesURL>v<version>/<file>.
-const releasesURL = "https://github.com/armanlife/firefox-vpn-client/releases/download/"
+const releasesURL = "https://github.com/astwdnya/firefox-vpn-client/releases/download/"
 
 // ServerEnv names a release server to use instead of GitHub, for trying
 // updates with a local test release: it serves

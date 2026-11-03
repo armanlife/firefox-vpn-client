@@ -24,7 +24,7 @@ import (
 
 	"golang.org/x/net/proxy"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/egress"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/egress"
 )
 
 const (

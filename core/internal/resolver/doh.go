@@ -14,7 +14,7 @@ import (
 
 	"golang.org/x/net/dns/dnsmessage"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/egress"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/egress"
 )
 
 const (

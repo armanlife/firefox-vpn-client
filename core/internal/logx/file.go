@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/securefile"
 )
 
 // The log folder holds one file per local day, firefox-vpn-YYYY-MM-DD.log,

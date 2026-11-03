@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/serverlist"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/serverlist"
 )
 
 // FastestCountry is the proxy.country value that picks the location with

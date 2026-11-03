@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/accounts"
 )
 
 // All credentials in this file are local fixtures; the control plane

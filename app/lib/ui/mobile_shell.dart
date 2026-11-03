@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import '../app_settings.dart';
 import '../core/core_controller.dart';
 import '../l10n/app_localizations.dart';
+import '../platform.dart' show isPhone;
 import 'about_page.dart';
 import 'accounts_page.dart';
 import 'logs_page.dart';
@@ -249,7 +248,7 @@ class _SettingsList extends StatelessWidget {
         group(l.groupApp, [
           // The app's port and the web dashboard: computers only (a narrow
           // window shows this layout too).
-          if (!Platform.isAndroid)
+          if (!isPhone)
             section(
               SettingsSection.advanced,
               Icons.build_outlined,

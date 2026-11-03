@@ -12,10 +12,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
-	"github.com/armanlife/firefox-vpn-client/core/internal/update"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/service"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/update"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/version"
 )
 
 // The app mode (-app) is the core process of the desktop app: the app

@@ -18,8 +18,8 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/hpack"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/controlplane"
+	"github.com/astwdnya/firefox-vpn-client/core/internal/logx"
 )
 
 // CONNECT-UDP (RFC 9298) over HTTP/2: Mozilla's proxy carries UDP in an

@@ -24,8 +24,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'go generate failed (firefox-vpn-tun)' }
 
     # windowsgui: no console window when the app or Setup starts it.
-    $ldflags = "-s -w -H windowsgui -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$Version"
-    if ($public) { $ldflags += " -X github.com/armanlife/firefox-vpn-client/core/internal/signing.Key=$public" }
+    $ldflags = "-s -w -H windowsgui -X github.com/astwdnya/firefox-vpn-client/core/internal/version.Current=$Version"
+    if ($public) { $ldflags += " -X github.com/astwdnya/firefox-vpn-client/core/internal/signing.Key=$public" }
     $exe = Join-Path $Out 'firefox-vpn-tun.exe'
     go build -tags with_gvisor -trimpath -ldflags $ldflags -o $exe ./cmd/firefox-vpn-tun
     if ($LASTEXITCODE -ne 0) { throw 'go build failed (firefox-vpn-tun)' }
