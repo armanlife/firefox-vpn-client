@@ -5,11 +5,13 @@
 </div>
 <br>
 
-<p align="center"><img src="../images/logo.png" width="128" alt="Firefox VPN"></p>
+<p align="center"><img src="../images/logo.png" width="128" alt="Arman VPN"></p>
 
-<h1 align="center">Firefox VPN</h1>
+<h1 align="center">Arman VPN</h1>
 
-<p align="center"><b>Неофициальный проект.</b> Не создан Mozilla, не связан с Mozilla и не одобрен ею. Firefox — товарный знак Mozilla Foundation. См. <a href="#отказ-от-ответственности">отказ от ответственности</a>.</p>
+<h2 align="center">⚠️ Неофициальный проект</h2>
+
+<p align="center">Не создан Mozilla, не связан с Mozilla и не одобрен ею. Firefox — товарный знак Mozilla Foundation. См. <a href="#отказ-от-ответственности">отказ от ответственности</a>.</p>
 
 <div align="center">
 
@@ -19,9 +21,9 @@
 
 </div>
 
-## Что такое Firefox VPN?
+## Что такое Arman VPN?
 
-**Firefox VPN** — бесплатный VPN с открытым исходным кодом, который работает с аккаунтом Firefox (Firefox Account). Он передаёт ваш интернет-трафик через серверы Mozilla, на инфраструктуре **Fastly**, по защищённым туннелям **HTTP/2 и HTTP/3**.
+**Arman VPN** — бесплатный VPN с открытым исходным кодом, который работает с аккаунтом Firefox (Firefox Account). Он передаёт ваш интернет-трафик через серверы Mozilla, на инфраструктуре **Fastly**, по защищённым туннелям **HTTP/2 и HTTP/3**.
 
 Для **Android, Windows, macOS и Linux**; полностью бесплатно, без рекламы.
 

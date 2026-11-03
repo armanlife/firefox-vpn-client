@@ -5,11 +5,13 @@
 </div>
 <br>
 
-<p align="center"><img src="docs/images/logo.png" width="128" alt="Firefox VPN"></p>
+<p align="center"><img src="docs/images/logo.png" width="128" alt="Arman VPN"></p>
 
-<h1 align="center">Firefox VPN</h1>
+<h1 align="center">Arman VPN</h1>
 
-<p align="center"><b>Unofficial project.</b> Not made, affiliated with, or endorsed by Mozilla. Firefox is a trademark of the Mozilla Foundation. See the <a href="#disclaimer">disclaimer</a>.</p>
+<h2 align="center">⚠️ Unofficial project</h2>
+
+<p align="center">Not made, affiliated with, or endorsed by Mozilla. Firefox is a trademark of the Mozilla Foundation. See the <a href="#disclaimer">disclaimer</a>.</p>
 
 <div align="center">
 
@@ -19,9 +21,9 @@
 
 </div>
 
-## What is Firefox VPN?
+## What is Arman VPN?
 
-**Firefox VPN** is a free, open-source VPN that works with a Firefox Account. It carries your internet traffic through Mozilla's servers, on **Fastly**'s infrastructure, over secure **HTTP/2 and HTTP/3** tunnels.
+**Arman VPN** is a free, open-source VPN that works with a Firefox Account. It carries your internet traffic through Mozilla's servers, on **Fastly**'s infrastructure, over secure **HTTP/2 and HTTP/3** tunnels.
 
 For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 

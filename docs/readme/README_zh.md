@@ -5,11 +5,13 @@
 </div>
 <br>
 
-<p align="center"><img src="../images/logo.png" width="128" alt="Firefox VPN"></p>
+<p align="center"><img src="../images/logo.png" width="128" alt="Arman VPN"></p>
 
-<h1 align="center">Firefox VPN</h1>
+<h1 align="center">Arman VPN</h1>
 
-<p align="center"><b>非官方项目。</b>本应用并非由 Mozilla 开发，与 Mozilla 无关，也未获得 Mozilla 认可。Firefox 是 Mozilla 基金会的商标。参见<a href="#免责声明">免责声明</a>。</p>
+<h2 align="center">⚠️ 非官方项目</h2>
+
+<p align="center">本应用并非由 Mozilla 开发，与 Mozilla 无关，也未获得 Mozilla 认可。Firefox 是 Mozilla 基金会的商标。参见<a href="#免责声明">免责声明</a>。</p>
 
 <div align="center">
 
@@ -19,9 +21,9 @@
 
 </div>
 
-## Firefox VPN 是什么？
+## Arman VPN 是什么？
 
-**Firefox VPN** 是一款免费、开源的 VPN，使用 Firefox 账户（Firefox Account）登录。它通过 Mozilla 的服务器，基于 **Fastly** 的基础设施，以安全的 **HTTP/2 和 HTTP/3** 隧道传输你的网络流量。
+**Arman VPN** 是一款免费、开源的 VPN，使用 Firefox 账户（Firefox Account）登录。它通过 Mozilla 的服务器，基于 **Fastly** 的基础设施，以安全的 **HTTP/2 和 HTTP/3** 隧道传输你的网络流量。
 
 支持 **Android、Windows、macOS 和 Linux**；完全免费，没有广告。
 

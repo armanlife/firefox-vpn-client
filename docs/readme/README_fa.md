@@ -5,11 +5,13 @@
 </div>
 <br>
 
-<p align="center"><img src="../images/logo.png" width="128" alt="Firefox VPN"></p>
+<p align="center"><img src="../images/logo.png" width="128" alt="Arman VPN"></p>
 
-<h1 align="center">Firefox VPN</h1>
+<h1 align="center">Arman VPN</h1>
 
-<p align="center" dir="rtl"><b>پروژه غیررسمی.</b> این برنامه را موزیلا نساخته، به موزیلا وابسته نیست و موزیلا آن را تأیید نکرده است. Firefox علامت تجاری بنیاد موزیلا است. <a href="#سلب-مسئولیت">سلب مسئولیت</a> را ببینید.</p>
+<h2 align="center" dir="rtl">⚠️ پروژه غیررسمی</h2>
+
+<p align="center" dir="rtl">این برنامه را موزیلا نساخته، به موزیلا وابسته نیست و موزیلا آن را تأیید نکرده است. Firefox علامت تجاری بنیاد موزیلا است. <a href="#سلب-مسئولیت">سلب مسئولیت</a> را ببینید.</p>
 
 <div align="center">
 
@@ -21,9 +23,9 @@
 
 <div dir="rtl">
 
-## &rlm;Firefox VPN چیست؟
+## &rlm;Arman VPN چیست؟
 
-&rlm;**Firefox VPN** یک VPN رایگان و متن‌باز است که با حساب فایرفاکس (Firefox Account) کار می‌کند. اینترنت شما را از سرورهای موزیلا، روی زیرساخت **Fastly**، و با تونل‌های امن **HTTP/2 و HTTP/3** عبور می‌دهد.
+&rlm;**Arman VPN** یک VPN رایگان و متن‌باز است که با حساب فایرفاکس (Firefox Account) کار می‌کند. اینترنت شما را از سرورهای موزیلا، روی زیرساخت **Fastly**، و با تونل‌های امن **HTTP/2 و HTTP/3** عبور می‌دهد.
 
 &rlm;برای **اندروید، ویندوز، مک و لینوکس**؛ کاملاً رایگان، بدون تبلیغات.
 
