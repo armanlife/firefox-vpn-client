@@ -9,6 +9,8 @@
 
 <h1 align="center">Firefox VPN</h1>
 
+<p align="center"><b>Unofficial project.</b> Not made, affiliated with, or endorsed by Mozilla. Firefox is a trademark of the Mozilla Foundation. See the <a href="#disclaimer">disclaimer</a>.</p>
+
 <div align="center">
 
 [![Downloads](https://img.shields.io/github/downloads/armanlife/firefox-vpn-client/total?style=flat-square&logo=github&label=Downloads)](https://github.com/armanlife/firefox-vpn-client/releases)
@@ -20,8 +22,6 @@
 ## What is Firefox VPN?
 
 **Firefox VPN** is a free, open-source VPN that works with a Firefox Account. It carries your internet traffic through Mozilla's servers, on **Fastly**'s infrastructure, over secure **HTTP/2 and HTTP/3** tunnels.
-
-Every Firefox Account comes with **50 GB of free data a month**, and the **multi-account** feature multiplies it: when one runs out, the next connects **automatically**.
 
 For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 
@@ -150,6 +150,11 @@ To install on an OpenWrt router, see the [OpenWrt guide](docs/OPENWRT.md).
 
 - **TCP:** ports 80, 443, 8080, and 8443 only. Other ports, such as mail (25, 465, 587, 993) and SSH (22), are refused. Git over SSH to GitHub is the exception: it goes through port 443 by itself.
 - **UDP:** ports 80, 443, 3478, 8080, 8443, and 49152-65534 only. Calls and games on other ports do not go through. Browsers and most apps work normally.
-- **Android notifications:** Google's push service uses port 5228, so with the VPN on, some apps' notifications (WhatsApp, Telegram, and others) may arrive only when the app is opened.
 
 </details>
+
+## Disclaimer
+
+This app is an independent, unofficial client. It is not made, affiliated with, or endorsed by Mozilla, and it is not a Mozilla product. Firefox and Mozilla are trademarks of the Mozilla Foundation.
+
+You sign in with your own Mozilla account. The account's terms, data limit, and availability are set by Mozilla. Your password and sign-in tokens stay on your device.

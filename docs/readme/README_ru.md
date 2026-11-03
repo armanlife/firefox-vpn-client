@@ -9,6 +9,8 @@
 
 <h1 align="center">Firefox VPN</h1>
 
+<p align="center"><b>Неофициальный проект.</b> Не создан Mozilla, не связан с Mozilla и не одобрен ею. Firefox — товарный знак Mozilla Foundation. См. <a href="#отказ-от-ответственности">отказ от ответственности</a>.</p>
+
 <div align="center">
 
 [![Downloads](https://img.shields.io/github/downloads/armanlife/firefox-vpn-client/total?style=flat-square&logo=github&label=Downloads)](https://github.com/armanlife/firefox-vpn-client/releases)
@@ -20,8 +22,6 @@
 ## Что такое Firefox VPN?
 
 **Firefox VPN** — бесплатный VPN с открытым исходным кодом, который работает с аккаунтом Firefox (Firefox Account). Он передаёт ваш интернет-трафик через серверы Mozilla, на инфраструктуре **Fastly**, по защищённым туннелям **HTTP/2 и HTTP/3**.
-
-Каждый аккаунт Firefox получает **50 ГБ бесплатного трафика в месяц**, а функция **мультиаккаунта** умножает этот объём: когда один заканчивается, следующий подключается **автоматически**.
 
 Для **Android, Windows, macOS и Linux**; полностью бесплатно, без рекламы.
 
@@ -142,3 +142,9 @@ $ sudo firefox-vpn
 ## Роутеры OpenWrt
 
 Чтобы установить на роутер OpenWrt, см. [руководство по OpenWrt](../OPENWRT.md).
+
+## Отказ от ответственности
+
+Это приложение — независимый неофициальный клиент. Оно не создано Mozilla, не связано с Mozilla, не одобрено ею и не является продуктом Mozilla. Firefox и Mozilla — товарные знаки Mozilla Foundation.
+
+Вы входите со своим собственным аккаунтом Mozilla. Условия, лимит трафика и доступность аккаунта определяет Mozilla. Ваш пароль и токены входа остаются на вашем устройстве.
