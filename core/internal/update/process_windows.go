@@ -32,7 +32,7 @@ func dataDirOK(appDir, dataDir string) string {
 // uses that folder and starts meanwhile leaves the update's files alone.
 func mutexName(dataDir string) string {
 	sum := sha256.Sum256([]byte(strings.ToLower(filepath.Clean(dataDir))))
-	return `Local\FirefoxVPNUpdate-` + hex.EncodeToString(sum[:8])
+	return `Local\ArmanVPNUpdate-` + hex.EncodeToString(sum[:8])
 }
 
 // updating reports whether an update that uses the data folder runs now.
@@ -106,7 +106,7 @@ func waitForExit(pids []int, timeout time.Duration) error {
 }
 
 // uninstallKey is Setup's entry in Windows' list of installed apps, for the
-// current user: its AppId (app/windows/installer/firefox-vpn.iss) and "_is1".
+// current user: its AppId (app/windows/installer/arman-vpn.iss) and "_is1".
 // Tests use a key of their own.
 var uninstallKey = `Software\Microsoft\Windows\CurrentVersion\Uninstall\{6F3A2C1E-9B4D-4E7A-8C21-5D0F7B9E4A63}_is1`
 

@@ -11,7 +11,7 @@ import (
 )
 
 // unzip unpacks the zip at file into dir. The release's zip holds one
-// folder ("Firefox VPN/...") whose contents go into dir; names that would
+// folder ("Arman VPN/...", "Firefox VPN/..." before 1.0.9) whose contents go into dir; names that would
 // land outside dir are refused, on every system as on Windows (no colon:
 // a drive, or an NTFS stream), and so are links.
 func unzip(file, dir string) error {

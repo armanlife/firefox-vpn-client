@@ -11,13 +11,13 @@
 
 <h2 align="center">⚠️ Unofficial project</h2>
 
-<p align="center">Not made, affiliated with, or endorsed by Mozilla. Firefox is a trademark of the Mozilla Foundation. See the <a href="#disclaimer">disclaimer</a>.</p>
+<h3 align="center">Arman VPN is an independent project. It is not made, owned, sponsored, or endorsed by Mozilla, and is not affiliated with Mozilla in any way. See the <a href="#disclaimer">disclaimer</a>.</h3>
 
 <div align="center">
 
-[![Downloads](https://img.shields.io/github/downloads/armanlife/firefox-vpn-client/total?style=flat-square&logo=github&label=Downloads)](https://github.com/armanlife/firefox-vpn-client/releases)
-[![Last Version](https://img.shields.io/github/v/release/armanlife/firefox-vpn-client?style=flat-square&label=Version)](https://github.com/armanlife/firefox-vpn-client/releases/latest)
-[![License](https://img.shields.io/github/license/armanlife/firefox-vpn-client?style=flat-square&label=License)](LICENSE)
+[![Downloads](https://img.shields.io/github/downloads/armanlife/arman-vpn-client/total?style=flat-square&logo=github&label=Downloads)](https://github.com/armanlife/arman-vpn-client/releases)
+[![Last Version](https://img.shields.io/github/v/release/armanlife/arman-vpn-client?style=flat-square&label=Version)](https://github.com/armanlife/arman-vpn-client/releases/latest)
+[![License](https://img.shields.io/github/license/armanlife/arman-vpn-client?style=flat-square&label=License)](LICENSE)
 
 </div>
 
@@ -27,7 +27,7 @@
 
 For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 
-<p align="center"><a href="https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/docs/screenshots/main.webp" target="_blank"><img src="docs/screenshots/main.webp" width="720" alt="Firefox VPN"></a></p>
+<p align="center"><a href="https://raw.githubusercontent.com/armanlife/arman-vpn-client/main/docs/screenshots/main.webp" target="_blank"><img src="docs/screenshots/main.webp" width="720" alt="Arman VPN"></a></p>
 
 ## 🚀 Main features
 
@@ -39,15 +39,13 @@ For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 
 🆓 Free: 50 GB a month for every Firefox Account
 
-➕ Multi-account: when one account's data runs out, the next takes over automatically
-
-🌐 Mozilla's official servers: choose a country with a ping test, or let the app pick the best server
+🌐 Mozilla's servers: choose a country with a ping test, or let the app pick the best server
 
 ⚡ Fast, stable connections over HTTP/2 and HTTP/3
 
 🔀 Smart routing (split tunneling): choose the sites and apps that skip the VPN
 
-🧱 If Mozilla is blocked: TLS fragmentation, upstream SOCKS5 proxy, and a relay server
+🧱 If your network blocks the connection: TLS fragmentation, upstream SOCKS5 proxy, and a relay server
 
 🔒 Encrypted DNS (DNS over HTTPS)
 
@@ -74,12 +72,12 @@ For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 <tr><th>System</th><th>Download</th></tr>
 </thead>
 <tbody>
-<tr><td>Android</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-universal.apk"><img src="https://img.shields.io/badge/APK-Universal-1a7f37?logo=android&logoColor=white" alt="APK Universal"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-arm64-v8a.apk"><img src="https://img.shields.io/badge/APK-ARMv8-2da44e?logo=android&logoColor=white" alt="APK ARMv8"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-armeabi-v7a.apk"><img src="https://img.shields.io/badge/APK-ARMv7-4ac26b?logo=android&logoColor=white" alt="APK ARMv7"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-x86_64.apk"><img src="https://img.shields.io/badge/APK-x64-6fdd8b?logo=android&logoColor=white" alt="APK x64"></a></td></tr>
-<tr><td>Android TV</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Android-universal.apk"><img src="https://img.shields.io/badge/APK-Universal-1a7f37?logo=android&logoColor=white" alt="APK Universal"></a></td></tr>
-<tr><td>Windows</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Windows-Setup-x64.exe"><img src="https://img.shields.io/badge/Setup-x64-0550ae?logo=windows&logoColor=white" alt="Setup x64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Windows-x64.zip"><img src="https://img.shields.io/badge/Portable-x64-0969da" alt="Portable x64"></a></td></tr>
-<tr><td>macOS</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-macOS.dmg"><img src="https://img.shields.io/badge/DMG-Universal-24292f?logo=apple&logoColor=white" alt="DMG Universal"></a></td></tr>
-<tr><td rowspan="2">Linux</td><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-amd64.tar.gz"><img src="https://img.shields.io/badge/App-amd64-e36209?logo=linux&logoColor=white" alt="App amd64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/Firefox-VPN-Linux-arm64.tar.gz"><img src="https://img.shields.io/badge/App-ARM64-e36209?logo=linux&logoColor=white" alt="App ARM64"></a></td></tr>
-<tr><td><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-amd64.tar.gz"><img src="https://img.shields.io/badge/Core-amd64-f0883e?logo=linux&logoColor=white" alt="Core amd64"></a><br><a href="https://github.com/armanlife/firefox-vpn-client/releases/latest/download/firefox-vpn-core-linux-arm64.tar.gz"><img src="https://img.shields.io/badge/Core-ARM64-f6a35e?logo=linux&logoColor=white" alt="Core ARM64"></a></td></tr>
+<tr><td>Android</td><td><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/Arman-VPN-Android-universal.apk"><img src="https://img.shields.io/badge/APK-Universal-1a7f37?logo=android&logoColor=white" alt="APK Universal"></a><br><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/Arman-VPN-Android-arm64-v8a.apk"><img src="https://img.shields.io/badge/APK-ARMv8-2da44e?logo=android&logoColor=white" alt="APK ARMv8"></a><br><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/Arman-VPN-Android-armeabi-v7a.apk"><img src="https://img.shields.io/badge/APK-ARMv7-4ac26b?logo=android&logoColor=white" alt="APK ARMv7"></a><br><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/Arman-VPN-Android-x86_64.apk"><img src="https://img.shields.io/badge/APK-x64-6fdd8b?logo=android&logoColor=white" alt="APK x64"></a></td></tr>
+<tr><td>Android TV</td><td><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/Arman-VPN-Android-universal.apk"><img src="https://img.shields.io/badge/APK-Universal-1a7f37?logo=android&logoColor=white" alt="APK Universal"></a></td></tr>
+<tr><td>Windows</td><td><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/Arman-VPN-Windows-Setup-x64.exe"><img src="https://img.shields.io/badge/Setup-x64-0550ae?logo=windows&logoColor=white" alt="Setup x64"></a><br><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/Arman-VPN-Windows-x64.zip"><img src="https://img.shields.io/badge/Portable-x64-0969da" alt="Portable x64"></a></td></tr>
+<tr><td>macOS</td><td><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/Arman-VPN-macOS.dmg"><img src="https://img.shields.io/badge/DMG-Universal-24292f?logo=apple&logoColor=white" alt="DMG Universal"></a></td></tr>
+<tr><td rowspan="2">Linux</td><td><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/Arman-VPN-Linux-amd64.tar.gz"><img src="https://img.shields.io/badge/App-amd64-e36209?logo=linux&logoColor=white" alt="App amd64"></a><br><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/Arman-VPN-Linux-arm64.tar.gz"><img src="https://img.shields.io/badge/App-ARM64-e36209?logo=linux&logoColor=white" alt="App ARM64"></a></td></tr>
+<tr><td><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/arman-vpn-core-linux-amd64.tar.gz"><img src="https://img.shields.io/badge/Core-amd64-f0883e?logo=linux&logoColor=white" alt="Core amd64"></a><br><a href="https://github.com/armanlife/arman-vpn-client/releases/latest/download/arman-vpn-core-linux-arm64.tar.gz"><img src="https://img.shields.io/badge/Core-ARM64-f6a35e?logo=linux&logoColor=white" alt="Core ARM64"></a></td></tr>
 </tbody>
 </table>
 
@@ -94,12 +92,12 @@ For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 > Windows and Android users don't need this section: take the installer from the "Download" table above.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/armanlife/arman-vpn-client/main/install.sh | bash
 ```
 
 ### 🌐 Web panel
 
-For Linux servers, Firefox VPN has a **web panel** that opens in any browser and has everything the app has: managing accounts and data, choosing a server and testing delay, the connection test, the live log, and every setting.
+For Linux servers, Arman VPN has a **web panel** that opens in any browser and has everything the app has: managing accounts and data, choosing a server and testing delay, the connection test, the live log, and every setting.
 
 <p align="center"><img src="docs/screenshots/web.webp" width="720" alt="Web panel"></p>
 
@@ -108,35 +106,35 @@ For Linux servers, Firefox VPN has a **web panel** that opens in any browser and
 
 ### ⌨️ Managing from the terminal
 
-On the server, run `sudo firefox-vpn` to open the management menu:
+On the server, run `sudo arman-vpn` to open the management menu:
 
 ```text
-$ sudo firefox-vpn
+$ sudo arman-vpn
 
-  Firefox VPN
+  Arman VPN
   ────────────────────────────────────────────────────────────────────────────
     Service     ● running
     Autostart   on
   ────────────────────────────────────────────────────────────────────────────
    0) Exit
   ────────────────────────────────────────────────────────────────────────────
-   1) Update                                   firefox-vpn update
-   2) Uninstall                                firefox-vpn uninstall
+   1) Update                                   arman-vpn update
+   2) Uninstall                                arman-vpn uninstall
   ────────────────────────────────────────────────────────────────────────────
-   3) Set panel login                          firefox-vpn panel
-   4) View panel info                          firefox-vpn panel-info
+   3) Set panel login                          arman-vpn panel
+   4) View panel info                          arman-vpn panel-info
   ────────────────────────────────────────────────────────────────────────────
-   5) Status                                   firefox-vpn status
-   6) Start                                    firefox-vpn start
-   7) Stop                                     firefox-vpn stop
-   8) Restart                                  firefox-vpn restart
-   9) Show the log                             firefox-vpn logs
+   5) Status                                   arman-vpn status
+   6) Start                                    arman-vpn start
+   7) Stop                                     arman-vpn stop
+   8) Restart                                  arman-vpn restart
+   9) Show the log                             arman-vpn logs
   ────────────────────────────────────────────────────────────────────────────
-  10) Enable autostart                         firefox-vpn enable
-  11) Disable autostart                        firefox-vpn disable
+  10) Enable autostart                         arman-vpn enable
+  11) Disable autostart                        arman-vpn disable
   ────────────────────────────────────────────────────────────────────────────
-  12) Add a Firefox Account                    firefox-vpn add-account
-  13) List the accounts                        firefox-vpn list-accounts
+  12) Add a Firefox Account                    arman-vpn add-account
+  13) List the accounts                        arman-vpn list-accounts
   ────────────────────────────────────────────────────────────────────────────
   Enter a number [0-13]:
 ```
@@ -157,6 +155,6 @@ To install on an OpenWrt router, see the [OpenWrt guide](docs/OPENWRT.md).
 
 ## Disclaimer
 
-This app is an independent, unofficial client. It is not made, affiliated with, or endorsed by Mozilla, and it is not a Mozilla product. Firefox and Mozilla are trademarks of the Mozilla Foundation.
+This app is an independent, unofficial client, made and maintained by its own developer. It is not a Mozilla product: Mozilla did not make it, does not own, sponsor, or endorse it, and has no part in its development or support. Questions and problems about the app belong in this repository, not with Mozilla.
 
 You sign in with your own Mozilla account. The account's terms, data limit, and availability are set by Mozilla. Your password and sign-in tokens stay on your device.

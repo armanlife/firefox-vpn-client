@@ -71,7 +71,7 @@ var endSession struct {
 }
 
 var registerEndSessionClass = sync.OnceValues(func() (*uint16, error) {
-	name, _ := windows.UTF16PtrFromString("FirefoxVPNCoreEndSession")
+	name, _ := windows.UTF16PtrFromString("ArmanVPNCoreEndSession")
 	cls := wndClassExW{
 		wndProc:   windows.NewCallback(endSessionWndProc),
 		className: name,

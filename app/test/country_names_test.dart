@@ -1,10 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:firefox_vpn/app_settings.dart';
-import 'package:firefox_vpn/core/models.dart';
-import 'package:firefox_vpn/l10n/app_localizations.dart';
-import 'package:firefox_vpn/ui/local_country_names.dart';
-import 'package:firefox_vpn/ui/widgets.dart';
+import 'package:arman_vpn/app_settings.dart';
+import 'package:arman_vpn/core/models.dart';
+import 'package:arman_vpn/l10n/app_localizations.dart';
+import 'package:arman_vpn/ui/local_country_names.dart';
+import 'package:arman_vpn/ui/widgets.dart';
 
 /// Every country in Mozilla's server list, and the others the exit or the
 /// user's region can be in.

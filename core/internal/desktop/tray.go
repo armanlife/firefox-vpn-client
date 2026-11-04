@@ -8,10 +8,10 @@ import (
 	"time"
 	"unicode/utf16"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/armanlife/arman-vpn-client/core/internal/config"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/service"
+	"github.com/armanlife/arman-vpn-client/core/internal/version"
 
 	"fyne.io/systray"
 )
@@ -94,8 +94,8 @@ func RunTray(paths service.DataPaths, verbose bool) error {
 
 func (a *trayApp) onReady() {
 	systray.SetIcon(a.iconOff)
-	systray.SetTitle("Firefox VPN")
-	systray.SetTooltip("Firefox VPN")
+	systray.SetTitle("Arman VPN")
+	systray.SetTooltip("Arman VPN")
 
 	// The layout follows v2rayN's tray menu.
 	a.mOpen = systray.AddMenuItem("Open dashboard", "Open the web dashboard")
@@ -152,7 +152,7 @@ func (a *trayApp) startOwn() {
 	if err != nil {
 		logx.Error("tray: starting the service failed err=%s", logx.Err(err))
 		a.startErr = "Could not start: " + err.Error()
-		notify("Firefox VPN could not start", err.Error())
+		notify("Arman VPN could not start", err.Error())
 		return
 	}
 	a.own = d
@@ -160,7 +160,7 @@ func (a *trayApp) startOwn() {
 		err := d.Run()
 		if err != nil {
 			logx.Error("tray: the service stopped err=%s", logx.Err(err))
-			notify("Firefox VPN stopped", err.Error())
+			notify("Arman VPN stopped", err.Error())
 		}
 		a.mu.Lock()
 		if err != nil {
@@ -232,7 +232,7 @@ func (a *trayApp) setTooltip(text string) {
 	if problem := a.problem(); problem != "" {
 		text += " · " + problem
 	}
-	systray.SetTooltip(capTooltip("Firefox VPN: " + text))
+	systray.SetTooltip(capTooltip("Arman VPN: " + text))
 }
 
 // maxTooltipUnits is the longest tooltip in UTF-16 units: Windows keeps it
@@ -260,7 +260,7 @@ func capTooltip(s string) string {
 func (a *trayApp) refresh() {
 	st, err := pollStatus(a.client)
 	if a.ownsService() {
-		a.mQuit.SetTitle("Exit Firefox VPN (stops the proxy)")
+		a.mQuit.SetTitle("Exit Arman VPN (stops the proxy)")
 	} else {
 		a.mQuit.SetTitle("Close icon (the service keeps running)")
 	}
@@ -379,15 +379,15 @@ func (a *trayApp) notifyChanges(st service.TrayStatus) {
 		if st.State.Phase != a.lastPhase || st.State.Message != a.lastMessage {
 			switch st.State.Phase {
 			case "error":
-				notify("Firefox VPN error", st.State.Message)
+				notify("Arman VPN error", st.State.Message)
 			case "waiting":
 				// Waiting for Wi-Fi or a cable is expected, not news.
 				if st.State.Code != service.CodeWaitingForNetwork {
-					notify("Firefox VPN is waiting", st.State.Message)
+					notify("Arman VPN is waiting", st.State.Message)
 				}
 			case "running":
 				if a.lastPhase == "error" || a.lastPhase == "waiting" {
-					notify("Firefox VPN connected", "The proxy is running again.")
+					notify("Arman VPN connected", "The proxy is running again.")
 				}
 			}
 		}

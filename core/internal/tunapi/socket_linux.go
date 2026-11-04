@@ -9,7 +9,7 @@ import (
 )
 
 // SocketPath is the service's socket, in a folder only root may write to.
-const SocketPath = "/run/firefox-vpn-tun.sock"
+const SocketPath = "/run/arman-vpn-tun.sock"
 
 // ServiceFile is the service's systemd unit.
 const ServiceFile = "/etc/systemd/system/" + ServiceName + ".service"

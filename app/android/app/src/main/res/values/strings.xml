@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- A placeholder until the final name is chosen. -->
-    <string name="app_name">Firefox VPN</string>
+    <string name="app_name">Arman VPN</string>
     <string name="notification_channel">VPN</string>
     <string name="notification_connecting">Connecting…</string>
     <string name="notification_no_network">No internet connection</string>

@@ -8,10 +8,10 @@ Accounts are managed in the [dashboard](DASHBOARD.md) (add, sign in again, reord
 
 | Command | Effect |
 | --- | --- |
-| `firefox-vpn-core` | Run the service: dashboard and proxy |
-| `firefox-vpn-core -add-account` | Sign in on the terminal (email, password, emailed code) and store the account at the end of the priority order |
-| `firefox-vpn-core -list-accounts` | Print accounts in priority order with status, usage, and the active account |
-| `firefox-vpn-core -panel` | Set the panel login (random when left empty) |
+| `arman-vpn-core` | Run the service: dashboard and proxy |
+| `arman-vpn-core -add-account` | Sign in on the terminal (email, password, emailed code) and store the account at the end of the priority order |
+| `arman-vpn-core -list-accounts` | Print accounts in priority order with status, usage, and the active account |
+| `arman-vpn-core -panel` | Set the panel login (random when left empty) |
 | `-data-dir PATH` | Use another data folder (with any of the above) |
 | `-verbose` | Force verbose logs regardless of the config |
 
@@ -19,11 +19,11 @@ Accounts added from the dashboard take effect immediately. After `-add-account` 
 
 ## Portable data folder
 
-All data lives in a `user-data` folder **next to the executable**. A core in the Windows desktop app's `core` folder (or beside `firefox-vpn.exe`) uses the app's `user-data` instead, so the core shares the app's accounts and settings. The one exception is a core beside the macOS or Linux app (`firefox_vpn` in the same folder, without a `portable` file): it uses the app's data folder (`~/Library/Application Support/Firefox VPN Client`, or `$XDG_DATA_HOME/firefox-vpn-client`). (Not `data`: Flutter keeps its own files in a `data` folder beside the app.) Moving the program's folder moves its data. If the folder is read-only (for example under `Program Files`), startup fails with a message; move the program or pass `-data-dir`.
+All data lives in a `user-data` folder **next to the executable**. A core in the Windows desktop app's `core` folder (or beside `arman-vpn.exe`) uses the app's `user-data` instead, so the core shares the app's accounts and settings. The one exception is a core beside the macOS or Linux app (`arman_vpn` in the same folder, without a `portable` file): it uses the app's data folder (`~/Library/Application Support/Arman VPN`, or `$XDG_DATA_HOME/arman-vpn`). (Not `data`: Flutter keeps its own files in a `data` folder beside the app.) Moving the program's folder moves its data. If the folder is read-only (for example under `Program Files`), startup fails with a message; move the program or pass `-data-dir`.
 
 ```text
 <program folder>/
-├── firefox-vpn-core(.exe)
+├── arman-vpn-core(.exe)
 └── user-data/
     ├── config.json            settings (may contain the dashboard password hash)
     ├── state.json             active account id
@@ -113,7 +113,7 @@ The active account id survives restarts in `user-data/state.json`. `status.json`
 | Atomic owner-only writes | [internal/securefile](../internal/securefile/securefile.go) |
 | Pass acquisition across accounts | [internal/proxy/accounts.go](../internal/proxy/accounts.go) |
 | Supervisor, account and settings operations | [internal/service/daemon.go](../internal/service/daemon.go), [engine.go](../internal/service/engine.go) |
-| Terminal commands | [cmd/firefox-vpn-core/commands.go](../cmd/firefox-vpn-core/commands.go) |
+| Terminal commands | [cmd/arman-vpn-core/commands.go](../cmd/arman-vpn-core/commands.go) |
 | Data folder, account store opening, order reconciliation | [internal/service/paths.go](../internal/service/paths.go) |
 | Quota checks, early checks, in-place switch | `checkQuota`, `noteTraffic` in [renewal.go](../internal/proxy/renewal.go) and [controller.go](../internal/proxy/controller.go) |
 

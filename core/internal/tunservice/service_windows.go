@@ -18,9 +18,9 @@ import (
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/mgr"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/tunapi"
+	"github.com/armanlife/arman-vpn-client/core/internal/version"
 )
 
 // The installed service lives in Program Files, where only administrators
@@ -28,11 +28,11 @@ import (
 // its file or put a library beside it. The app carries the same
 // executable in its core folder, and installs it from there.
 const (
-	installFolder = "Firefox VPN"
-	displayName   = "Firefox VPN TUN"
-	description   = "Runs the TUN mode of Firefox VPN."
-	newExeName    = "firefox-vpn-tun.new.exe"
-	oldExeName    = "firefox-vpn-tun.old.exe"
+	installFolder = "Arman VPN"
+	displayName   = "Arman VPN TUN"
+	description   = "Runs the TUN mode of Arman VPN."
+	newExeName    = "arman-vpn-tun.new.exe"
+	oldExeName    = "arman-vpn-tun.old.exe"
 )
 
 // usersKey holds the SIDs of the users who installed the service, the
@@ -155,6 +155,7 @@ func Install(user string) error {
 		return fmt.Errorf("connecting to the service manager: %w", err)
 	}
 	defer m.Disconnect()
+	removeLegacy(m)
 	s, err := m.OpenService(tunapi.ServiceName)
 	exists := err == nil
 	if exists {
@@ -249,6 +250,7 @@ func Uninstall() error {
 		return fmt.Errorf("connecting to the service manager: %w", err)
 	}
 	defer m.Disconnect()
+	removeLegacy(m)
 	if s, err := m.OpenService(tunapi.ServiceName); err == nil {
 		stopErr := stopService(s)
 		delErr := s.Delete()
@@ -301,7 +303,7 @@ func Cleanup(pid int, dir string) error {
 }
 
 // removeFolder removes the service's folder, never another: only the
-// Firefox VPN folder in Program Files.
+// Arman VPN folder in Program Files.
 func removeFolder(dir string) error {
 	want, err := InstallDir()
 	if err != nil {
@@ -408,7 +410,7 @@ func startDetached(exe, command string, copyFirst bool, args ...string) error {
 		if err != nil {
 			return err
 		}
-		tmp, err := os.CreateTemp(os.TempDir(), "firefox-vpn-tun-cleanup-*.exe")
+		tmp, err := os.CreateTemp(os.TempDir(), "arman-vpn-tun-cleanup-*.exe")
 		if err != nil {
 			return err
 		}

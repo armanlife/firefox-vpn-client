@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/config"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
 )
 
 // The desktop TUN mode (system_proxy.mode "tun"): the TUN service
-// (cmd/firefox-vpn-tun) sends every TCP connection of the computer, and UDP
+// (cmd/arman-vpn-tun) sends every TCP connection of the computer, and UDP
 // on the ports the VPN carries, to a SOCKS5 listener of its own here, on
 // loopback with a login made for this
 // process, so that another program holding proxy.listen never receives

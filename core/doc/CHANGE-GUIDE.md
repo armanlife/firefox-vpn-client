@@ -15,7 +15,7 @@ Prefer symbol searches to hardcoded line ranges:
 
 ```powershell
 rg -n 'ResolveWithStateAndCountry|ServerFailover' internal/proxy internal/service
-rg -n 'UpdateToken|updateCurrentSessionToken|adoptPass' cmd/firefox-vpn-core
+rg -n 'UpdateToken|updateCurrentSessionToken|adoptPass' cmd/arman-vpn-core
 rg -n '^func Test' -g '*_test.go' .
 ```
 
@@ -124,7 +124,7 @@ Sources: `internal/resolver` (servers, racing, cache), `internal/service/network
 
 ## Change the TUN mode
 
-Sources: core side `internal/desktop/tun.go` (`tunSync`: dial, hello, update an older service, open, bind, route, close), `internal/service/tun.go` (the mode, its SOCKS listener, the status), `internal/egress` (the core's own sockets), `internal/netstate` (ignores the TUN adapter); service side `cmd/firefox-vpn-tun`, `internal/tunservice` (sessions, update; installing in `service_windows.go`, `service_linux.go` (systemd), `service_darwin.go` (launchd); elevating in `client_*.go`; DNS kept in the TUN by `filters_*.go`, on macOS through `macdns.go`), `internal/tunstack` (the only sing-tun importer; Linux's table and rules in `options_linux.go`), `internal/wfp`, `internal/tun` (FakeDNS); protocol `internal/tunapi` (the named pipe, the Unix socket).
+Sources: core side `internal/desktop/tun.go` (`tunSync`: dial, hello, update an older service, open, bind, route, close), `internal/service/tun.go` (the mode, its SOCKS listener, the status), `internal/egress` (the core's own sockets), `internal/netstate` (ignores the TUN adapter); service side `cmd/arman-vpn-tun`, `internal/tunservice` (sessions, update; installing in `service_windows.go`, `service_linux.go` (systemd), `service_darwin.go` (launchd); elevating in `client_*.go`; DNS kept in the TUN by `filters_*.go`, on macOS through `macdns.go`), `internal/tunstack` (the only sing-tun importer; Linux's table and rules in `options_linux.go`), `internal/wfp`, `internal/tun` (FakeDNS); protocol `internal/tunapi` (the named pipe, the Unix socket).
 
 - The core stays unprivileged: anything that needs the system's rights belongs in the service, and the core never elevates. Keep every outgoing socket of the core bound outside the TUN while it runs (`egress.Dialer`, `egress.Control`, `egress.ListenUDP`), or its connections loop back into its own proxy.
 - A protocol change raises `tunapi.Protocol` (and `MinProtocol` when old peers can no longer be served); `update` and `uninstall` must stay understood in every version, so any app can replace or remove any service.
@@ -139,7 +139,7 @@ Sources: `internal/update` (download, check, `Apply`, swap, the update folder; `
 
 - Install only what the signed list names, and only a newer version; re-check the package before installing. Never run the release's Setup for an update (its rollback keeps replaced files).
 - Never touch `user-data`, the portable marker, or Setup's uninstaller, nor anything in the app's folder that the new version does not replace; every failure must leave the old version whole and runnable.
-- The release files' names, the packages' layout (the zip's and the Linux tar.gz's top folder with the app and `core/`; the macOS tar.gz's `Firefox VPN.app`), `SHA256SUMS.txt.sig`, and `.github/updates.json` (its place, keys, and values, read by `app/lib/app_info.dart`) are a contract with the apps already installed: a change there breaks their updates.
+- The release files' names, the packages' layout (the zip's and the Linux tar.gz's top folder with the app and `core/`; the macOS tar.gz's `Arman VPN.app`), `SHA256SUMS.txt.sig`, and `.github/updates.json` (its place, keys, and values, read by `app/lib/app_info.dart`) are a contract with the apps already installed: a change there breaks their updates.
 - Update [OPERATOR.md](OPERATOR.md#app-updates), and [DASHBOARD.md](DASHBOARD.md) for the API.
 
 ## Change status, persistence, or logs

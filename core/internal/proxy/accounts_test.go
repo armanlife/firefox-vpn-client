@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
-	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
-	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
+	"github.com/armanlife/arman-vpn-client/core/internal/accounts"
+	"github.com/armanlife/arman-vpn-client/core/internal/fxa"
+	"github.com/armanlife/arman-vpn-client/core/internal/guardian"
 )
 
 // All credentials in this file are local fixtures; the control plane

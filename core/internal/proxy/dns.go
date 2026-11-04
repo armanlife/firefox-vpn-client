@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/net/dns/dnsmessage"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
 )
 
 // DNSPort is DNS's port, which Mozilla's proxy does not connect to. A

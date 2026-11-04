@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunstack"
+	"github.com/armanlife/arman-vpn-client/core/internal/tun"
+	"github.com/armanlife/arman-vpn-client/core/internal/tunapi"
+	"github.com/armanlife/arman-vpn-client/core/internal/tunstack"
 )
 
 // fakeDevice stands for the adapter.
@@ -80,7 +80,7 @@ func newHarness(t *testing.T, cfg Config) *harness {
 	if cfg.Version == "" {
 		cfg.Version = "1.2.3"
 	}
-	cfg.Self = `C:\Program Files\Firefox VPN\firefox-vpn-tun.exe`
+	cfg.Self = `C:\Program Files\Arman VPN\arman-vpn-tun.exe`
 	h.s = NewServer(cfg)
 	h.s.openDevice = func(c tunstack.Config) (device, error) {
 		if h.noDriver.Load() {
@@ -100,7 +100,7 @@ func newHarness(t *testing.T, cfg Config) *harness {
 		return f, nil
 	}
 	h.s.adapterUp = func(uint32) bool { return h.up.Load() }
-	h.s.clientPath = func(net.Conn) (string, error) { return `C:\Apps\Firefox VPN\core\firefox-vpn-core.exe`, nil }
+	h.s.clientPath = func(net.Conn) (string, error) { return `C:\Apps\Arman VPN\core\arman-vpn-core.exe`, nil }
 	h.s.allowed = func(c net.Conn) bool { return !h.stranger.Load() }
 	h.ln = newPipeListener()
 	go func() { _ = h.s.Serve(h.ln) }()
@@ -192,7 +192,7 @@ func TestATUNSessionOpensRoutesAndCloses(t *testing.T) {
 	}
 	f := <-h.filters
 	if !dev.started.Load() || f.index != 42 || len(f.programs) != 2 ||
-		!strings.HasSuffix(f.programs[0], "firefox-vpn-tun.exe") || !strings.HasSuffix(f.programs[1], "firefox-vpn-core.exe") {
+		!strings.HasSuffix(f.programs[0], "arman-vpn-tun.exe") || !strings.HasSuffix(f.programs[1], "arman-vpn-core.exe") {
 		t.Fatalf("started %v, filters %+v", dev.started.Load(), f)
 	}
 	if reply := roundTrip(t, c, tunapi.Message{Type: tunapi.TypeClose}); reply.Type != tunapi.TypeClosed {
@@ -312,10 +312,10 @@ func TestAnIncompatibleCoreCanStillUpdateTheService(t *testing.T) {
 	if reply := roundTrip(t, c, openMessage); reply.Type != tunapi.TypeError || reply.Code != tunapi.CodeProtocol {
 		t.Fatalf("open: %+v", reply)
 	}
-	if reply := roundTrip(t, c, tunapi.Message{Type: tunapi.TypeUpdate, Path: `C:\new\firefox-vpn-tun.exe`}); reply.Type != tunapi.TypeUpdating {
+	if reply := roundTrip(t, c, tunapi.Message{Type: tunapi.TypeUpdate, Path: `C:\new\arman-vpn-tun.exe`}); reply.Type != tunapi.TypeUpdating {
 		t.Fatalf("update: %+v", reply)
 	}
-	if path := <-updated; path != `C:\new\firefox-vpn-tun.exe` {
+	if path := <-updated; path != `C:\new\arman-vpn-tun.exe` {
 		t.Fatalf("updated from %q", path)
 	}
 	select {

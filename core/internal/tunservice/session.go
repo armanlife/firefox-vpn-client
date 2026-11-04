@@ -10,11 +10,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/egress"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunstack"
+	"github.com/armanlife/arman-vpn-client/core/internal/egress"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/tun"
+	"github.com/armanlife/arman-vpn-client/core/internal/tunapi"
+	"github.com/armanlife/arman-vpn-client/core/internal/tunstack"
 )
 
 // session is one core's TUN: the adapter, then its routes and stack and

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
+	"github.com/armanlife/arman-vpn-client/core/internal/accounts"
 )
 
 func TestAccountList(t *testing.T) {
@@ -36,7 +36,7 @@ func TestAccountList(t *testing.T) {
 
 	b.Reset()
 	writeAccountList(&b, paint{}, nil, "", nil, 90, now)
-	if !strings.Contains(b.String(), "No accounts yet. Add one: firefox-vpn add-account") {
+	if !strings.Contains(b.String(), "No accounts yet. Add one: arman-vpn add-account") {
 		t.Errorf("empty list:\n%s", b.String())
 	}
 }

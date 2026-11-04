@@ -11,11 +11,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
+	"github.com/armanlife/arman-vpn-client/core/internal/tunapi"
 )
 
 // InstallDir is the installed service's folder.
-const InstallDir = "/Library/Application Support/Firefox VPN TUN"
+const InstallDir = "/Library/Application Support/Arman VPN TUN"
 
 // jobTarget is the service in launchctl's commands.
 const jobTarget = "system/" + tunapi.LaunchdLabel

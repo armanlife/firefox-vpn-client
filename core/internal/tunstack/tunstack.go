@@ -4,7 +4,7 @@
 // Handler. It is the only package that imports sing-tun, so that a sing-tun
 // update changes nothing else; its API speaks only the standard library.
 //
-// The stack needs the build tag with_gvisor (cmd/firefox-vpn-tun is built
+// The stack needs the build tag with_gvisor (cmd/arman-vpn-tun is built
 // with it); without the tag Start fails.
 //
 // Open creates the adapter with its addresses and DNS server but no routes;
@@ -28,7 +28,7 @@ import (
 	M "github.com/sagernet/sing/common/metadata"
 	N "github.com/sagernet/sing/common/network"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
 )
 
 // Config is the device.

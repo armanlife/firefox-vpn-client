@@ -11,13 +11,13 @@ The current source and nearby tests are authoritative. These guides explain exis
 | First development task | [Development workflow](DEVELOPMENT.md), [architecture](ARCHITECTURE.md) | `go.mod` and the affected source file |
 | Login, OAuth, Guardian, quota | [Authentication](AUTHENTICATION.md) | `internal/fxa`, `internal/guardian`, `internal/proxy/proxypass.go` |
 | Multi-account mode, config.json, data folder | [Multi-account mode](MULTI-ACCOUNT.md) | `internal/accounts`, `internal/config`, `internal/proxy/accounts.go`, `internal/service/daemon.go` |
-| Web dashboard, API, sign-in steps | [Dashboard](DASHBOARD.md) | `cmd/firefox-vpn-core`: `dashboard.go`, `dashboard_api.go`, `signin_flow.go`, `web/` |
-| SOCKS, H2/H3, renewal, pool, concurrency | [Sessions and transports](SESSIONS.md) | `cmd/firefox-vpn-core`: `socks.go`, `upstream_h2.go`, `pool.go`, `controller.go`, `renewal.go` |
+| Web dashboard, API, sign-in steps | [Dashboard](DASHBOARD.md) | `cmd/arman-vpn-core`: `dashboard.go`, `dashboard_api.go`, `signin_flow.go`, `web/` |
+| SOCKS, H2/H3, renewal, pool, concurrency | [Sessions and transports](SESSIONS.md) | `cmd/arman-vpn-core`: `socks.go`, `upstream_h2.go`, `pool.go`, `controller.go`, `renewal.go` |
 | Settings, server selection, data-folder files | [Configuration and state](CONFIGURATION.md) | `internal/config`, `proxy.ResolveWithStateAndCountry`, state helpers |
 | Implement a behavior change | [Change guide](CHANGE-GUIDE.md) | The matching source/test row |
 | Operate or troubleshoot the proxy | [Operator guide](OPERATOR.md) | Dashboard, `-help`, installer as applicable |
 | Tray icon, status screen, notifications | [Operator guide](OPERATOR.md), [change guide](CHANGE-GUIDE.md) | `internal/desktop`: `tray.go`, `console_ui.go`, `platform_*.go`; `internal/service/client.go` |
-| TUN mode | [Operator guide](OPERATOR.md#tun-mode), [change guide](CHANGE-GUIDE.md#change-the-tun-mode) | `internal/desktop/tun.go`, `internal/service/tun.go`, `internal/tunservice`, `internal/tunstack`, `internal/wfp`, `internal/egress`, `internal/tunapi`, `cmd/firefox-vpn-tun` |
+| TUN mode | [Operator guide](OPERATOR.md#tun-mode), [change guide](CHANGE-GUIDE.md#change-the-tun-mode) | `internal/desktop/tun.go`, `internal/service/tun.go`, `internal/tunservice`, `internal/tunstack`, `internal/wfp`, `internal/egress`, `internal/tunapi`, `cmd/arman-vpn-tun` |
 | The app's updates | [Operator guide](OPERATOR.md#app-updates), [change guide](CHANGE-GUIDE.md#change-the-apps-updates) | `internal/update`, `internal/service/update.go`, `internal/signing`, `tools/sign` |
 
 ## Documentation map
@@ -38,13 +38,13 @@ The root [README.md](../README.md) is the user entry point.
 
 ## Fast orientation
 
-- Module: `github.com/armanlife/firefox-vpn-client/core`; executable: `./cmd/firefox-vpn-core` (service, dashboard, proxy); internal packages: `fxa`, `guardian`, `serverlist`, `accounts`, `config`, `controlplane`, `securefile`, `resolver`.
+- Module: `github.com/armanlife/arman-vpn-client/core`; executable: `./cmd/arman-vpn-core` (service, dashboard, proxy); internal packages: `fxa`, `guardian`, `serverlist`, `accounts`, `config`, `controlplane`, `securefile`, `resolver`.
 - Data: SOCKS5 CONNECT -> controller/pool -> H2 over TLS/TCP or H3 over QUIC/UDP -> Fastly -> target TCP. SOCKS5 UDP ASSOCIATE -> CONNECT-UDP on an HTTP/2 connection of its own -> Fastly -> target UDP.
 - Control: per-account FxA OAuth -> Guardian ProxyPass -> bearer token for CONNECT; the account manager picks the account.
-- Settings and accounts: `user-data/` next to the executable (the desktop app's data folder when the core sits beside `firefox-vpn.exe`), edited through the dashboard (`127.0.0.1:10820`).
+- Settings and accounts: `user-data/` next to the executable (the desktop app's data folder when the core sits beside `arman-vpn.exe`), edited through the dashboard (`127.0.0.1:10820`).
 - Default SOCKS5 listener: `127.0.0.1:10810`; dashboard: `127.0.0.1:10820`.
 - Run modes: status screen in an interactive terminal (also a double-click), plain log (`-plain` or non-interactive), tray (`-tray`), desktop app core process (`-app`, started by the Flutter app), the update of the desktop app (`-update`, a copy of the core), systemd on Linux (plain log mode).
-- The proxy has no direct-target fallback; connections go directly only by the opt-in routing rules. On Windows the desktop app's TUN mode sends every app's TCP, and UDP on the ports Mozilla carries, to the core through the TUN service (`cmd/firefox-vpn-tun`), and the app updates itself on Windows, Linux, and macOS (`internal/update`, the core's `-update`).
+- The proxy has no direct-target fallback; connections go directly only by the opt-in routing rules. On Windows the desktop app's TUN mode sends every app's TCP, and UDP on the ports Mozilla carries, to the core through the TUN service (`cmd/arman-vpn-tun`), and the app updates itself on Windows, Linux, and macOS (`internal/update`, the core's `-update`).
 - Ordinary development uses isolated local tests. Real-account tests have explicit side effects and opt-in requirements.
 
 Use symbol names rather than historical line numbers when navigating. Keep each behavior documented in its owning guide and link to it from other documents.

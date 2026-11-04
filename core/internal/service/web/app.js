@@ -1,6 +1,6 @@
 "use strict";
 
-// Firefox VPN dashboard. All server data is rendered with textContent; no
+// Arman VPN dashboard. All server data is rendered with textContent; no
 // response value is ever interpreted as HTML.
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -374,7 +374,7 @@ function showView(name) {
   $("#page-title").textContent = title;
   $("#page-sub").textContent = sub;
   $("#page-sub").hidden = !sub;
-  document.title = `${title} · Firefox VPN`;
+  document.title = `${title} · Arman VPN`;
   if (name === "settings") loadSettings().catch(reportError);
   if (name === "accounts") loadAccounts().catch(reportError);
   if (name === "locations") loadLocations().catch(reportError);
@@ -477,7 +477,7 @@ function renderStatus() {
   const phase = s.state.phase;
   const label = PHASE_LABELS[phase] || phase;
 
-  $("#version-tag").textContent = s.version ? `Firefox VPN ${s.version}` : "";
+  $("#version-tag").textContent = s.version ? `Arman VPN ${s.version}` : "";
   const pill = $("#state-pill");
   const asleep = phase === "running" && s.proxy && s.proxy.sleeping_since;
   // A sleeping proxy has its own look everywhere: it is not connected.
@@ -811,10 +811,10 @@ async function renderHelp() {
   const hostPart = host.includes(":") ? `[${host}]` : host;
   const address = `${hostPart}:${port}`;
   const userinfo = base64(`${proxy.username || ""}:${proxy.password || ""}`).replace(/=+$/, "");
-  const link = `socks://${userinfo}@${address}#${encodeURIComponent("🦊Firefox VPN")}`;
+  const link = `socks://${userinfo}@${address}#${encodeURIComponent("Arman VPN")}`;
   $("#help-socks-addr").textContent = address;
   // The password stays out of sight; the copied link has it.
-  $("#help-socks-link").textContent = proxy.password ? `socks://…@${address}#🦊Firefox VPN` : `socks://${userinfo}@${address}#🦊Firefox VPN`;
+  $("#help-socks-link").textContent = proxy.password ? `socks://…@${address}#Arman VPN` : `socks://${userinfo}@${address}#Arman VPN`;
   $("#help-copy-addr").onclick = () => copyText(address);
   $("#help-copy-link").onclick = () => copyText(link, "the link");
 }

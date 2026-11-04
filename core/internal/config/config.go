@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/url"
 	"os"
@@ -18,11 +19,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
-	"github.com/armanlife/firefox-vpn-client/core/internal/hellosplit"
-	"github.com/armanlife/firefox-vpn-client/core/internal/resolver"
-	"github.com/armanlife/firefox-vpn-client/core/internal/routing"
-	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
+	"github.com/armanlife/arman-vpn-client/core/internal/guardian"
+	"github.com/armanlife/arman-vpn-client/core/internal/hellosplit"
+	"github.com/armanlife/arman-vpn-client/core/internal/resolver"
+	"github.com/armanlife/arman-vpn-client/core/internal/routing"
+	"github.com/armanlife/arman-vpn-client/core/internal/securefile"
 )
 
 // CurrentVersion is the config schema version written by this build.
@@ -139,7 +140,7 @@ func CleanTunPrograms(programs []TunProgram) []TunProgram {
 //	clear  turn the system proxy off, once when chosen (a setting this
 //	       program made is restored first)
 //	tun    leave the setting alone (restoring this program's) and send every
-//	       app's TCP through the TUN service (cmd/firefox-vpn-tun) while the
+//	       app's TCP through the TUN service (cmd/arman-vpn-tun) while the
 //	       proxy is on; only the desktop app's core does it
 type SystemProxy struct {
 	Mode string `json:"mode"`
@@ -729,14 +730,14 @@ const DataDirName = "user-data"
 // (inside the macOS bundle). A core started from either place uses the
 // app's data folder, so it sees the app's accounts and settings.
 const (
-	AppFolder      = "Firefox VPN Client"
+	AppFolder      = "Arman VPN"
 	PortableMarker = "portable"
 	CoreFolder     = "core"
 )
 
 // appExecutables are the desktop app's executables: Windows, Linux, and
-// macOS (inside Firefox VPN.app/Contents/MacOS).
-var appExecutables = []string{"firefox-vpn.exe", "firefox-vpn", "Firefox VPN"}
+// macOS (inside Arman VPN.app/Contents/MacOS).
+var appExecutables = []string{"arman-vpn.exe", "arman-vpn", "Arman VPN"}
 
 // DefaultDataDir returns the data folder: DataDirName next to the running
 // executable (symlinks resolved, so a linked binary still uses its real
@@ -746,7 +747,33 @@ func DefaultDataDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return defaultDataDirFor(dir, runtime.GOOS, os.Getenv, fileExists), nil
+	data := defaultDataDirFor(dir, runtime.GOOS, os.Getenv, fileExists)
+	MoveLegacyDataDir(data)
+	return data, nil
+}
+
+// The app's data folder on macOS and Linux before 1.0.9, when the program
+// was called Firefox VPN: beside the new one, by its new name.
+var legacyDataFolders = map[string]string{AppFolder: "Firefox VPN Client", linuxDataFolder: "firefox-vpn-client"}
+
+// MoveLegacyDataDir moves the app's data folder of a version before 1.0.9
+// to dir, the app's data folder now, when the old one exists and the new
+// one does not yet (the app does the same: app/lib/core/core_api.dart).
+// Other folders (Windows' and a portable copy's user-data beside the app)
+// keep their name.
+func MoveLegacyDataDir(dir string) {
+	old, ok := legacyDataFolders[filepath.Base(dir)]
+	if !ok {
+		return
+	}
+	legacy := filepath.Join(filepath.Dir(dir), old)
+	if _, err := os.Lstat(dir); !errors.Is(err, fs.ErrNotExist) {
+		return
+	}
+	if info, err := os.Lstat(legacy); err != nil || !info.IsDir() {
+		return
+	}
+	_ = os.Rename(legacy, dir)
 }
 
 // ProgramDir is the program's folder: the desktop app's when this core
@@ -818,9 +845,12 @@ func defaultDataDirFor(exeDir, goos string, getenv func(string) string, exists f
 		if base == "" {
 			base = filepath.Join(home, ".local", "share")
 		}
-		return filepath.Join(base, "firefox-vpn-client")
+		return filepath.Join(base, linuxDataFolder)
 	}
 }
+
+// linuxDataFolder is the app's data folder on Linux, in XDG_DATA_HOME.
+const linuxDataFolder = "arman-vpn"
 
 // CheckWritable verifies that dir can be created and written, so a
 // read-only installation folder fails with a clear message at startup.

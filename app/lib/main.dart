@@ -17,7 +17,7 @@ import 'ui/app.dart';
 /// The desktop app starts the core as its child process (`-app`) and stops
 /// it on quit. Arguments: `--data-dir=<path>` (default: see
 /// [CoreLocator.dataDir]) and `--core=<path>` (default:
-/// [CoreProcess.executableFrom], `core\firefox-vpn-core.exe` beside the app).
+/// [CoreProcess.executableFrom], `core\arman-vpn-core.exe` beside the app).
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   if (Platform.isAndroid) return runAndroid();

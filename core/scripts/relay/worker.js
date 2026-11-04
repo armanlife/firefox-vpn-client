@@ -37,7 +37,7 @@ const STATES = {
   works: {
     status: 200, color: "#10b981", badge: "✓ Working",
     title: "Your relay is ready",
-    text: "Put this page's address in Firefox VPN:",
+    text: "Put this page's address in Arman VPN:",
     path: ["Settings", "Connection", "If Mozilla is blocked", "Cloudflare Worker"],
   },
   wrong: {
@@ -56,7 +56,7 @@ function page(state) {
   const s = STATES[state];
   const path = s.path ? `<div class="path">${s.path.map((p) => `<span>${p}</span>`).join("<i>›</i>")}</div>` : "";
   const html = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Firefox VPN relay</title>
+<title>Arman VPN relay</title>
 <style>
 :root{--bg:#eef0fb;--card:#fff;--text:#1d2040;--muted:#5d6385;--accent:#5b5bd6;--c:${s.color}}
 @media (prefers-color-scheme:dark){:root{--bg:#0b0e1f;--card:#151a35;--text:#eef0ff;--muted:#9aa3c7;--accent:#8b8ff8}}
@@ -79,7 +79,7 @@ code{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--acc
 background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
 .path i{color:var(--muted);font-style:normal}
 </style>
-<div class="card"><div class="brand"><span class="dot"></span>Firefox VPN relay</div>
+<div class="card"><div class="brand"><span class="dot"></span>Arman VPN relay</div>
 <span class="badge">${s.badge}</span><h1>${s.title}</h1><p>${s.text}</p>${path}</div></html>`;
   return new Response(html, { status: s.status, headers: { "Content-Type": "text/html; charset=utf-8" } });
 }

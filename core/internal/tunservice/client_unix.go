@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
+	"github.com/armanlife/arman-vpn-client/core/internal/tunapi"
 )
 
 // InstallForUser installs the service for the user running this process
@@ -42,7 +42,7 @@ func UninstallForUser(prompt string) error {
 // reportFile makes the file an elevated copy writes why it failed to, and
 // returns a function that removes it.
 func reportFile() (string, func(), error) {
-	f, err := os.CreateTemp("", "firefox-vpn-tun-*.txt")
+	f, err := os.CreateTemp("", "arman-vpn-tun-*.txt")
 	if err != nil {
 		return "", nil, err
 	}

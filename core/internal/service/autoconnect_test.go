@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
+	"github.com/armanlife/arman-vpn-client/core/internal/config"
 )
 
 // fakeAutoConnect replaces auto-connect's test with pass (counting the

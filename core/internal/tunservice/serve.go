@@ -5,8 +5,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/tunapi"
 )
 
 // serve listens on the service's channel for the users that users names,

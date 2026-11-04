@@ -47,14 +47,14 @@ String apkName(String abi) =>
 String windowsName({required bool installed}) =>
     installed ? 'Windows-Setup-x64.exe' : 'Windows-x64.zip';
 
-/// The file `Firefox-VPN-<version>-[name]` in the release whose page is
+/// The file `Arman-VPN-<version>-[name]` in the release whose page is
 /// [releaseUrl] (".../releases/tag/v1.2.3"): its versioned name, so the
 /// downloaded file says which version it is.
 String releaseFileUrl(String releaseUrl, String name) {
   final tag = releaseUrl.substring(releaseUrl.lastIndexOf('/') + 1);
   final version = tag.replaceFirst(RegExp('^[vV]'), '');
   return '${releaseUrl.replaceFirst('/releases/tag/', '/releases/download/')}'
-      '/Firefox-VPN-$version-$name';
+      '/Arman-VPN-$version-$name';
 }
 
 /// The APK for processor [abi] in the release whose page is [releaseUrl].

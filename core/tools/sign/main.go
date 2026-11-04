@@ -8,9 +8,9 @@
 //	go run ./tools/sign -public           print the public key (for -ldflags -X ...signing.Key=)
 //	go run ./tools/sign FILE...           write FILE.sig beside each file
 //
-// The private key comes from -key FILE, else from FIREFOX_VPN_SIGNING_KEY
+// The private key comes from -key FILE, else from ARMAN_VPN_SIGNING_KEY
 // (base64, as CI holds it in a secret), else from the file named by
-// FIREFOX_VPN_SIGNING_KEY_FILE. A key file holds the base64 seed on one
+// ARMAN_VPN_SIGNING_KEY_FILE. A key file holds the base64 seed on one
 // line; keep it out of the repository (*.signing-key is ignored).
 package main
 
@@ -77,9 +77,9 @@ func publicKey(priv ed25519.PrivateKey) string {
 }
 
 func loadKey(file string) (ed25519.PrivateKey, error) {
-	text := os.Getenv("FIREFOX_VPN_SIGNING_KEY")
+	text := os.Getenv("ARMAN_VPN_SIGNING_KEY")
 	if file == "" && text == "" {
-		file = os.Getenv("FIREFOX_VPN_SIGNING_KEY_FILE")
+		file = os.Getenv("ARMAN_VPN_SIGNING_KEY_FILE")
 	}
 	if file != "" {
 		data, err := os.ReadFile(file)
@@ -89,7 +89,7 @@ func loadKey(file string) (ed25519.PrivateKey, error) {
 		text = string(data)
 	}
 	if text == "" {
-		return nil, errors.New("no key: use -key, FIREFOX_VPN_SIGNING_KEY, or FIREFOX_VPN_SIGNING_KEY_FILE")
+		return nil, errors.New("no key: use -key, ARMAN_VPN_SIGNING_KEY, or ARMAN_VPN_SIGNING_KEY_FILE")
 	}
 	seed, err := base64.StdEncoding.DecodeString(strings.TrimSpace(text))
 	if err != nil || len(seed) != ed25519.SeedSize {

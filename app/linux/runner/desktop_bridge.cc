@@ -65,7 +65,7 @@ struct Indicator {
   }
 };
 
-constexpr const char* kAutostartFile = "firefox-vpn-client.desktop";
+constexpr const char* kAutostartFile = "arman-vpn.desktop";
 
 }  // namespace
 
@@ -167,9 +167,9 @@ static GtkWidget* build_menu(DesktopBridge* self, FlValue* items, bool rtl,
 // tray_icon is the icon at path as the tray takes it: a name in an icon
 // folder of the app's own, where each icon is copied once, rather than the
 // file path, which some trays (StatusNotifierItem hosts) do not resolve.
-// The name is firefoxvpntray_<file>: no theme has it, and it has no dash,
+// The name is armanvpntray_<file>: no theme has it, and it has no dash,
 // since KDE looks a name up in the system's theme first and drops its
-// dashed parts until one matches ("firefox-vpn-off" showed Firefox's own
+// dashed parts until one matches ("arman-vpn-off" showed Firefox's own
 // icon). Without the library's icon folder call, the path goes.
 static std::string tray_icon(DesktopBridge* self, const gchar* path) {
   if (self->api.set_theme_path == nullptr || path[0] == '\0') {
@@ -177,7 +177,7 @@ static std::string tray_icon(DesktopBridge* self, const gchar* path) {
   }
   if (self->icon_dir.empty()) {
     g_autofree gchar* dir = g_build_filename(g_get_user_runtime_dir(),
-                                             "firefox-vpn-tray", nullptr);
+                                             "arman-vpn-tray", nullptr);
     g_mkdir_with_parents(dir, 0700);
     self->icon_dir = dir;
     self->api.set_theme_path(self->indicator, dir);
@@ -187,7 +187,7 @@ static std::string tray_icon(DesktopBridge* self, const gchar* path) {
   if (dot) {
     *dot = '\0';
   }
-  std::string name = std::string("firefoxvpntray_") + base;
+  std::string name = std::string("armanvpntray_") + base;
   if (self->icons_copied.insert(name).second) {
     g_autofree gchar* data = nullptr;
     gsize length = 0;
@@ -269,7 +269,7 @@ static void notify(DesktopBridge* self, const gchar* title, const gchar* body) {
       self->bus, "org.freedesktop.Notifications",
       "/org/freedesktop/Notifications", "org.freedesktop.Notifications",
       "Notify",
-      g_variant_new("(susssasa{sv}i)", "Firefox VPN", self->notification,
+      g_variant_new("(susssasa{sv}i)", "Arman VPN", self->notification,
                     self->app_icon.c_str(), title, body, &actions, &hints, -1),
       G_VARIANT_TYPE("(u)"), G_DBUS_CALL_FLAGS_NONE, -1, nullptr, on_notified,
       self);
@@ -281,6 +281,10 @@ static void set_autostart(DesktopBridge* self, bool enabled,
   g_autofree gchar* dir =
       g_build_filename(g_get_user_config_dir(), "autostart", nullptr);
   g_autofree gchar* path = g_build_filename(dir, kAutostartFile, nullptr);
+  // The entry's name before 1.0.9.
+  g_autofree gchar* legacy =
+      g_build_filename(dir, "firefox-vpn-client.desktop", nullptr);
+  g_unlink(legacy);
   if (!enabled || command[0] == '\0') {
     g_unlink(path);
     return;
@@ -289,7 +293,7 @@ static void set_autostart(DesktopBridge* self, bool enabled,
   g_autofree gchar* entry = g_strdup_printf(
       "[Desktop Entry]\n"
       "Type=Application\n"
-      "Name=Firefox VPN\n"
+      "Name=Arman VPN\n"
       "Exec=%s\n"
       "Icon=%s\n"
       "Terminal=false\n"
@@ -388,7 +392,7 @@ DesktopBridge* desktop_bridge_new(FlView* view, GtkWindow* window) {
                                             self, nullptr);
   if (self->api.Load()) {
     self->indicator = self->api.create(
-        "firefox-vpn-client", "network-vpn", kCategoryApplicationStatus);
+        "arman-vpn", "network-vpn", kCategoryApplicationStatus);
   }
   self->bus = g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, nullptr);
   if (self->bus) {

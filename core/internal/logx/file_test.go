@@ -51,7 +51,7 @@ func TestDailyLogFiles(t *testing.T) {
 	if _, err := f.Write([]byte("second day\n")); err != nil {
 		t.Fatal(err)
 	}
-	if got := strings.Join(logNames(t, dir), " "); got != "firefox-vpn-2026-03-01.log firefox-vpn-2026-03-02.log" {
+	if got := strings.Join(logNames(t, dir), " "); got != "arman-vpn-2026-03-01.log arman-vpn-2026-03-02.log" {
 		t.Fatalf("files = %s", got)
 	}
 	data, _ := os.ReadFile(DayFile(dir, day(2)))
@@ -68,7 +68,7 @@ func TestLogsKeptForOneWeek(t *testing.T) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"firefox-vpn.log", "firefox-vpn.log.3", "notes.txt"} {
+	for _, name := range []string{"arman-vpn.log", "arman-vpn.log.3", "notes.txt"} {
 		if err := os.WriteFile(filepath.Join(dir, name), []byte("x"), 0o600); err != nil {
 			t.Fatal(err)
 		}
@@ -83,8 +83,8 @@ func TestLogsKeptForOneWeek(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer f.Close()
-	want := []string{"firefox-vpn-2026-03-04.log", "firefox-vpn-2026-03-05.log", "firefox-vpn-2026-03-06.log", "firefox-vpn-2026-03-07.log",
-		"firefox-vpn-2026-03-08.log", "firefox-vpn-2026-03-09.log", "firefox-vpn-2026-03-10.log", "notes.txt"}
+	want := []string{"arman-vpn-2026-03-04.log", "arman-vpn-2026-03-05.log", "arman-vpn-2026-03-06.log", "arman-vpn-2026-03-07.log",
+		"arman-vpn-2026-03-08.log", "arman-vpn-2026-03-09.log", "arman-vpn-2026-03-10.log", "notes.txt"}
 	if got := logNames(t, dir); strings.Join(got, " ") != strings.Join(want, " ") {
 		t.Fatalf("files = %v", got)
 	}
@@ -94,7 +94,7 @@ func TestLogsKeptForOneWeek(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := logNames(t, dir)
-	if len(got) != 8 || got[0] != "firefox-vpn-2026-03-05.log" || got[6] != "firefox-vpn-2026-03-11.log" {
+	if len(got) != 8 || got[0] != "arman-vpn-2026-03-05.log" || got[6] != "arman-vpn-2026-03-11.log" {
 		t.Fatalf("after the eighth day started: %v", got)
 	}
 }
@@ -189,5 +189,29 @@ func TestDeletedLogFileIsCreatedAgain(t *testing.T) {
 	data, err := os.ReadFile(DayFile(dir, day(1)))
 	if err != nil || string(data) != "after\n" {
 		t.Fatalf("the file was not created again: %q %v", data, err)
+	}
+}
+
+// Old day files go after keepLogDays days, also those named before 1.0.9
+// (firefox-vpn-<day>.log); other files stay.
+func TestOldDayFilesAreRemovedUnderEitherName(t *testing.T) {
+	dir := t.TempDir()
+	today := time.Date(2026, 11, 4, 12, 0, 0, 0, time.Local)
+	files := map[string]bool{
+		"arman-vpn-2026-11-04.log":   true,
+		"arman-vpn-2026-10-01.log":   false,
+		"firefox-vpn-2026-11-03.log": true,
+		"firefox-vpn-2026-10-01.log": false,
+		"notes.txt":                  true,
+	}
+	for name := range files {
+		os.WriteFile(filepath.Join(dir, name), []byte("x"), 0o600)
+	}
+	pruneLogs(dir, today)
+	for name, kept := range files {
+		_, err := os.Stat(filepath.Join(dir, name))
+		if (err == nil) != kept {
+			t.Errorf("%s: kept=%v, want %v", name, err == nil, kept)
+		}
 	}
 }

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
+	"github.com/armanlife/arman-vpn-client/core/internal/accounts"
+	"github.com/armanlife/arman-vpn-client/core/internal/config"
 )
 
 // waitCode waits until /api/status reports the state code, and returns the

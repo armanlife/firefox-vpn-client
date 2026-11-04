@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/routing"
+	"github.com/armanlife/arman-vpn-client/core/internal/routing"
 )
 
 // countingOpener answers every tunnel with one end of a pipe.

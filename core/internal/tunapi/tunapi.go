@@ -1,5 +1,5 @@
 // Package tunapi is the local protocol between the core and the TUN service
-// (cmd/firefox-vpn-tun), which holds the TUN device of the desktop TUN mode
+// (cmd/arman-vpn-tun), which holds the TUN device of the desktop TUN mode
 // with the system's rights. Messages are JSON objects, one per line, over a
 // channel that only the users who installed the service can use: a named
 // pipe on Windows (pipe_windows.go), whose access list keeps others out; a

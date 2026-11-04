@@ -12,14 +12,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/netstate"
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
-	"github.com/armanlife/firefox-vpn-client/core/internal/serverlist"
-	"github.com/armanlife/firefox-vpn-client/core/internal/update"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/armanlife/arman-vpn-client/core/internal/accounts"
+	"github.com/armanlife/arman-vpn-client/core/internal/config"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/netstate"
+	"github.com/armanlife/arman-vpn-client/core/internal/proxy"
+	"github.com/armanlife/arman-vpn-client/core/internal/serverlist"
+	"github.com/armanlife/arman-vpn-client/core/internal/update"
+	"github.com/armanlife/arman-vpn-client/core/internal/version"
 )
 
 type proxyView struct {

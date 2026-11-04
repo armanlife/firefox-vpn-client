@@ -18,12 +18,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/netstate"
-	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
+	"github.com/armanlife/arman-vpn-client/core/internal/config"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/netstate"
+	"github.com/armanlife/arman-vpn-client/core/internal/securefile"
+	"github.com/armanlife/arman-vpn-client/core/internal/service"
+	"github.com/armanlife/arman-vpn-client/core/internal/tun"
 )
 
 var (

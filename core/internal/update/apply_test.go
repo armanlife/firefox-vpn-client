@@ -62,7 +62,7 @@ func TestApplySwapsAPortableCopyAndStartsTheApp(t *testing.T) {
 	if len(f.waited) != 2 || f.waited[0] != 4242 {
 		t.Fatalf("waited for %v", f.waited)
 	}
-	if read(t, filepath.Join(appDir, "core", "firefox-vpn-core.exe")) != "core 1.2.3" || read(t, filepath.Join(appDir, "user-data", "config.json")) != "the user's settings" {
+	if read(t, filepath.Join(appDir, "core", "arman-vpn-core.exe")) != "core 1.2.3" || read(t, filepath.Join(appDir, "user-data", "config.json")) != "the user's settings" {
 		t.Fatal("not swapped")
 	}
 	if r := readResult(t, dataDir); !r.OK || r.From != "1.0.0" || r.To != "1.2.3" || !r.On {
@@ -98,7 +98,7 @@ func TestApplySwapsAnInstalledCopyAndSetsItsVersion(t *testing.T) {
 	if err := Apply(dataDir); err != nil {
 		t.Fatal(err)
 	}
-	if read(t, filepath.Join(appDir, "core", "firefox-vpn-core.exe")) != "core 1.2.3" || read(t, filepath.Join(appDir, "unins000.exe")) != "uninstaller" {
+	if read(t, filepath.Join(appDir, "core", "arman-vpn-core.exe")) != "core 1.2.3" || read(t, filepath.Join(appDir, "unins000.exe")) != "uninstaller" {
 		t.Fatal("not swapped, or the uninstaller went")
 	}
 	if strings.Join(f.marked, " ") != appDir+" 1.2.3" {
@@ -128,7 +128,7 @@ func TestAFailedApplyStartsTheOldVersion(t *testing.T) {
 	if err := Apply(dataDir); err == nil {
 		t.Fatal("no error")
 	}
-	if read(t, filepath.Join(appDir, "core", "firefox-vpn-core.exe")) != "core 1.0.0" || read(t, filepath.Join(appDir, "data", "app.so")) != "assets 1.0.0" {
+	if read(t, filepath.Join(appDir, "core", "arman-vpn-core.exe")) != "core 1.0.0" || read(t, filepath.Join(appDir, "data", "app.so")) != "assets 1.0.0" {
 		t.Fatal("the old version is not back")
 	}
 	if r := readResult(t, dataDir); r.OK || !strings.Contains(r.Error, "data") {
@@ -152,7 +152,7 @@ func TestApplyLeavesARunningAppAlone(t *testing.T) {
 	if err := Apply(dataDir); err == nil {
 		t.Fatal("no error")
 	}
-	if read(t, filepath.Join(appDir, "firefox-vpn.exe")) != "app 1.0.0" || f.started != nil {
+	if read(t, filepath.Join(appDir, "arman-vpn.exe")) != "app 1.0.0" || f.started != nil {
 		t.Fatal("changed a running app")
 	}
 	if r := readResult(t, dataDir); r.OK {

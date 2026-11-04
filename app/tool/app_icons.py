@@ -1,8 +1,8 @@
-"""Makes every icon of the program from Mozilla VPN's logo (tool/mozilla-vpn,
-from mozilla-mobile/mozilla-vpn-client): logo-dock.png, the white symbol on
-a black rounded tile (512 px); logo-glyph.png, the symbol alone (1024 px,
-transparent); and its tray icons, logo-generic.png and four frames while
-connecting, logo-animated1.png to logo-animated4.png (80 px):
+"""Makes every icon of the program from its symbol, which it draws itself
+(symbol()): four rings at the left, top, bottom, and right, joined along a
+path (left-top, the upright bar top-bottom, bottom-right). From it: the
+symbol alone (white, transparent), the tile (the white symbol on a black
+rounded square), and the tray icons:
 
 - Android (android/app/src/main/res): an adaptive icon for Android 8+, a
   black background layer and the symbol as the foreground layer, 108 dp
@@ -22,18 +22,19 @@ connecting, logo-animated1.png to logo-animated4.png (80 px):
 - The web dashboard (core/internal/service/web/icon.png): the tile, for
   the page icon and the logo.
 - The app's logo (assets/logo.png): the tile, beside its name.
-- The tray icons, as Mozilla VPN draws them: the plain logo while off,
-  the four frames while connecting, and the logo with a colored dot in the
-  lower right corner otherwise. The app's tray (assets/tray: .ico for
-  Windows, .png for Linux): off, busy1 to busy4, on and idle (green dot),
-  error (red dot). The core's tray (core/internal/desktop/tray: .ico for
-  Windows, .png elsewhere): one icon per state, the dot green while the
-  proxy runs, blue while Windows' system proxy points at it, faded while
-  asleep, red on an error; the first frame while waiting.
+- The tray icons: the symbol on a dark tile, plain while off; while
+  connecting, one ring after the other along the path is filled (four
+  frames); otherwise a dot of the state's color sits on the last bar,
+  between the third ring and the fourth. The app's tray (assets/tray: .ico for Windows, .png for
+  Linux): off, busy1 to busy4, on and idle (green), error (red). The core's
+  tray (core/internal/desktop/tray: .ico for Windows, .png elsewhere): one
+  icon per state, green while the proxy runs, blue while Windows' system
+  proxy points at it, faded while asleep, red on an error; the first frame
+  while waiting.
 
 The fox shield of the documentation is docs/images/logo.png, kept as is.
 
-Run from app/ after changing the art or the colors (needs Pillow):
+Run from app/ after changing the symbol or the colors (needs Pillow):
 
     python tool/app_icons.py
 """
@@ -44,21 +45,17 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(HERE, '..')
 CORE = os.path.join(APP, '..', 'core')
-MOZILLA = os.path.join(HERE, 'mozilla-vpn')
-TILE = os.path.join(MOZILLA, 'logo-dock.png')
-GLYPH = os.path.join(MOZILLA, 'logo-glyph.png')
 RES = os.path.join(APP, 'android', 'app', 'src', 'main', 'res')
 
 # The symbol's height as a share of the 108 dp canvas. Launchers show about
-# the middle 72 dp (67%), so 0.46 makes it about 70% of the tile, as Mozilla
-# VPN's own launcher icon has it.
+# the middle 72 dp (67%), so 0.46 makes it about 70% of the tile.
 ART = 0.46
 BLACK = (0, 0, 0, 255)
 DENSITY = {'mdpi': 1, 'hdpi': 1.5, 'xhdpi': 2, 'xxhdpi': 3, 'xxxhdpi': 4}
 WINDOWS_SIZES = [16, 20, 24, 32, 40, 48, 64, 128, 256]
 
 ADAPTIVE = '''<?xml version="1.0" encoding="utf-8"?>
-<!-- The launcher icon on Android 8+: Mozilla VPN's symbol over black;
+<!-- The launcher icon on Android 8+: the symbol over black;
      the launcher crops both layers to its own shape. Made by
      tool/app_icons.py. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
@@ -66,6 +63,55 @@ ADAPTIVE = '''<?xml version="1.0" encoding="utf-8"?>
     <foreground android:drawable="@mipmap/ic_launcher_foreground" />
 </adaptive-icon>
 '''
+
+
+# The symbol in a 24 grid: four rings (radius 2.8, 1.6 thick) at the left,
+# top, bottom, and right, joined left-top, top-bottom, bottom-right. The
+# tray shows the state as a dot of DOT radius on the last bar (bottom-right),
+# with a gap of DOT_GAP around it.
+NODES = [(7, 12), (12, 7), (12, 17), (17, 12)]
+EDGES = [(0, 1), (1, 2), (2, 3)]
+RING, STROKE = 2.8, 1.6
+DOT, DOT_GAP = 4.0, 0.3
+WHITE = (255, 255, 255, 255)
+
+
+def symbol(size, filled=None):
+    """The symbol, white on transparent, on a size px square for the 24
+    grid; filled maps ring indexes to a fill color. Drawn at 4x."""
+    filled = filled or {}
+    k = 4
+    s = size * k / 24
+    img = Image.new('RGBA', (size * k, size * k), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    for i, j in EDGES:
+        d.line([(NODES[i][0] * s, NODES[i][1] * s), (NODES[j][0] * s, NODES[j][1] * s)],
+               fill=WHITE, width=round(STROKE * s))
+    hole = Image.new('L', img.size, 0)
+    holes = ImageDraw.Draw(hole)
+    r, w = RING * s, STROKE * s
+    for x, y in NODES:
+        x, y = x * s, y * s
+        d.ellipse([x - r, y - r, x + r, y + r], fill=WHITE)
+        holes.ellipse([x - r + w, y - r + w, x + r - w, y + r - w], fill=255)
+    img.paste((0, 0, 0, 0), (0, 0), hole)
+    for n, color in filled.items():
+        x, y = NODES[n][0] * s, NODES[n][1] * s
+        d.ellipse([x - r, y - r, x + r, y + r], fill=color)
+    return img.resize((size, size), Image.LANCZOS)
+
+
+def tile_art():
+    """The tile (512 px): a black rounded square of 412 px, the symbol 300
+    px wide in its middle."""
+    size, body = 512, 412
+    out = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    off = (size - body) // 2
+    ImageDraw.Draw(out).rounded_rectangle([off, off, off + body - 1, off + body - 1], radius=round(body * 0.2), fill=BLACK)
+    span = (NODES[3][0] + RING) - (NODES[0][0] - RING)
+    art = symbol(round(300 * 24 / span))
+    out.alpha_composite(art, ((size - art.width) // 2, (size - art.height) // 2))
+    return out
 
 
 def art_layer(art, size, share):
@@ -120,7 +166,7 @@ def tv_banner(glyph):
         out.paste(tuple(round(a + (b - a) * t) for a, b in zip(top, bottom)) + (255,), (0, y, w, y + 1))
     symbol = art_layer(glyph, 96, 1.0)
     font = ImageFont.truetype(os.path.join(APP, 'assets', 'fonts', 'Vazirmatn-Bold.ttf'), 34)
-    name = 'Firefox VPN'
+    name = 'Arman VPN'
     draw = ImageDraw.Draw(out)
     left, top, right, bottom = draw.textbbox((0, 0), name, font=font)
     gap = 14
@@ -190,8 +236,9 @@ def core(tile_art):
     art_layer(tile_art, 192, 1.0).save(os.path.join(CORE, 'internal', 'service', 'web', 'icon.png'), optimize=True)
 
 
-# The tray's status dots, as Mozilla VPN's (green, red), and the core's own:
-# blue while Windows' system proxy points at the proxy, faded while asleep.
+# The tray's state colors: green while connected, red on an error, and the
+# core's own: blue while Windows' system proxy points at the proxy, faded
+# while asleep.
 DOT_GOOD, DOT_BAD = (63, 225, 176), (226, 40, 80)
 DOT_SET = (96, 165, 250)
 TRAY_SIZES = [16, 20, 24, 32, 48, 64]
@@ -201,17 +248,29 @@ def asleep(color):
     return tuple(round(c * 0.45 + g * 0.55) for c, g in zip(color, (150, 160, 158)))
 
 
-def mozilla_icon(name, dot=None):
-    """A Mozilla VPN tray icon (80 px), with a status dot of color dot."""
-    img = Image.open(os.path.join(MOZILLA, name)).convert('RGBA')
+TRAY_TILE = (39, 39, 41, 255)
+
+
+def tray_icon(filled=None, dot=None):
+    """A tray icon (80 px): the symbol on a dark rounded tile, its rings
+    filled as filled maps them (index: RGB), and a dot of color dot (RGB) on
+    the last bar."""
+    n = 320
+    img = Image.new('RGBA', (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle([0, 0, n - 1, n - 1], radius=round(n * 0.22), fill=TRAY_TILE)
+    art = symbol(round(n * 1.12), {k: v + (255,) for k, v in (filled or {}).items()})
+    off = (n - art.width) // 2
+    img.alpha_composite(art, (off, off))
     if dot:
-        n = img.width
-        # A gap around the dot, then the dot.
-        gap = Image.new('L', img.size, 0)
-        ImageDraw.Draw(gap).ellipse([n * 0.56, n * 0.56, n * 1.0, n * 1.0], fill=255)
-        img.paste((0, 0, 0, 0), (0, 0), gap)
-        ImageDraw.Draw(img).ellipse([n * 0.62, n * 0.62, n * 0.94, n * 0.94], fill=dot + (255,))
-    return img
+        s = art.width / 24
+        (x1, y1), (x2, y2) = NODES[EDGES[-1][0]], NODES[EDGES[-1][1]]
+        x, y = off + (x1 + x2) / 2 * s, off + (y1 + y2) / 2 * s
+        r = (DOT + DOT_GAP) * s
+        d.ellipse([x - r, y - r, x + r, y + r], fill=TRAY_TILE)
+        r = DOT * s
+        d.ellipse([x - r, y - r, x + r, y + r], fill=dot + (255,))
+    return img.resize((80, 80), Image.LANCZOS)
 
 
 def save_ico(path, big):
@@ -220,19 +279,19 @@ def save_ico(path, big):
 
 
 def tray():
-    logo = 'logo-generic.png'
     # The app's tray.
     app = os.path.join(APP, 'assets', 'tray')
     for old in os.listdir(app):
         os.remove(os.path.join(app, old))
     icons = {
-        'off': mozilla_icon(logo),
-        'on': mozilla_icon(logo, DOT_GOOD),
-        'idle': mozilla_icon(logo, DOT_GOOD),
-        'error': mozilla_icon(logo, DOT_BAD),
+        'off': tray_icon(),
+        'on': tray_icon(dot=DOT_GOOD),
+        'idle': tray_icon(dot=DOT_GOOD),
+        'error': tray_icon(dot=DOT_BAD),
     }
+    # Connecting: each ring in turn, along the path.
     for frame in range(1, 5):
-        icons['busy%d' % frame] = mozilla_icon('logo-animated%d.png' % frame)
+        icons['busy%d' % frame] = tray_icon({frame - 1: (255, 255, 255)})
     for name, big in icons.items():
         save_ico(os.path.join(app, name + '.ico'), big)
         # Linux (AppIndicator) takes a .png; 64 px stays sharp when scaled.
@@ -241,13 +300,13 @@ def tray():
     folder = os.path.join(CORE, 'internal', 'desktop', 'tray')
     os.makedirs(folder, exist_ok=True)
     states = {
-        'running': mozilla_icon(logo, DOT_GOOD),
-        'set': mozilla_icon(logo, DOT_SET),
-        'running-asleep': mozilla_icon(logo, asleep(DOT_GOOD)),
-        'set-asleep': mozilla_icon(logo, asleep(DOT_SET)),
-        'waiting': mozilla_icon('logo-animated1.png'),
-        'error': mozilla_icon(logo, DOT_BAD),
-        'off': mozilla_icon(logo),
+        'running': tray_icon(dot=DOT_GOOD),
+        'set': tray_icon(dot=DOT_SET),
+        'running-asleep': tray_icon(dot=asleep(DOT_GOOD)),
+        'set-asleep': tray_icon(dot=asleep(DOT_SET)),
+        'waiting': tray_icon({0: (255, 255, 255)}),
+        'error': tray_icon(dot=DOT_BAD),
+        'off': tray_icon(),
     }
     for name, big in states.items():
         save_ico(os.path.join(folder, name + '.ico'), big)
@@ -255,14 +314,14 @@ def tray():
 
 
 def main():
-    tile_art = Image.open(TILE).convert('RGBA')
-    glyph = Image.open(GLYPH).convert('RGBA')
+    square = tile_art()
+    glyph = symbol(1024)
     android(glyph)
     tv_banner(glyph)
     macos(glyph)
-    windows(tile_art)
-    core(tile_art)
-    app_logo(tile_art)
+    windows(square)
+    core(square)
+    app_logo(square)
     tray()
 
 

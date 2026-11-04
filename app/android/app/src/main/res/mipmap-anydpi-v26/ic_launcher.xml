@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The launcher icon on Android 8+: Mozilla VPN's symbol over black;
+<!-- The launcher icon on Android 8+: the symbol over black;
      the launcher crops both layers to its own shape. Made by
      tool/app_icons.py. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">

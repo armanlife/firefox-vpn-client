@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/fxa"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
 )
 
 const oauthRefreshLead = 2 * time.Minute

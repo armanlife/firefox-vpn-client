@@ -11,7 +11,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
+	"github.com/armanlife/arman-vpn-client/core/internal/securefile"
 )
 
 // The desktop's proxy setting: GNOME's (gsettings org.gnome.system.proxy),
@@ -30,7 +30,7 @@ var (
 		if err != nil {
 			return "", err
 		}
-		return filepath.Join(dir, "firefox-vpn-client", "previous-proxy.json"), nil
+		return filepath.Join(dir, "arman-vpn", "previous-proxy.json"), nil
 	}
 )
 

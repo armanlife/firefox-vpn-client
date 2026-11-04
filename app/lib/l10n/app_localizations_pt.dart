@@ -10,7 +10,7 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
-  String get appTitle => 'Firefox VPN';
+  String get appTitle => 'Arman VPN';
 
   @override
   String get navOverview => 'Visão geral';
@@ -1415,7 +1415,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'O serviço TUN é mais novo que este app. Atualize o app para usar o modo TUN.';
 
   @override
-  String get tunBusy => 'Outra cópia do Firefox VPN está usando o modo TUN.';
+  String get tunBusy => 'Outra cópia do Arman VPN está usando o modo TUN.';
 
   @override
   String get tunNoDriver =>
@@ -1442,11 +1442,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tunInstallPrompt =>
-      'O Firefox VPN quer instalar o serviço do modo TUN.';
+      'O Arman VPN quer instalar o serviço do modo TUN.';
 
   @override
   String get tunRemovePrompt =>
-      'O Firefox VPN quer remover o serviço do modo TUN.';
+      'O Arman VPN quer remover o serviço do modo TUN.';
 
   @override
   String tunRemoveFailed(String error) {

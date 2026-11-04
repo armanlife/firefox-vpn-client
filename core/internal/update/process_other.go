@@ -21,3 +21,7 @@ func startUpdater(string, string) error { return errNotSupported }
 func startApp(string, []string) error { return errNotSupported }
 
 func setInstalledVersion(string, string) error { return nil }
+
+// Migrate: copies of the app under the old name exist on Windows, Linux,
+// and macOS only.
+func Migrate(string) error { return nil }

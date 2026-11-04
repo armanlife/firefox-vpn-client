@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
-	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
+	"github.com/armanlife/arman-vpn-client/core/internal/controlplane"
+	"github.com/armanlife/arman-vpn-client/core/internal/fxa"
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"

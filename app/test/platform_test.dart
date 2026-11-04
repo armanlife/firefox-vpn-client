@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:firefox_vpn/platform.dart';
+import 'package:arman_vpn/platform.dart';
 
 void main() {
   test('a listen address on every interface is shared with the LAN', () {

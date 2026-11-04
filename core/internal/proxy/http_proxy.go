@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/egress"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/egress"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
 )
 
 // The SOCKS5 port also serves HTTP proxy clients (the Windows system proxy
@@ -51,7 +51,7 @@ func (s *SOCKSServer) serveHTTP(client *bufferedConn, clientAddr string, start t
 	}
 	if s.Auth != nil && !s.Auth.matchBasic(req.Header.Get("Proxy-Authorization")) {
 		logx.Warn("HTTP proxy client rejected: %s client=%s", errSOCKSAuth, clientAddr)
-		writeHTTPError(client, http.StatusProxyAuthRequired, "The proxy needs the username and password set in Settings.", `Basic realm="Firefox VPN"`)
+		writeHTTPError(client, http.StatusProxyAuthRequired, "The proxy needs the username and password set in Settings.", `Basic realm="Arman VPN"`)
 		return
 	}
 	if s.handshakeTimeout > 0 {
@@ -112,7 +112,7 @@ func (s *SOCKSServer) openTarget(client net.Conn, target, clientAddr, inbound st
 			host, _, _ := net.SplitHostPort(target)
 			s.Notices.record(NoticeLoop, "", host)
 			if warn {
-				logx.Warn("a loop: this program's own connections come back to its proxy as a client's (client=%s target=%s), so nothing connects; a program sends this program's own traffic into the proxy: in PassWall2 turn Localhost Proxy off, in another VPN program's TUN mode let firefox-vpn-core connect directly", clientAddr, logx.Target(target))
+				logx.Warn("a loop: this program's own connections come back to its proxy as a client's (client=%s target=%s), so nothing connects; a program sends this program's own traffic into the proxy: in PassWall2 turn Localhost Proxy off, in another VPN program's TUN mode let arman-vpn-core connect directly", clientAddr, logx.Target(target))
 			}
 		}
 	}

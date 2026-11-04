@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:firefox_vpn/app_settings.dart';
-import 'package:firefox_vpn/core/core_process.dart';
+import 'package:arman_vpn/app_settings.dart';
+import 'package:arman_vpn/core/core_process.dart';
 
 void main() {
   late Directory dir;
@@ -73,8 +73,8 @@ void main() {
       CoreProcess.executableFrom(const []),
       endsWith(
         Platform.isWindows
-            ? r'core\firefox-vpn-core.exe'
-            : 'core/firefox-vpn-core',
+            ? r'core\arman-vpn-core.exe'
+            : 'core/arman-vpn-core',
       ),
     );
   });

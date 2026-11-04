@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
-	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
+	"github.com/armanlife/arman-vpn-client/core/internal/fxa"
+	"github.com/armanlife/arman-vpn-client/core/internal/guardian"
 )
 
 // rebuildController has one session that fails with openErr and a factory

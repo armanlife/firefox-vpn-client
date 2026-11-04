@@ -42,7 +42,7 @@ func runElevated(_ string, args ...string) error {
 		return ErrCancelled
 	case pkexecNotAuthorized:
 		if noPromptAgent(string(out)) {
-			return fmt.Errorf("no password prompt could open here: the app was not started from the desktop (but from a terminal or over SSH, for one); start Firefox VPN from the applications menu, or install the service in a terminal: sudo %q install", self)
+			return fmt.Errorf("no password prompt could open here: the app was not started from the desktop (but from a terminal or over SSH, for one); start Arman VPN from the applications menu, or install the service in a terminal: sudo %q install", self)
 		}
 		if text := strings.TrimSpace(string(out)); text != "" {
 			return fmt.Errorf("the administrator permission was refused: %s", text)

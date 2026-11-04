@@ -13,7 +13,7 @@ import (
 )
 
 // PipeName is the service's named pipe.
-const PipeName = `\\.\pipe\firefox-vpn-tun`
+const PipeName = `\\.\pipe\arman-vpn-tun`
 
 // pipeName is PipeName; tests use their own.
 var pipeName = PipeName
@@ -21,8 +21,8 @@ var pipeName = PipeName
 // ServiceName is the Windows service; ExeName its executable, which the app
 // also carries in its core folder.
 const (
-	ServiceName = "FirefoxVPNTun"
-	ExeName     = "firefox-vpn-tun.exe"
+	ServiceName = "ArmanVPNTun"
+	ExeName     = "arman-vpn-tun.exe"
 )
 
 // ErrNoService means no service answers: it is not installed, or it is

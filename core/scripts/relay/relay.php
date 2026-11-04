@@ -48,7 +48,7 @@ function ends_with($text, $suffix)
 function page($state)
 {
     $states = [
-        'works' => [200, '#10b981', '✓ Working', 'Your relay is ready', "Put this page's address in Firefox VPN:",
+        'works' => [200, '#10b981', '✓ Working', 'Your relay is ready', "Put this page's address in Arman VPN:",
             ['Settings', 'Connection', 'If Mozilla is blocked', 'Cloudflare Worker']],
         'wrong' => [403, '#ef4444', '✗ Wrong secret', 'This address has no secret, or the wrong one',
             'It must end in <code>?secret=</code> followed by the $SECRET set in the file.', []],
@@ -61,7 +61,7 @@ function page($state)
     header('Content-Type: text/html; charset=utf-8');
     echo <<<HTML
 <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Firefox VPN relay</title>
+<title>Arman VPN relay</title>
 <style>
 :root{--bg:#eef0fb;--card:#fff;--text:#1d2040;--muted:#5d6385;--accent:#5b5bd6;--c:$color}
 @media (prefers-color-scheme:dark){:root{--bg:#0b0e1f;--card:#151a35;--text:#eef0ff;--muted:#9aa3c7;--accent:#8b8ff8}}
@@ -84,7 +84,7 @@ code{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--acc
 background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
 .path i{color:var(--muted);font-style:normal}
 </style>
-<div class="card"><div class="brand"><span class="dot"></span>Firefox VPN relay</div>
+<div class="card"><div class="brand"><span class="dot"></span>Arman VPN relay</div>
 <span class="badge">$badge</span><h1>$title</h1><p>$text</p>$path</div></html>
 HTML;
     exit;

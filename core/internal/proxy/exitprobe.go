@@ -187,7 +187,7 @@ func verifyExitAt(opener tunnelOpener, rawURL string, timeout time.Duration) (Ex
 		return ExitProbeResult{}, fmt.Errorf("creating exit verification request: %w", err)
 	}
 	request.Header.Set("Accept", "text/plain, application/json")
-	request.Header.Set("User-Agent", "firefox-vpn-exit-check/1")
+	request.Header.Set("User-Agent", "arman-vpn-exit-check/1")
 
 	started := time.Now()
 	response, err := client.Do(request)

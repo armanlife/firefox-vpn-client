@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/sys/windows"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
+	"github.com/armanlife/arman-vpn-client/core/internal/tunapi"
 )
 
 // InstallForUser installs the service for the user running this process.
@@ -60,7 +60,7 @@ func runElevated(args ...string) error {
 	if err != nil {
 		return err
 	}
-	report, err := os.CreateTemp("", "firefox-vpn-tun-*.txt")
+	report, err := os.CreateTemp("", "arman-vpn-tun-*.txt")
 	if err != nil {
 		return err
 	}

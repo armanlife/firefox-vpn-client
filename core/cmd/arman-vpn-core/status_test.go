@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
+	"github.com/armanlife/arman-vpn-client/core/internal/accounts"
+	"github.com/armanlife/arman-vpn-client/core/internal/service"
 )
 
 func TestStatusLines(t *testing.T) {
@@ -42,7 +42,7 @@ func TestStatusLines(t *testing.T) {
 	none.State.Message = "Add an account in the dashboard to start the proxy"
 	none.Accounts = map[string]int{"total": 0}
 	got = text(none)
-	if !strings.Contains(got, "Proxy: waiting       Add an account") || !strings.Contains(got, "Account: none yet: firefox-vpn add-account") {
+	if !strings.Contains(got, "Proxy: waiting       Add an account") || !strings.Contains(got, "Account: none yet: arman-vpn add-account") {
 		t.Errorf("no account:\n%s", got)
 	}
 }

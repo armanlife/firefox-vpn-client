@@ -1,13 +1,13 @@
 # Builds the Windows app with its core into dist\:
-# - Firefox-VPN-<version>\: firefox-vpn.exe (the Flutter app),
-#   core\firefox-vpn-core.exe (the Go core, which the app starts with -app),
-#   and core\firefox-vpn-tun.exe (the TUN service, which the app or Setup
+# - Arman-VPN-<version>\: arman-vpn.exe (the Flutter app),
+#   core\arman-vpn-core.exe (the Go core, which the app starts with -app),
+#   and core\arman-vpn-tun.exe (the TUN service, which the app or Setup
 #   installs; scripts\build-windows-tun.ps1 says how it is signed), to run
 #   here;
-# - Firefox-VPN-<version>-Windows-x64.zip: the portable app, a "Firefox VPN"
+# - Arman-VPN-<version>-Windows-x64.zip: the portable app, an "Arman VPN"
 #   folder to unpack anywhere (or over an older one);
-# - Firefox-VPN-<version>-Windows-Setup-x64.exe: the installer
-#   (app\windows\installer\firefox-vpn.iss, Inno Setup 6).
+# - Arman-VPN-<version>-Windows-Setup-x64.exe: the installer
+#   (app\windows\installer\arman-vpn.iss, Inno Setup 6).
 # The app keeps its data (accounts, settings, logs) in user-data beside it.
 # The zip and the installer are made from a clean copy, never with a
 # user-data folder. The version is "major.minor.patch" from app\pubspec.yaml,
@@ -26,7 +26,7 @@ $match = Select-String -Path "$root\app\pubspec.yaml" -Pattern '^version:\s*(\d+
 if (-not $match) { throw 'No version in app\pubspec.yaml' }
 $version = $match.Matches[0].Groups[1].Value
 if ($AppVersion) { $version = $AppVersion }
-$out = "$root\dist\Firefox-VPN-$version"
+$out = "$root\dist\Arman-VPN-$version"
 if (Test-Path $out) { throw "$out already exists; bump the version in app\pubspec.yaml" }
 
 # Inno Setup's compiler: ISCC on the PATH, else its usual places.
@@ -68,27 +68,34 @@ Push-Location "$root\core"
 try {
     # The executable's icon and version information (Windows resources).
     $env:APP_VERSION = $version
-    go generate ./cmd/firefox-vpn-core
+    go generate ./cmd/arman-vpn-core
     if ($LASTEXITCODE -ne 0) { throw 'go generate failed' }
-    $ldflags = "-s -w -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$version"
-    if ($public) { $ldflags += " -X github.com/armanlife/firefox-vpn-client/core/internal/signing.Key=$public" }
-    go build -trimpath -ldflags $ldflags -o "$out\core\firefox-vpn-core.exe" ./cmd/firefox-vpn-core
+    $ldflags = "-s -w -X github.com/armanlife/arman-vpn-client/core/internal/version.Current=$version"
+    if ($public) { $ldflags += " -X github.com/armanlife/arman-vpn-client/core/internal/signing.Key=$public" }
+    go build -trimpath -ldflags $ldflags -o "$out\core\arman-vpn-core.exe" ./cmd/arman-vpn-core
     if ($LASTEXITCODE -ne 0) { throw 'go build failed' }
     & "$PSScriptRoot\build-windows-tun.ps1" -Version $version -Out "$out\core" -PublicKey $public
 } finally { Pop-Location }
 
 # A clean copy named as the user sees it, for the zip and the installer.
 $stage = "$root\dist\.stage-$version"
-$app = "$stage\Firefox VPN"
+$app = "$stage\Arman VPN"
 Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force $app | Out-Null
 Get-ChildItem $out -Force | Where-Object { $_.Name -notin 'user-data', 'portable' } | Copy-Item -Destination $app -Recurse
 try {
-    $zip = "$root\dist\Firefox-VPN-$version-Windows-x64.zip"
+    # The zip also carries the app and the core under their names before
+    # 1.0.9, which the update of those versions checks for and starts: a
+    # copy of the app, which starts the one under the new name, and an
+    # empty file (core\internal\update\legacy.go). The installer does not.
+    Copy-Item "$app\arman-vpn.exe" "$app\firefox-vpn.exe"
+    New-Item -ItemType File "$app\core\firefox-vpn-core.exe" | Out-Null
+    $zip = "$root\dist\Arman-VPN-$version-Windows-x64.zip"
     Compress-Archive -Path $app -DestinationPath $zip -CompressionLevel Optimal -Force
+    Remove-Item "$app\firefox-vpn.exe", "$app\core\firefox-vpn-core.exe"
 
-    $setupName = "Firefox-VPN-$version-Windows-Setup-x64"
-    & $iscc /Q "/DAppVersion=$version" "/DSourceDir=$app" "/DOutputDir=$root\dist" "/DOutputName=$setupName" "$root\app\windows\installer\firefox-vpn.iss"
+    $setupName = "Arman-VPN-$version-Windows-Setup-x64"
+    & $iscc /Q "/DAppVersion=$version" "/DSourceDir=$app" "/DOutputDir=$root\dist" "/DOutputName=$setupName" "$root\app\windows\installer\arman-vpn.iss"
     if ($LASTEXITCODE -ne 0) { throw 'the installer did not build' }
 } finally { Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue }
 

@@ -10,8 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/guardian"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
 )
 
 const maxOpenTunnelRebuildRetries = 3

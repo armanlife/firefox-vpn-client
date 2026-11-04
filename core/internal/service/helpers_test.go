@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
-	"github.com/armanlife/firefox-vpn-client/core/internal/netcheck"
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
+	"github.com/armanlife/arman-vpn-client/core/internal/controlplane"
+	"github.com/armanlife/arman-vpn-client/core/internal/netcheck"
+	"github.com/armanlife/arman-vpn-client/core/internal/proxy"
 )
 
 // All values in this file are local fixtures; the control plane transport

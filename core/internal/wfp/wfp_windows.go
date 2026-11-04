@@ -40,7 +40,7 @@ const (
 
 // Start adds the filters in one transaction.
 func Start(r Rules) (s *Session, err error) {
-	name, _ := windows.UTF16PtrFromString("Firefox VPN TUN")
+	name, _ := windows.UTF16PtrFromString("Arman VPN TUN")
 	session := fwpmSession0{
 		displayData: fwpmDisplayData0{name: name},
 		flags:       fwpmSessionFlagDynamic,
@@ -82,7 +82,7 @@ func addFilters(engine windows.Handle, r Rules) error {
 	if err != nil {
 		return err
 	}
-	name, _ := windows.UTF16PtrFromString("Firefox VPN TUN")
+	name, _ := windows.UTF16PtrFromString("Arman VPN TUN")
 	description, _ := windows.UTF16PtrFromString("DNS only through the TUN adapter")
 	sublayer := fwpmSublayer0{
 		subLayerKey: key,
@@ -95,7 +95,7 @@ func addFilters(engine windows.Handle, r Rules) error {
 	both := []windows.GUID{fwpmLayerALEAuthConnectV4, fwpmLayerALEAuthConnectV6}
 	addTo := func(layers []windows.GUID, what string, weight uint8, action uint32, flags uint32, conditions []fwpmFilterCondition0) error {
 		for _, layer := range layers {
-			filterName, _ := windows.UTF16PtrFromString("Firefox VPN TUN: " + what)
+			filterName, _ := windows.UTF16PtrFromString("Arman VPN TUN: " + what)
 			f := fwpmFilter0{
 				displayData: fwpmDisplayData0{name: filterName},
 				flags:       flags,

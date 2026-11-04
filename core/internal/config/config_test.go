@@ -303,13 +303,13 @@ func TestDefaultDataDirFollowsTheApp(t *testing.T) {
 		t.Fatalf("alone: %s", got)
 	}
 	// Beside the desktop app on Windows: user-data beside both.
-	files["firefox-vpn.exe"] = true
+	files["arman-vpn.exe"] = true
 	if got := defaultDataDirFor(dir, "windows", getenv, exists); got != filepath.Join(dir, "user-data") {
 		t.Fatalf("beside the app on Windows: %s", got)
 	}
 	// On macOS: the app's folder in the user's data location.
-	files["Firefox VPN"] = true
-	if got := defaultDataDirFor(dir, "darwin", getenv, exists); got != filepath.Join("/home/u", "Library", "Application Support", "Firefox VPN Client") {
+	files["Arman VPN"] = true
+	if got := defaultDataDirFor(dir, "darwin", getenv, exists); got != filepath.Join("/home/u", "Library", "Application Support", "Arman VPN") {
 		t.Fatalf("beside the app on macOS: %s", got)
 	}
 	// A portable app keeps user-data beside it.
@@ -323,12 +323,12 @@ func TestAppDir(t *testing.T) {
 	// Files by their full path, so the parent folder counts.
 	files := map[string]bool{}
 	exists := func(p string) bool { return files[p] }
-	app := filepath.Join("opt", "Firefox VPN")
+	app := filepath.Join("opt", "Arman VPN")
 	core := filepath.Join(app, "core")
 	if got := appDir(app, exists); got != "" {
 		t.Fatalf("a core on its own belongs to %q", got)
 	}
-	for _, name := range []string{"firefox-vpn.exe", "firefox-vpn", "Firefox VPN"} {
+	for _, name := range []string{"arman-vpn.exe", "arman-vpn", "Arman VPN"} {
 		files = map[string]bool{filepath.Join(app, name): true}
 		if got := appDir(app, exists); got != app {
 			t.Fatalf("beside %s: %q", name, got)
@@ -339,7 +339,7 @@ func TestAppDir(t *testing.T) {
 		}
 	}
 	// The parent counts only from a folder named core.
-	files = map[string]bool{filepath.Join(app, "firefox-vpn.exe"): true}
+	files = map[string]bool{filepath.Join(app, "arman-vpn.exe"): true}
 	if got := appDir(filepath.Join(app, "tools"), exists); got != "" {
 		t.Fatalf("a core in another folder belongs to %q", got)
 	}

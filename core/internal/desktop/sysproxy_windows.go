@@ -23,7 +23,7 @@ func systemProxySupported() bool { return true }
 // removed. Tests replace the key names.
 var (
 	internetSettingsKey = `Software\Microsoft\Windows\CurrentVersion\Internet Settings`
-	backupKey           = `Software\FirefoxVPN\PreviousProxy`
+	backupKey           = `Software\ArmanVPN\PreviousProxy`
 )
 
 // systemProxyBypass keeps local and private addresses off the proxy.

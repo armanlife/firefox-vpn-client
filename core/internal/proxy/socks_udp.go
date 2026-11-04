@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
 )
 
 // SOCKS5 UDP ASSOCIATE (RFC 1928 7): a client asks over its TCP connection,

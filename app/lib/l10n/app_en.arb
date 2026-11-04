@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Firefox VPN",
+  "appTitle": "Arman VPN",
   "navOverview": "Overview",
   "navAccounts": "Accounts",
   "navSettings": "Settings",
@@ -879,7 +879,7 @@
   "tunMissing": "The TUN service isn't installed.",
   "tunOutdated": "The TUN service is older than this app. Install it again to use TUN mode.",
   "tunAppOutdated": "The TUN service is newer than this app. Update the app to use TUN mode.",
-  "tunBusy": "Another copy of Firefox VPN is using TUN mode.",
+  "tunBusy": "Another copy of Arman VPN is using TUN mode.",
   "tunNoDriver": "The system's TUN driver isn't available. Restart the computer and try again.",
   "tunInstall": "Install",
   "tunInstallAgain": "Install again",
@@ -887,11 +887,11 @@
   "removeTunService": "Remove the TUN service",
   "removeTunServiceHint": "Removes the system service that TUN mode uses. Choosing TUN again installs it again.",
   "tunServiceRemoved": "The TUN service was removed.",
-  "tunInstallPrompt": "Firefox VPN wants to install the service for TUN mode.",
+  "tunInstallPrompt": "Arman VPN wants to install the service for TUN mode.",
   "@tunInstallPrompt": {
     "description": "macOS: the reason its administrator password prompt shows when the app installs the TUN mode's service."
   },
-  "tunRemovePrompt": "Firefox VPN wants to remove the service for TUN mode.",
+  "tunRemovePrompt": "Arman VPN wants to remove the service for TUN mode.",
   "@tunRemovePrompt": {
     "description": "macOS: the reason its administrator password prompt shows when the app removes the TUN mode's service while the service does not run."
   },

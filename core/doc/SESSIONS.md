@@ -1,6 +1,6 @@
 # Sessions, Transports, and Concurrency
 
-The relevant implementation is in [cmd/firefox-vpn-core](../cmd/firefox-vpn-core): `controller.go`, `renewal.go`, `pool.go`, `session.go`, `tunnel.go`, `upstream_h2.go`, `upstream_h3.go`, `socks.go`, and `relay.go`. Read [authentication](AUTHENTICATION.md) for pass acquisition.
+The relevant implementation is in [cmd/arman-vpn-core](../cmd/arman-vpn-core): `controller.go`, `renewal.go`, `pool.go`, `session.go`, `tunnel.go`, `upstream_h2.go`, `upstream_h3.go`, `socks.go`, and `relay.go`. Read [authentication](AUTHENTICATION.md) for pass acquisition.
 
 ## Ownership and admission
 

@@ -2,7 +2,7 @@
 # app/pubspec.yaml) also builds Windows, macOS, Android, Linux, and the Linux
 # core, and publishes them as a GitHub release, each file twice: under a
 # fixed name, which the README's releases/latest/download links fetch, and
-# with the version in its name (Firefox-VPN-1.2.3-Android-arm64-v8a.apk),
+# with the version in its name (Arman-VPN-1.2.3-Android-arm64-v8a.apk),
 # which the release's own notes and the app's Download button use, so a
 # downloaded file says which version it is. "Run workflow" builds without
 # publishing.
@@ -129,15 +129,15 @@ jobs:
           # The key updates are signed with (scripts/signing-key.ps1): the
           # core and the TUN service take only updates it signed; without
           # it they take none.
-          FIREFOX_VPN_SIGNING_KEY: ${{ secrets.FIREFOX_VPN_SIGNING_KEY }}
+          ARMAN_VPN_SIGNING_KEY: ${{ secrets.FIREFOX_VPN_SIGNING_KEY }}
         run: ./scripts/build-windows.ps1
       - name: Release names
         shell: pwsh
         run: |
           $v = '${{ needs.test.outputs.version }}'
           New-Item -ItemType Directory out | Out-Null
-          Move-Item "dist/Firefox-VPN-$v-Windows-x64.zip" out/Firefox-VPN-Windows-x64.zip
-          Move-Item "dist/Firefox-VPN-$v-Windows-Setup-x64.exe" out/Firefox-VPN-Windows-Setup-x64.exe
+          Move-Item "dist/Arman-VPN-$v-Windows-x64.zip" out/Arman-VPN-Windows-x64.zip
+          Move-Item "dist/Arman-VPN-$v-Windows-Setup-x64.exe" out/Arman-VPN-Windows-Setup-x64.exe
       - uses: actions/upload-artifact@v7
         with:
           name: windows
@@ -188,7 +188,7 @@ jobs:
         run: |
           v='${{ needs.test.outputs.version }}'
           mkdir -p app/android/app/libs
-          flags="-s -w -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$v"
+          flags="-s -w -X github.com/armanlife/arman-vpn-client/core/internal/version.Current=$v"
           (cd core && gomobile bind -target=android -androidapi 24 -trimpath \
             -ldflags "$flags" \
             -o ../app/android/app/libs/core.aar ./mobile)
@@ -197,10 +197,10 @@ jobs:
           mkdir -p ../out
           flutter build apk --release --split-per-abi --dart-define=APP_VERSION=$v
           for abi in arm64-v8a armeabi-v7a x86_64; do
-            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "../out/Firefox-VPN-Android-$abi.apk"
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "../out/Arman-VPN-Android-$abi.apk"
           done
           flutter build apk --release --dart-define=APP_VERSION=$v
-          cp build/app/outputs/flutter-apk/app-release.apk ../out/Firefox-VPN-Android-universal.apk
+          cp build/app/outputs/flutter-apk/app-release.apk ../out/Arman-VPN-Android-universal.apk
       - name: Remove the key
         if: always()
         run: rm -f app/android/release.jks app/android/key.properties
@@ -225,7 +225,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: linux
-          path: dist/firefox-vpn-core-linux-*.tar.gz
+          path: dist/arman-vpn-core-linux-*.tar.gz
           if-no-files-found: error
 
   linux-desktop:
@@ -276,24 +276,24 @@ jobs:
       - name: TUN service with systemd
         working-directory: core
         run: |
-          go build -tags with_gvisor -o "$RUNNER_TEMP/firefox-vpn-tun" ./cmd/firefox-vpn-tun
-          sudo "$RUNNER_TEMP/firefox-vpn-tun" install
-          systemctl is-active firefox-vpn-tun
-          "$RUNNER_TEMP/firefox-vpn-tun" uninstall
-          for i in $(seq 20); do systemctl is-active --quiet firefox-vpn-tun || break; sleep 0.5; done
-          if systemctl is-active --quiet firefox-vpn-tun; then echo "the service still runs"; exit 1; fi
-          test ! -e /etc/systemd/system/firefox-vpn-tun.service
-          test ! -e /opt/firefox-vpn-tun
+          go build -tags with_gvisor -o "$RUNNER_TEMP/arman-vpn-tun" ./cmd/arman-vpn-tun
+          sudo "$RUNNER_TEMP/arman-vpn-tun" install
+          systemctl is-active arman-vpn-tun
+          "$RUNNER_TEMP/arman-vpn-tun" uninstall
+          for i in $(seq 20); do systemctl is-active --quiet arman-vpn-tun || break; sleep 0.5; done
+          if systemctl is-active --quiet arman-vpn-tun; then echo "the service still runs"; exit 1; fi
+          test ! -e /etc/systemd/system/arman-vpn-tun.service
+          test ! -e /opt/arman-vpn-tun
       - name: Build
         env:
           # The key updates are signed with: the core and the TUN service
           # take only updates it signed; without it they take none.
-          FIREFOX_VPN_SIGNING_KEY: ${{ secrets.FIREFOX_VPN_SIGNING_KEY }}
+          ARMAN_VPN_SIGNING_KEY: ${{ secrets.FIREFOX_VPN_SIGNING_KEY }}
         run: bash scripts/build-linux.sh
       - name: Release name
         run: |
           mkdir out
-          mv "dist/Firefox-VPN-${{ needs.test.outputs.version }}-Linux-${{ matrix.arch }}.tar.gz" "out/Firefox-VPN-Linux-${{ matrix.arch }}.tar.gz"
+          mv "dist/Arman-VPN-${{ needs.test.outputs.version }}-Linux-${{ matrix.arch }}.tar.gz" "out/Arman-VPN-Linux-${{ matrix.arch }}.tar.gz"
       - uses: actions/upload-artifact@v7
         with:
           name: linux-desktop-${{ matrix.arch }}
@@ -347,19 +347,19 @@ jobs:
         continue-on-error: true
         working-directory: core
         run: |
-          go build -tags with_gvisor -o "$RUNNER_TEMP/firefox-vpn-tun" ./cmd/firefox-vpn-tun
-          sudo "$RUNNER_TEMP/firefox-vpn-tun" install
+          go build -tags with_gvisor -o "$RUNNER_TEMP/arman-vpn-tun" ./cmd/arman-vpn-tun
+          sudo "$RUNNER_TEMP/arman-vpn-tun" install
           sudo launchctl print system/com.arman.firefoxvpn.tun | head -20
-          "$RUNNER_TEMP/firefox-vpn-tun" uninstall
+          "$RUNNER_TEMP/arman-vpn-tun" uninstall
           for i in $(seq 20); do sudo launchctl print system/com.arman.firefoxvpn.tun >/dev/null 2>&1 || break; sleep 0.5; done
           if sudo launchctl print system/com.arman.firefoxvpn.tun >/dev/null 2>&1; then echo "the job is still loaded"; exit 1; fi
           test ! -e /Library/LaunchDaemons/com.arman.firefoxvpn.tun.plist
-          test ! -e "/Library/Application Support/Firefox VPN TUN"
+          test ! -e "/Library/Application Support/Arman VPN TUN"
       - name: Build
         env:
           # The key updates are signed with: the core and the TUN service
           # take only updates it signed; without it they take none.
-          FIREFOX_VPN_SIGNING_KEY: ${{ secrets.FIREFOX_VPN_SIGNING_KEY }}
+          ARMAN_VPN_SIGNING_KEY: ${{ secrets.FIREFOX_VPN_SIGNING_KEY }}
         run: bash scripts/build-macos.sh
       # The app's own update, end to end: the app just built, in
       # /Applications, updates itself to a test release on loopback
@@ -382,8 +382,8 @@ jobs:
       - name: Release name
         run: |
           mkdir out
-          mv "dist/Firefox-VPN-${{ needs.test.outputs.version }}-macOS.dmg" out/Firefox-VPN-macOS.dmg
-          mv "dist/Firefox-VPN-${{ needs.test.outputs.version }}-macOS.tar.gz" out/Firefox-VPN-macOS.tar.gz
+          mv "dist/Arman-VPN-${{ needs.test.outputs.version }}-macOS.dmg" out/Arman-VPN-macOS.dmg
+          mv "dist/Arman-VPN-${{ needs.test.outputs.version }}-macOS.tar.gz" out/Arman-VPN-macOS.tar.gz
       - uses: actions/upload-artifact@v7
         with:
           name: macos
@@ -408,15 +408,22 @@ jobs:
         with:
           path: release
           merge-multiple: true
-      # A copy of each file with the version after the program's name.
+      # A copy of each file with the version after the program's name; and
+      # the app's files under their names before 1.0.9 (Firefox-VPN-*),
+      # which the update and the Android Download button of those versions
+      # look for.
       - name: Versioned names
         working-directory: release
         run: |
           v="${GITHUB_REF_NAME#v}"
           for f in *; do
             case "$f" in
-              Firefox-VPN-*) cp "$f" "Firefox-VPN-$v-${f#Firefox-VPN-}" ;;
-              firefox-vpn-core-*) cp "$f" "firefox-vpn-core-$v-${f#firefox-vpn-core-}" ;;
+              Arman-VPN-*)
+                rest="${f#Arman-VPN-}"
+                cp "$f" "Arman-VPN-$v-$rest"
+                cp "$f" "Firefox-VPN-$rest"
+                cp "$f" "Firefox-VPN-$v-$rest" ;;
+              arman-vpn-core-*) cp "$f" "arman-vpn-core-$v-${f#arman-vpn-core-}" ;;
             esac
           done
           ls
@@ -428,10 +435,10 @@ jobs:
       - name: Sign the checksums
         working-directory: core
         env:
-          FIREFOX_VPN_SIGNING_KEY: ${{ secrets.FIREFOX_VPN_SIGNING_KEY }}
+          ARMAN_VPN_SIGNING_KEY: ${{ secrets.FIREFOX_VPN_SIGNING_KEY }}
         run: |
-          if [ -z "$FIREFOX_VPN_SIGNING_KEY" ]; then
-            echo "::error::no release key (the secret FIREFOX_VPN_SIGNING_KEY): the apps could not install this release"
+          if [ -z "$ARMAN_VPN_SIGNING_KEY" ]; then
+            echo "::error::no release key (the secret ARMAN_VPN_SIGNING_KEY): the apps could not install this release"
             exit 1
           fi
           go run ./tools/sign ../release/SHA256SUMS.txt
@@ -444,5 +451,5 @@ jobs:
           bash scripts/release-notes.sh "$GITHUB_REF_NAME" > notes.md
           gh release create "$GITHUB_REF_NAME" release/* \
             --repo "$GITHUB_REPOSITORY" \
-            --title "Firefox VPN ${{ needs.test.outputs.version }}" \
+            --title "Arman VPN ${{ needs.test.outputs.version }}" \
             --notes-file notes.md

@@ -15,12 +15,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/config"
-	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
-	"github.com/armanlife/firefox-vpn-client/core/internal/routing"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
+	"github.com/armanlife/arman-vpn-client/core/internal/config"
+	"github.com/armanlife/arman-vpn-client/core/internal/controlplane"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/proxy"
+	"github.com/armanlife/arman-vpn-client/core/internal/routing"
+	"github.com/armanlife/arman-vpn-client/core/internal/tun"
 )
 
 // listDownloadTimeout bounds downloading both routing lists.

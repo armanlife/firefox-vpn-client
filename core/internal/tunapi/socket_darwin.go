@@ -10,7 +10,7 @@ import (
 )
 
 // SocketPath is the service's socket, in a folder only root may write to.
-const SocketPath = "/var/run/firefox-vpn-tun.sock"
+const SocketPath = "/var/run/arman-vpn-tun.sock"
 
 // LaunchdLabel is the service's launchd job.
 const LaunchdLabel = "com.arman.firefoxvpn.tun"

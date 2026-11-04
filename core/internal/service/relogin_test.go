@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
-	"github.com/armanlife/firefox-vpn-client/core/internal/controlplane"
-	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
-	"github.com/armanlife/firefox-vpn-client/core/internal/proxy"
+	"github.com/armanlife/arman-vpn-client/core/internal/accounts"
+	"github.com/armanlife/arman-vpn-client/core/internal/controlplane"
+	"github.com/armanlife/arman-vpn-client/core/internal/fxa"
+	"github.com/armanlife/arman-vpn-client/core/internal/proxy"
 )
 
 // mockFxA answers the FxA requests of an automatic sign-in and device

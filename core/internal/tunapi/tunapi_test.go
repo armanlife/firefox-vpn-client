@@ -20,7 +20,7 @@ func TestMessagesGoAcrossOneLineEach(t *testing.T) {
 	sent := []Message{
 		Hello("1.2.3"),
 		{Type: TypeOpen, Proxy: "127.0.0.1:5000", Username: "u", Password: "p"},
-		{Type: TypeOpened, Interface: &Interface{Name: "Firefox VPN", Index: 31, LUID: 1 << 40}},
+		{Type: TypeOpened, Interface: &Interface{Name: "Arman VPN", Index: 31, LUID: 1 << 40}},
 	}
 	go func() {
 		for _, m := range sent {

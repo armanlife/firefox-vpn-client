@@ -11,7 +11,7 @@ import (
 func TestCapTooltip(t *testing.T) {
 	units := func(s string) int { return len(utf16.Encode([]rune(s))) }
 
-	short := "Firefox VPN: Connected · Amsterdam, Netherlands"
+	short := "Arman VPN: Connected · Amsterdam, Netherlands"
 	if got := capTooltip(short); got != short {
 		t.Fatalf("a short tooltip changed: %q", got)
 	}
@@ -19,7 +19,7 @@ func TestCapTooltip(t *testing.T) {
 	if got := capTooltip(exact); got != exact {
 		t.Fatal("a tooltip of exactly the limit must stay whole")
 	}
-	long := "Firefox VPN: Service not reachable · Could not start: " + strings.Repeat("parsing config.json ", 10)
+	long := "Arman VPN: Service not reachable · Could not start: " + strings.Repeat("parsing config.json ", 10)
 	got := capTooltip(long)
 	if units(got) != maxTooltipUnits || !strings.HasSuffix(got, "…") || !strings.HasPrefix(long, strings.TrimSuffix(got, "…")) {
 		t.Fatalf("long tooltip: %d units, %q", units(got), got)

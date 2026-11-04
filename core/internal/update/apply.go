@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
 )
 
 // exitWait bounds the wait for the app and the core to exit.
@@ -60,15 +60,17 @@ func Apply(dataDir string) error {
 		err = swap(p.AppDir, p.Package, filepath.Join(dir, "backup"))
 	}
 	result.OK = err == nil
+	appDir := p.AppDir
 	if err != nil {
 		result.Error = err.Error()
 		logx.Error("update: failed err=%s", logx.Err(err))
 	} else {
 		logx.Info("update: installed version=%s", p.To)
+		appDir = relocate(appDir)
 		// What the system keeps about the app: Windows' list of installed
 		// apps shows the new version of a copy Setup installed; on macOS
 		// the bundle loses the mark of a downloaded app.
-		if merr := markInstalled(p.AppDir, p.To); merr != nil {
+		if merr := markInstalled(appDir, p.To); merr != nil {
 			logx.Warn("update: telling the system about the new version failed err=%s", logx.Err(merr))
 		}
 	}
@@ -84,7 +86,7 @@ func Apply(dataDir string) error {
 		// The app still runs; it is not started twice.
 		return err
 	}
-	if serr := launchApp(p.AppDir, p.Args); serr != nil {
+	if serr := launchApp(appDir, p.Args); serr != nil {
 		logx.Error("update: starting the app failed err=%s", logx.Err(serr))
 		return errors.Join(err, serr)
 	}

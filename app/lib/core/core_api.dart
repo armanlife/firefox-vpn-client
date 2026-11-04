@@ -68,7 +68,7 @@ abstract final class CoreLocator {
   static const _defaultPort = 10820;
 
   /// The folder name under the per-user data location (macOS).
-  static const appFolder = 'Firefox VPN Client';
+  static const appFolder = 'Arman VPN';
 
   /// The file next to the app that makes it portable: its data stays in
   /// `user-data` beside it instead of the per-user location.
@@ -82,7 +82,7 @@ abstract final class CoreLocator {
   /// per-user location.
   static String dataDir(List<String> args) {
     final exeDir = File(Platform.resolvedExecutable).parent.path;
-    return dataDirFor(
+    final dir = dataDirFor(
       args: args,
       exeDir: exeDir,
       portable: File('$exeDir${Platform.pathSeparator}$portableMarker')
@@ -90,6 +90,40 @@ abstract final class CoreLocator {
       env: Platform.environment,
       os: Platform.operatingSystem,
     );
+    moveLegacyDataDir(dir);
+    return dir;
+  }
+
+  /// The per-user data folders of the versions before 1.0.9, when the
+  /// program was called Firefox VPN, by the new folder's name: beside it.
+  static const legacyFolders = {
+    appFolder: 'Firefox VPN Client',
+    linuxFolder: 'firefox-vpn-client',
+  };
+
+  /// The folder name under the per-user data location (Linux).
+  static const linuxFolder = 'arman-vpn';
+
+  /// Moves the data folder of a version before 1.0.9 to [dir] when only the
+  /// old one exists (the core does the same: MoveLegacyDataDir in
+  /// core/internal/config).
+  static void moveLegacyDataDir(String dir) {
+    final sep = Platform.pathSeparator;
+    final cut = dir.lastIndexOf(sep);
+    if (cut < 0) return;
+    final old = legacyFolders[dir.substring(cut + 1)];
+    if (old == null) return;
+    final legacy = Directory('${dir.substring(0, cut)}$sep$old');
+    try {
+      if (FileSystemEntity.typeSync(dir, followLinks: false) !=
+              FileSystemEntityType.notFound ||
+          !legacy.existsSync()) {
+        return;
+      }
+      legacy.renameSync(dir);
+    } on FileSystemException {
+      // The old folder stays; the app starts with a new one.
+    }
   }
 
   /// [dataDir] without the file system, for tests.
@@ -109,7 +143,7 @@ abstract final class CoreLocator {
     final home = env['HOME'] ?? env['USERPROFILE'] ?? exeDir;
     return switch (os) {
       'macos' => '$home/Library/Application Support/$appFolder',
-      _ => '${env['XDG_DATA_HOME'] ?? '$home/.local/share'}/firefox-vpn-client',
+      _ => '${env['XDG_DATA_HOME'] ?? '$home/.local/share'}/$linuxFolder',
     };
   }
 

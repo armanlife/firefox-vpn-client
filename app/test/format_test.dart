@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:firefox_vpn/l10n/app_localizations.dart';
-import 'package:firefox_vpn/ui/format.dart';
+import 'package:arman_vpn/l10n/app_localizations.dart';
+import 'package:arman_vpn/ui/format.dart';
 
 void main() {
   test('converts Gregorian dates to Jalali', () {

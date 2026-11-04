@@ -21,7 +21,7 @@ const firefoxAccountSignUpUrl = 'https://accounts.firefox.com/';
 const firefoxAccountSetPasswordUrl =
     'https://accounts.firefox.com/reset_password/';
 
-/// The program's logo, Mozilla VPN's tile (assets/logo.png, made by
+/// The program's logo, its tile (assets/logo.png, made by
 /// tool/app_icons.py), [size] logical pixels square.
 class AppLogo extends StatelessWidget {
   const AppLogo({super.key, required this.size});

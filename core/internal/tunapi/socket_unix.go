@@ -17,8 +17,8 @@ import (
 // end); ExeName is its executable, which the app also carries beside its
 // core.
 const (
-	ServiceName = "firefox-vpn-tun"
-	ExeName     = "firefox-vpn-tun"
+	ServiceName = "arman-vpn-tun"
+	ExeName     = "arman-vpn-tun"
 )
 
 // ErrNoService means no service answers: it is not installed, or it is

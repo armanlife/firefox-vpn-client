@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
-	"github.com/armanlife/firefox-vpn-client/core/internal/securefile"
+	"github.com/armanlife/arman-vpn-client/core/internal/guardian"
+	"github.com/armanlife/arman-vpn-client/core/internal/securefile"
 )
 
 // Explicit opt-in only: refreshes the OAuth credentials of one stored

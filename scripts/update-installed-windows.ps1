@@ -1,6 +1,6 @@
 # Builds the Windows app and its core and puts them over the installed copy
 # (the Setup's per-user install, in the folder chosen at install time; by
-# default %LOCALAPPDATA%\Programs\Firefox VPN Client), to try a change
+# default %LOCALAPPDATA%\Programs\Arman VPN), to try a change
 # without making and running an installer:
 # - a running copy is closed first: the app by its process id, after which
 #   its core restores the system proxy and exits, as when the app quits;
@@ -10,7 +10,7 @@
 #   was connected;
 # - an installed TUN service is asked to replace itself with the new one,
 #   which it does when the build is signed with its key (the developer key
-#   in FIREFOX_VPN_SIGNING_KEY_FILE; scripts\signing-key.ps1). The core gets
+#   in ARMAN_VPN_SIGNING_KEY_FILE; scripts\signing-key.ps1). The core gets
 #   the same key: the app then installs only updates signed with it.
 # The version is "major.minor.patch" from app\pubspec.yaml, or -AppVersion: an
 # older one makes the app find the latest release as an update, to try the
@@ -27,12 +27,12 @@ $version = $match.Matches[0].Groups[1].Value
 if ($AppVersion) { $version = $AppVersion }
 
 # The install folder, from the Setup's uninstall entry (AppId in
-# app\windows\installer\firefox-vpn.iss).
+# app\windows\installer\arman-vpn.iss).
 $uninstallKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{6F3A2C1E-9B4D-4E7A-8C21-5D0F7B9E4A63}_is1'
 $dir = (Get-ItemProperty $uninstallKey -ErrorAction SilentlyContinue).InstallLocation
-if (-not $dir) { throw 'Firefox VPN is not installed for this user; run the Setup once' }
+if (-not $dir) { throw 'Arman VPN is not installed for this user; run the Setup once' }
 $dir = $dir.TrimEnd('\')
-$appExe = "$dir\firefox-vpn.exe"
+$appExe = "$dir\arman-vpn.exe"
 $dataDir = "$dir\user-data"
 
 # The same build as scripts\build-windows.ps1, the core into app\build.
@@ -53,11 +53,11 @@ $public = & "$PSScriptRoot\signing-key.ps1"
 Push-Location "$root\core"
 try {
     $env:APP_VERSION = $version
-    go generate ./cmd/firefox-vpn-core
+    go generate ./cmd/arman-vpn-core
     if ($LASTEXITCODE -ne 0) { throw 'go generate failed' }
-    $ldflags = "-s -w -X github.com/armanlife/firefox-vpn-client/core/internal/version.Current=$version"
-    if ($public) { $ldflags += " -X github.com/armanlife/firefox-vpn-client/core/internal/signing.Key=$public" }
-    go build -trimpath -ldflags $ldflags -o "$coreOut\firefox-vpn-core.exe" ./cmd/firefox-vpn-core
+    $ldflags = "-s -w -X github.com/armanlife/arman-vpn-client/core/internal/version.Current=$version"
+    if ($public) { $ldflags += " -X github.com/armanlife/arman-vpn-client/core/internal/signing.Key=$public" }
+    go build -trimpath -ldflags $ldflags -o "$coreOut\arman-vpn-core.exe" ./cmd/arman-vpn-core
     if ($LASTEXITCODE -ne 0) { throw 'go build failed' }
 } finally {
     Remove-Item Env:APP_VERSION -ErrorAction SilentlyContinue
@@ -90,13 +90,15 @@ function Get-Installed {
 }
 
 $running = @(Get-Installed)
-$appWasRunning = [bool]($running | Where-Object { $_.Path -ieq $appExe })
+# The app may still run under its name before 1.0.9.
+$appExes = @($appExe, "$dir\firefox-vpn.exe")
+$appWasRunning = [bool]($running | Where-Object { $_.Path -in $appExes })
 $wasOn = $false
 if ($running) {
     try { $wasOn = (Invoke-Core GET /status).state.phase -notin 'off', '' } catch {}
     # The app first: its core sees the end of its standard input, restores
     # the system proxy, and exits.
-    $running | Where-Object { $_.Path -ieq $appExe } | ForEach-Object { Stop-Process -Id $_.Id -Force }
+    $running | Where-Object { $_.Path -in $appExes } | ForEach-Object { Stop-Process -Id $_.Id -Force }
     $deadline = (Get-Date).AddSeconds(10)
     while ((Get-Installed) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 200 }
     $left = @(Get-Installed)
@@ -115,10 +117,10 @@ if ($LASTEXITCODE -ge 8) { throw "copying the app failed (robocopy $LASTEXITCODE
 # old icon, say) must not stay behind and be used.
 robocopy "$release\data" "$dir\data" /MIR /R:10 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "copying the app's assets failed (robocopy $LASTEXITCODE)" }
-robocopy $coreOut "$dir\core" firefox-vpn-core.exe firefox-vpn-tun.exe firefox-vpn-tun.exe.sig /R:10 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+robocopy $coreOut "$dir\core" arman-vpn-core.exe arman-vpn-tun.exe arman-vpn-tun.exe.sig /R:10 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "copying the core failed (robocopy $LASTEXITCODE)" }
-if (-not (Test-Path "$coreOut\firefox-vpn-tun.exe.sig")) {
-    Remove-Item "$dir\core\firefox-vpn-tun.exe.sig" -ErrorAction SilentlyContinue
+if (-not (Test-Path "$coreOut\arman-vpn-tun.exe.sig")) {
+    Remove-Item "$dir\core\arman-vpn-tun.exe.sig" -ErrorAction SilentlyContinue
 }
 Set-ItemProperty $uninstallKey -Name DisplayVersion -Value $version
 Write-Host "Installed $version in $dir"
@@ -126,9 +128,9 @@ Write-Host "Installed $version in $dir"
 # The installed TUN service, if any, replaces itself with the new one: the
 # app's core asks only when the service is older, and a test build keeps
 # the version. It refuses a build its key did not sign (then install it
-# again: core\firefox-vpn-tun.exe install, with the administrator prompt).
-if (Get-Service FirefoxVPNTun -ErrorAction SilentlyContinue) {
-    $p = Start-Process -FilePath "$dir\core\firefox-vpn-tun.exe" -ArgumentList update -Wait -PassThru -NoNewWindow -RedirectStandardError "$coreOut\tun-update.txt"
+# again: core\arman-vpn-tun.exe install, with the administrator prompt).
+if (Get-Service ArmanVPNTun -ErrorAction SilentlyContinue) {
+    $p = Start-Process -FilePath "$dir\core\arman-vpn-tun.exe" -ArgumentList update -Wait -PassThru -NoNewWindow -RedirectStandardError "$coreOut\tun-update.txt"
     $why = (Get-Content "$coreOut\tun-update.txt" -Raw -ErrorAction SilentlyContinue)
     if ($p.ExitCode -eq 0) { Write-Host 'The TUN service updated itself' }
     elseif ($why -match 'already this build') { Write-Host 'The TUN service is already this build' }

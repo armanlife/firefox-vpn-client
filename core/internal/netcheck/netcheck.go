@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/egress"
+	"github.com/armanlife/arman-vpn-client/core/internal/egress"
 )
 
 // Result is what a check found.

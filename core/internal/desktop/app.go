@@ -12,10 +12,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
-	"github.com/armanlife/firefox-vpn-client/core/internal/update"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/service"
+	"github.com/armanlife/arman-vpn-client/core/internal/update"
+	"github.com/armanlife/arman-vpn-client/core/internal/version"
 )
 
 // The app mode (-app) is the core process of the desktop app: the app
@@ -101,7 +101,7 @@ func ReportAppError(w io.Writer, err error) int {
 	f := classifyAppError(err)
 	fmt.Fprintf(w, "%s%s %s\n", appErrorPrefix, f.code, oneLine(f.detail))
 	if f.code == AppErrorAlreadyRunning {
-		fmt.Fprintf(w, "firefox-vpn-core: %s\n", oneLine(err.Error()))
+		fmt.Fprintf(w, "arman-vpn-core: %s\n", oneLine(err.Error()))
 	}
 	return f.exit
 }
@@ -162,6 +162,11 @@ func RunApp(paths service.DataPaths, verbose bool) error {
 	refreshTun := false
 	if exe, err := os.Executable(); err == nil {
 		appDir := update.AppDir(exe)
+		if update.HasApp(appDir) {
+			if err := update.Migrate(appDir); err != nil {
+				logx.Warn("app: moving the app from its old name failed err=%s", logx.Err(err))
+			}
+		}
 		if why := update.Supported(appDir, paths.Dir, version.Current); why == "" {
 			d.Updater = update.New(update.Options{DataDir: paths.Dir, AppDir: appDir, Current: version.Current, Transports: d.UpdateTransports})
 			last := d.Updater.Status().Last

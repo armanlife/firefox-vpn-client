@@ -1,34 +1,34 @@
 #!/usr/bin/env bash
-# Installs firefox-vpn-core as a systemd service on Linux, from the source
+# Installs arman-vpn-core as a systemd service on Linux, from the source
 # tree or from a prebuilt binary. The release's install.sh (at the repository
-# root) runs it with the downloaded binary and keeps it as the firefox-vpn
+# root) runs it with the downloaded binary and keeps it as the arman-vpn
 # command.
 #
 # The program and its data folder live together in INSTALL_DIR (portable
-# layout): INSTALL_DIR/firefox-vpn-core and INSTALL_DIR/user-data. Settings and
+# layout): INSTALL_DIR/arman-vpn-core and INSTALL_DIR/user-data. Settings and
 # accounts are managed from the web dashboard (default 127.0.0.1:10820) or
 # with the subcommands below.
 set -euo pipefail
 
-SERVICE_NAME="${SERVICE_NAME:-firefox-vpn}"
-SERVICE_USER="${SERVICE_USER:-firefox-vpn}"
-INSTALL_DIR="${INSTALL_DIR:-/opt/firefox-vpn}"
+SERVICE_NAME="${SERVICE_NAME:-arman-vpn}"
+SERVICE_USER="${SERVICE_USER:-arman-vpn}"
+INSTALL_DIR="${INSTALL_DIR:-/opt/arman-vpn}"
 BINARY="${BINARY:-}"
 PURGE="${PURGE:-0}"
-# How the help and the messages name this script (install.sh: firefox-vpn).
+# How the help and the messages name this script (install.sh: arman-vpn).
 SELF="${SELF:-$0}"
 UNIT_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-BIN_PATH="$INSTALL_DIR/firefox-vpn-core"
+BIN_PATH="$INSTALL_DIR/arman-vpn-core"
 DATA_DIR="$INSTALL_DIR/user-data"
 # update runs the release's installer, which downloads the newest core,
 # keeps the data folder (accounts, settings, logins), and replaces this
 # command too; RELEASES_URL/latest leads to the newest release's tag.
-INSTALLER_URL="${INSTALLER_URL:-https://raw.githubusercontent.com/armanlife/firefox-vpn-client/main/install.sh}"
-RELEASES_URL="${RELEASES_URL:-https://github.com/armanlife/firefox-vpn-client/releases}"
+INSTALLER_URL="${INSTALLER_URL:-https://raw.githubusercontent.com/armanlife/arman-vpn-client/main/install.sh}"
+RELEASES_URL="${RELEASES_URL:-https://github.com/armanlife/arman-vpn-client/releases}"
 
 # The command being run, for the messages.
 COMMAND_NAME="${1:-}"
-# The name people type (firefox-vpn), not the path.
+# The name people type (arman-vpn), not the path.
 NAME="$(basename "$SELF")"
 # Colors on a terminal (unless NO_COLOR is set): errors in red, the menu.
 if [ -t 2 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-}" != dumb ]; then
@@ -72,7 +72,7 @@ Commands:
 
 Environment:
   BINARY=path          Install this prebuilt binary instead of building from the source tree
-  INSTALL_DIR=dir      Program and data folder (default /opt/firefox-vpn)
+  INSTALL_DIR=dir      Program and data folder (default /opt/arman-vpn)
   SERVICE_NAME, SERVICE_USER
 
 The dashboard is at http://<address>:10820/app/. It opens to other devices only
@@ -100,12 +100,12 @@ build_binary() {
     cp "$BINARY" "$out"
     return
   fi
-  # Installed as the firefox-vpn command (install.sh), with no source tree.
-  [ -d "$(repo_root)/cmd/firefox-vpn-core" ] ||
+  # Installed as the arman-vpn command (install.sh), with no source tree.
+  [ -d "$(repo_root)/cmd/arman-vpn-core" ] ||
     die "no source tree to build from; to update, run: sudo $NAME update"
-  command -v go >/dev/null 2>&1 || die "Go is not installed; install Go or pass BINARY=path/to/firefox-vpn-core"
+  command -v go >/dev/null 2>&1 || die "Go is not installed; install Go or pass BINARY=path/to/arman-vpn-core"
   log "building from $(repo_root)"
-  (cd "$(repo_root)" && CGO_ENABLED=0 go build -trimpath -o "$out" ./cmd/firefox-vpn-core)
+  (cd "$(repo_root)" && CGO_ENABLED=0 go build -trimpath -o "$out" ./cmd/arman-vpn-core)
 }
 
 ensure_user() {
@@ -119,7 +119,7 @@ ensure_user() {
 write_unit() {
   cat >"$UNIT_FILE" <<EOF
 [Unit]
-Description=Firefox VPN SOCKS5 proxy and dashboard
+Description=Arman VPN SOCKS5 proxy and dashboard
 After=network-online.target
 Wants=network-online.target
 
@@ -147,9 +147,31 @@ run_as_service_user() {
   runuser -u "$SERVICE_USER" -- "$BIN_PATH" "$@"
 }
 
+# migrate_legacy: a service installed before 1.0.9, when the program was
+# called Firefox VPN (the unit, user, and folder firefox-vpn), takes the new
+# names with its data: accounts, settings, and logins stay. Only for the
+# default names.
+migrate_legacy() {
+  local old=firefox-vpn
+  [ "$SERVICE_NAME" = arman-vpn ] && [ -f "/etc/systemd/system/$old.service" ] || return 0
+  log "moving the service from its old name ($old)"
+  systemctl disable --now "$old.service" >/dev/null 2>&1 || true
+  rm -f "/etc/systemd/system/$old.service"
+  systemctl daemon-reload
+  if [ "$INSTALL_DIR" = /opt/arman-vpn ] && [ -d "/opt/$old" ] && [ ! -e "$INSTALL_DIR" ]; then
+    mv "/opt/$old" "$INSTALL_DIR"
+    rm -f "$INSTALL_DIR/$old-core"
+  fi
+  if [ "$SERVICE_USER" = arman-vpn ] && id "$old" >/dev/null 2>&1 && ! id "$SERVICE_USER" >/dev/null 2>&1; then
+    usermod -l "$SERVICE_USER" -d "$DATA_DIR" "$old"
+    groupmod -n "$SERVICE_USER" "$old" 2>/dev/null || true
+  fi
+}
+
 cmd_install() {
   need_root
   command -v systemctl >/dev/null 2>&1 || die "systemd is required"
+  migrate_legacy
   local tmp
   tmp="$(mktemp)"
   # The value now: the local variable is gone when the script exits.
@@ -220,12 +242,12 @@ cmd_update() {
 
 # cmd_uninstall removes the service. On a terminal it asks first, and
 # whether to delete the accounts and settings too (else PURGE=1 does); the
-# firefox-vpn command that install.sh made goes with it.
+# arman-vpn command that install.sh made goes with it.
 cmd_uninstall() {
   need_root
   if [ -t 0 ] && [ -t 1 ]; then
     local reply
-    printf '  Remove Firefox VPN from this server? [y/N] '
+    printf '  Remove Arman VPN from this server? [y/N] '
     read -r reply || reply=""
     case "$reply" in [yY]*) ;; *) printf '  Nothing removed.\n'; return 0 ;; esac
     printf '  Delete the accounts and settings too? [y/N] '
@@ -239,24 +261,24 @@ cmd_uninstall() {
     rm -rf "$INSTALL_DIR"
     userdel "$SERVICE_USER" >/dev/null 2>&1 || true
   fi
-  if [ "$SELF" = /usr/local/bin/firefox-vpn ]; then
+  if [ "$SELF" = /usr/local/bin/arman-vpn ]; then
     rm -f "$SELF"
   fi
   if [ "$PURGE" = "1" ]; then
-    done_ok "Firefox VPN is removed, with its accounts and settings."
+    done_ok "Arman VPN is removed, with its accounts and settings."
   else
-    done_ok "Firefox VPN is removed; its accounts and settings stay in $DATA_DIR."
+    done_ok "Arman VPN is removed; its accounts and settings stay in $DATA_DIR."
   fi
 }
 
 # cmd_status: a few lines: the service and its autostart from systemd, then
 # the core's own (proxy, account, data left). systemctl status
-# firefox-vpn has every detail.
+# arman-vpn has every detail.
 cmd_status() {
   local active since auto=off
   active="$(systemctl is-active "${SERVICE_NAME}.service" 2>/dev/null || true)"
   [ "$(systemctl is-enabled "${SERVICE_NAME}.service" 2>/dev/null || true)" != enabled ] || auto=on
-  printf '\n  %s%sFirefox VPN%s\n' "$BOLD" "$FOX" "$OFF"
+  printf '\n  %s%sArman VPN%s\n' "$BOLD" "$FOX" "$OFF"
   printf '  %s──────────────────────────────────────────────────────%s\n' "$DIM" "$OFF"
   if [ "$active" = active ]; then
     since="$(systemctl show -p ActiveEnterTimestamp --value "${SERVICE_NAME}.service" 2>/dev/null || true)"
@@ -304,7 +326,7 @@ cmd_panel_info() {
   user="$(dashboard_field username "$cfg")"
   port="${listen##*:}"
   host="${listen%:*}"
-  printf '\n  %s%sFirefox VPN panel%s\n' "$BOLD" "$FOX" "$OFF"
+  printf '\n  %s%sArman VPN panel%s\n' "$BOLD" "$FOX" "$OFF"
   printf '  %s──────────────────────────────────────────────────────%s\n' "$DIM" "$OFF"
   case "$host" in
     127.* | localhost | "[::1]")
@@ -369,7 +391,7 @@ menu() {
   # Back to the menu after each command, until 0.
   while :; do
     cmds=()
-    printf '\n  %s%sFirefox VPN%s\n' "$BOLD" "$FOX" "$OFF"
+    printf '\n  %s%sArman VPN%s\n' "$BOLD" "$FOX" "$OFF"
     printf '%s\n' "$rule"
     menu_state
     printf '%s\n' "$rule"

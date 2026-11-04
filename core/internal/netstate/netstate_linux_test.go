@@ -34,11 +34,11 @@ func TestLinuxDefaultRoutes(t *testing.T) {
 // /proc lists with the system's; it is no network.
 func TestTheTunsDefaultRouteIsNoNetwork(t *testing.T) {
 	zero := strings.Repeat("0", 32)
-	tun := strings.Fields(zero + " 00 " + zero + " 00 " + zero + " 00000400 00000001 00000000 00000001 firefox-vpn")
-	if !parseRoute6(tun, "") || parseRoute6(tun, "firefox-vpn") {
+	tun := strings.Fields(zero + " 00 " + zero + " 00 " + zero + " 00000400 00000001 00000000 00000001 arman-vpn")
+	if !parseRoute6(tun, "") || parseRoute6(tun, "arman-vpn") {
 		t.Fatal("the TUN's default route is not told apart")
 	}
-	if parseRoute4(strings.Fields("firefox-vpn	00000000	00000000	0001	0	0	0	00000000	0	0	0"), "firefox-vpn") {
+	if parseRoute4(strings.Fields("arman-vpn	00000000	00000000	0001	0	0	0	00000000	0	0	0"), "arman-vpn") {
 		t.Fatal("the TUN's IPv4 default route counts")
 	}
 }

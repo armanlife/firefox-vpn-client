@@ -13,22 +13,22 @@ import (
 
 	"golang.org/x/term"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/desktop"
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/service"
-	"github.com/armanlife/firefox-vpn-client/core/internal/update"
-	"github.com/armanlife/firefox-vpn-client/core/internal/version"
+	"github.com/armanlife/arman-vpn-client/core/internal/desktop"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/service"
+	"github.com/armanlife/arman-vpn-client/core/internal/update"
+	"github.com/armanlife/arman-vpn-client/core/internal/version"
 )
 
 func main() {
 	flag.Usage = func() {
 		out := flag.CommandLine.Output()
-		fmt.Fprintln(out, "Usage: firefox-vpn-core [-data-dir DIR] [-plain] [-verbose]")
-		fmt.Fprintln(out, "       firefox-vpn-core -tray [-data-dir DIR]")
-		fmt.Fprintln(out, "       firefox-vpn-core -app [-data-dir DIR] [-verbose]   (started by the desktop app)")
-		fmt.Fprintln(out, "       firefox-vpn-core -update -data-dir DIR   (a copy started by the app's core, to install an update)")
-		fmt.Fprintln(out, "       firefox-vpn-core -add-account | -list-accounts | -panel [-data-dir DIR]")
-		fmt.Fprintln(out, "       firefox-vpn-core -setup-server USERNAME [-data-dir DIR]   (install.sh, new Linux servers)")
+		fmt.Fprintln(out, "Usage: arman-vpn-core [-data-dir DIR] [-plain] [-verbose]")
+		fmt.Fprintln(out, "       arman-vpn-core -tray [-data-dir DIR]")
+		fmt.Fprintln(out, "       arman-vpn-core -app [-data-dir DIR] [-verbose]   (started by the desktop app)")
+		fmt.Fprintln(out, "       arman-vpn-core -update -data-dir DIR   (a copy started by the app's core, to install an update)")
+		fmt.Fprintln(out, "       arman-vpn-core -add-account | -list-accounts | -panel [-data-dir DIR]")
+		fmt.Fprintln(out, "       arman-vpn-core -setup-server USERNAME [-data-dir DIR]   (install.sh, new Linux servers)")
 		fmt.Fprintln(out)
 		fmt.Fprintln(out, "Without a command, runs the proxy service and its web dashboard (default")
 		fmt.Fprintln(out, "http://127.0.0.1:10820) with a status screen in the terminal (-plain prints the")
@@ -45,7 +45,7 @@ func main() {
 		fmt.Fprintln(out)
 		flag.PrintDefaults()
 	}
-	dataDir := flag.String("data-dir", "", "Data folder (default: the desktop app's folder when the core sits beside firefox-vpn(.exe), else the \"user-data\" folder next to the executable)")
+	dataDir := flag.String("data-dir", "", "Data folder (default: the desktop app's folder when the core sits beside arman-vpn(.exe), else the \"user-data\" folder next to the executable)")
 	addAccount := flag.Bool("add-account", false, "Sign in on the terminal and add the account, then exit")
 	listAccounts := flag.Bool("list-accounts", false, "List the accounts with status and quota, then exit")
 	status := flag.Bool("status", false, "Print the running service's proxy state, account, and data left in a few lines, then exit")
@@ -185,10 +185,10 @@ func runCommand(opts commandOptions) error {
 
 // appInTerminalHint tells someone who typed -app what that mode is for: it
 // waits for the desktop app to turn the proxy on.
-const appInTerminalHint = `firefox-vpn-core: -app is the desktop app's mode: the proxy stays off until the
+const appInTerminalHint = `arman-vpn-core: -app is the desktop app's mode: the proxy stays off until the
 app or the panel's power button turns it on, the log goes to user-data/logs
 only, and closing this terminal stops it. In a terminal or as a service, run
-firefox-vpn-core without -app: the proxy is on from the start (-plain prints
+arman-vpn-core without -app: the proxy is on from the start (-plain prints
 the log).`
 
 // runConsole runs the service in the terminal until Ctrl+C or SIGTERM.

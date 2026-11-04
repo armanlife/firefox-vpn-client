@@ -45,7 +45,7 @@ func showIntro() {
 	if r, _, _ := attachConsole.Call(attachParentProcess); r == 0 {
 		// One window at a time: should Enter still reach Explorer and open
 		// the file again, the second copy shows nothing.
-		name, _ := windows.UTF16PtrFromString(`Local\FirefoxVPNTunIntro`)
+		name, _ := windows.UTF16PtrFromString(`Local\ArmanVPNTunIntro`)
 		mutex, err := windows.CreateMutex(nil, false, name)
 		if err == windows.ERROR_ALREADY_EXISTS {
 			return
@@ -70,7 +70,7 @@ func showIntro() {
 		color = windows.SetConsoleMode(h, mode|windows.ENABLE_VIRTUAL_TERMINAL_PROCESSING|windows.ENABLE_PROCESSED_OUTPUT) == nil
 	}
 	if own {
-		_, _ = out.WriteString("\x1b]0;Firefox VPN TUN service\x07")
+		_, _ = out.WriteString("\x1b]0;Arman VPN TUN service\x07")
 		// A new console window opens behind the window that was in front
 		// (Explorer), which then gets the Enter meant for it and opens
 		// the file again: bring it to the front. Explorer started this

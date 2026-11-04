@@ -1,4 +1,4 @@
-// Package tunservice is the TUN service (cmd/firefox-vpn-tun): it serves
+// Package tunservice is the TUN service (cmd/arman-vpn-tun): it serves
 // the tunapi protocol on the service's channel and runs one TUN session at
 // a time, for the core that opened it, until that core closes it or its
 // connection ends. Every TCP flow goes to the core's SOCKS5 server on
@@ -14,10 +14,10 @@ import (
 	"net/netip"
 	"sync"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/logx"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tun"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunapi"
-	"github.com/armanlife/firefox-vpn-client/core/internal/tunstack"
+	"github.com/armanlife/arman-vpn-client/core/internal/logx"
+	"github.com/armanlife/arman-vpn-client/core/internal/tun"
+	"github.com/armanlife/arman-vpn-client/core/internal/tunapi"
+	"github.com/armanlife/arman-vpn-client/core/internal/tunstack"
 )
 
 // adapterMTU is the TUN adapter's MTU; AdapterName (adapter_*.go) its name.

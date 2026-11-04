@@ -1,4 +1,4 @@
-/* Firefox VPN dashboard. Dark by default; light follows the system or the
+/* Arman VPN dashboard. Dark by default; light follows the system or the
    theme switch (data-theme on <html>). */
 :root {
   --bg: #0b0d12;

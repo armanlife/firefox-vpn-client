@@ -7,13 +7,13 @@
 *.ipa
 *.dmg
 *.msix
-/core/cmd/firefox-vpn-core/firefox-vpn-core
-/core/firefox-vpn-core*
+/core/cmd/arman-vpn-core/arman-vpn-core
+/core/arman-vpn-core*
 # The Windows resources (icon, version) of the core and the TUN service,
-# made by the build: go generate ./cmd/firefox-vpn-core ./cmd/firefox-vpn-tun
-/core/cmd/firefox-vpn-core/rsrc_windows_*.syso
-/core/cmd/firefox-vpn-tun/rsrc_windows_*.syso
-/core/cmd/firefox-vpn-tun/firefox-vpn-tun
+# made by the build: go generate ./cmd/arman-vpn-core ./cmd/arman-vpn-tun
+/core/cmd/arman-vpn-core/rsrc_windows_*.syso
+/core/cmd/arman-vpn-tun/rsrc_windows_*.syso
+/core/cmd/arman-vpn-tun/arman-vpn-tun
 # Update signing keys (tools/sign) never go into the repository.
 *.signing-key
 # gomobile's output for the Android app (core.aar, core-sources.jar),

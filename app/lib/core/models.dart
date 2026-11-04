@@ -269,7 +269,7 @@ abstract final class Failure {
 }
 
 /// The TUN mode's state (core/internal/service/tun.go): the TUN service
-/// (core/cmd/firefox-vpn-tun) carries every app's traffic to the core.
+/// (core/cmd/arman-vpn-tun) carries every app's traffic to the core.
 class TunState {
   TunState.fromJson(Map<String, Object?> j)
     : state = _str(j['state']),

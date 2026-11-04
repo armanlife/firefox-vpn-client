@@ -10,7 +10,7 @@ class AppLocalizationsTr extends AppLocalizations {
   AppLocalizationsTr([String locale = 'tr']) : super(locale);
 
   @override
-  String get appTitle => 'Firefox VPN';
+  String get appTitle => 'Arman VPN';
 
   @override
   String get navOverview => 'Genel bakış';
@@ -1412,7 +1412,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tunBusy =>
-      'Firefox VPN\'in başka bir kopyası TUN modunu kullanıyor.';
+      'Arman VPN\'in başka bir kopyası TUN modunu kullanıyor.';
 
   @override
   String get tunNoDriver =>
@@ -1439,11 +1439,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tunInstallPrompt =>
-      'Firefox VPN, TUN modu için hizmeti yüklemek istiyor.';
+      'Arman VPN, TUN modu için hizmeti yüklemek istiyor.';
 
   @override
   String get tunRemovePrompt =>
-      'Firefox VPN, TUN modunun hizmetini kaldırmak istiyor.';
+      'Arman VPN, TUN modunun hizmetini kaldırmak istiyor.';
 
   @override
   String tunRemoveFailed(String error) {

@@ -11,9 +11,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/armanlife/firefox-vpn-client/core/internal/accounts"
-	"github.com/armanlife/firefox-vpn-client/core/internal/fxa"
-	"github.com/armanlife/firefox-vpn-client/core/internal/guardian"
+	"github.com/armanlife/arman-vpn-client/core/internal/accounts"
+	"github.com/armanlife/arman-vpn-client/core/internal/fxa"
+	"github.com/armanlife/arman-vpn-client/core/internal/guardian"
 )
 
 // Failure codes say why a connection through Mozilla failed, so the apps
@@ -30,7 +30,7 @@ const (
 	FailureUnreachable = "unreachable"
 	// FailureInsideVPN: as unreachable, on a device whose own internet
 	// already leaves through a VPN's exit (Fastly's network: another
-	// Firefox VPN, on this device or one whose proxy it uses), which lets
+	// Arman VPN, on this device or one whose proxy it uses), which lets
 	// only web ports through, not Mozilla's proxy port.
 	FailureInsideVPN = "inside_vpn"
 	// FailureUpstreamProxy: as unreachable, through the user's own SOCKS5

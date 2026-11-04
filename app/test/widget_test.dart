@@ -3,20 +3,20 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:firefox_vpn/app_info.dart';
-import 'package:firefox_vpn/app_settings.dart';
-import 'package:firefox_vpn/core/core_api.dart';
-import 'package:firefox_vpn/core/core_controller.dart';
-import 'package:firefox_vpn/core/models.dart';
-import 'package:firefox_vpn/core/tun_service.dart';
-import 'package:firefox_vpn/core/updates.dart';
-import 'package:firefox_vpn/desktop/close_dialog.dart';
-import 'package:firefox_vpn/l10n/app_localizations.dart';
-import 'package:firefox_vpn/ui/app.dart';
-import 'package:firefox_vpn/ui/settings_page.dart'
+import 'package:arman_vpn/app_info.dart';
+import 'package:arman_vpn/app_settings.dart';
+import 'package:arman_vpn/core/core_api.dart';
+import 'package:arman_vpn/core/core_controller.dart';
+import 'package:arman_vpn/core/models.dart';
+import 'package:arman_vpn/core/tun_service.dart';
+import 'package:arman_vpn/core/updates.dart';
+import 'package:arman_vpn/desktop/close_dialog.dart';
+import 'package:arman_vpn/l10n/app_localizations.dart';
+import 'package:arman_vpn/ui/app.dart';
+import 'package:arman_vpn/ui/settings_page.dart'
     show SettingsGroup, pickProgramFile;
-import 'package:firefox_vpn/ui/signin_dialog.dart';
-import 'package:firefox_vpn/ui/widgets.dart';
+import 'package:arman_vpn/ui/signin_dialog.dart';
+import 'package:arman_vpn/ui/widgets.dart';
 
 Map<String, Object?> _account(
   String id,
@@ -437,7 +437,7 @@ void main() {
     final core = CoreController(
       () async => throw const CoreUnavailable(
         CoreProblem.noCore,
-        'C:/x/firefox-vpn-core.exe',
+        'C:/x/arman-vpn-core.exe',
       ),
       pollInterval: const Duration(hours: 1),
     );
@@ -448,7 +448,7 @@ void main() {
     expect(find.text("Can't reach the core"), findsOneWidget);
     expect(
       find.text(
-        'The core program was not found next to the app (C:/x/firefox-vpn-core.exe).',
+        'The core program was not found next to the app (C:/x/arman-vpn-core.exe).',
       ),
       findsOneWidget,
     );
@@ -2547,7 +2547,7 @@ void main() {
       // The reason macOS' prompt shows, in the app's language.
       expect(
         service.prompt,
-        'Firefox VPN wants to install the service for TUN mode.',
+        'Arman VPN wants to install the service for TUN mode.',
       );
       expect(api.mode, 'tun');
       api.tun = {'state': 'on', 'installed': true};
@@ -2620,7 +2620,7 @@ void main() {
       expect(service.removals, 1);
       expect(
         service.prompt,
-        'Firefox VPN wants to remove the service for TUN mode.',
+        'Arman VPN wants to remove the service for TUN mode.',
       );
       expect(find.text('The TUN service was removed.'), findsOneWidget);
       expect(api.tun?['installed'], isFalse);
@@ -2857,7 +2857,7 @@ void main() {
           'The TUN service is newer than this app. Update the app to use TUN mode.',
           null,
         ),
-        ('busy', 'Another copy of Firefox VPN is using TUN mode.', null),
+        ('busy', 'Another copy of Arman VPN is using TUN mode.', null),
         (
           'no_driver',
           "The system's TUN driver isn't available. Restart the computer and try again.",
@@ -2926,7 +2926,7 @@ class FakeTunService implements TunService {
   String? prompt;
 
   @override
-  String get executable => 'firefox-vpn-tun.exe';
+  String get executable => 'arman-vpn-tun.exe';
 
   @override
   Future<TunServiceResult> install({String? prompt}) async {
