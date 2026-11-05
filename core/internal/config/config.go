@@ -241,6 +241,10 @@ type Network struct {
 	// (scripts/relay: a Cloudflare Worker or a PHP file). The VPN traffic
 	// never uses it.
 	APIRelay string `json:"api_relay"`
+	// APIRelayEnabled uses APIRelay (APIRelayInUse): while off, the address
+	// stays set and the requests go directly. On by default, so a relay set
+	// before this setting existed stays in use.
+	APIRelayEnabled bool `json:"api_relay_enabled"`
 	// APIRelayECH hides the relay's name from the network with Encrypted
 	// Client Hello (TLS 1.3): "on" (or empty: with ECH when the relay's
 	// name has a key, otherwise without; a relay on Cloudflare, a Worker,
@@ -320,6 +324,7 @@ func Default() Config {
 			Listen:  DefaultDashboardListen,
 		},
 		Network: Network{
+			APIRelayEnabled:  true,
 			APIRelayECH:      RelayECHOn,
 			GuardianEndpoint: guardian.DefaultEndpoint,
 			HelloSplit:       hellosplit.Off,
@@ -482,6 +487,15 @@ func (n Network) UpstreamProxyInUse() string {
 		return ""
 	}
 	return n.UpstreamProxy
+}
+
+// APIRelayInUse is the relay the control-plane requests may use: empty
+// while network.api_relay_enabled is off.
+func (n Network) APIRelayInUse() string {
+	if !n.APIRelayEnabled {
+		return ""
+	}
+	return n.APIRelay
 }
 
 // SettleUpstreamProxy is the upstream proxy as a client saved it over prev:

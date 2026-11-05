@@ -856,6 +856,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get apiRelay => '中继服务器';
 
   @override
+  String get apiRelayUse => '使用中继服务器';
+
+  @override
   String get apiRelayHint =>
       '你自己的 Cloudflare Worker，或你自己主机上的 relay.php。\n仅在 Mozilla 无法直接应答时使用：登录、账户和服务器列表经过它，VPN 流量不经过。';
 
@@ -998,6 +1001,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String updateCheckFailed(String error) {
     return '无法检查更新：$error';
   }
+
+  @override
+  String get updateCheckNoNetwork => '无法连接到 GitHub。请检查网络连接后重试。';
 
   @override
   String get updateNow => '更新';
@@ -2349,6 +2355,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get apiRelay => '中繼伺服器';
 
   @override
+  String get apiRelayUse => '使用中繼伺服器';
+
+  @override
   String get apiRelayHint =>
       '你自己的 Cloudflare Worker，或你自己主機上的 relay.php。\n僅在 Mozilla 無法直接回應時使用：登入、帳戶和伺服器清單經過它，VPN 流量不經過。';
 
@@ -2491,6 +2500,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String updateCheckFailed(String error) {
     return '無法檢查更新：$error';
   }
+
+  @override
+  String get updateCheckNoNetwork => '無法連線到 GitHub。請檢查網路連線後再試一次。';
 
   @override
   String get updateNow => '更新';

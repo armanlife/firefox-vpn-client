@@ -429,32 +429,134 @@ func (r *Resolver) dial(ctx context.Context, wait time.Duration, network, addres
 	}
 	ctx, cancel := limit()
 	defer cancel()
-	var lastErr error
-	for _, addr := range orderAddrs(result.Addrs) {
-		conn, err := d.DialContext(ctx, network, net.JoinHostPort(addr.String(), port))
-		if err == nil {
-			return conn, nil
-		}
-		lastErr = err
-		if ctx.Err() != nil {
-			break
-		}
-	}
-	return nil, lastErr
+	return dialRace(ctx, d.DialContext, network, port, orderAddrs(result.Addrs), dialStagger)
 }
 
-// orderAddrs puts IPv4 addresses first; IPv6 is often unusable on the
-// networks this program targets.
-func orderAddrs(addrs []netip.Addr) []netip.Addr {
-	out := make([]netip.Addr, 0, len(addrs))
-	for _, a := range addrs {
-		if a.Is4() {
-			out = append(out, a)
+const (
+	// dialStagger is how long a connection waits on one of a name's
+	// addresses before it tries the next one too (Happy Eyeballs, RFC 8305).
+	// Some networks drop a few of a name's addresses without an answer:
+	// waiting on such an address for the whole timeout would fail the
+	// sign-in and the pass renewal whenever DNS listed it first.
+	dialStagger = 300 * time.Millisecond
+
+	// failedAddrFor is how long an address that refused or failed a
+	// connection goes to the end of its name's list.
+	failedAddrFor = 10 * time.Minute
+)
+
+// failedAddrs maps a netip.Addr to the time until which it goes last.
+var failedAddrs sync.Map
+
+func addrFailed(a netip.Addr) bool {
+	v, ok := failedAddrs.Load(a)
+	if !ok {
+		return false
+	}
+	if time.Now().After(v.(time.Time)) {
+		failedAddrs.Delete(a)
+		return false
+	}
+	return true
+}
+
+type dialFunc func(ctx context.Context, network, address string) (net.Conn, error)
+
+// dialRace connects to the first of addrs that answers: it starts with the
+// first, and starts the next one at once when an attempt fails, or after
+// stagger while the earlier ones have not answered. The attempts still
+// running when one connects are cancelled, and closed if they connect
+// anyway.
+func dialRace(ctx context.Context, dial dialFunc, network, port string, addrs []netip.Addr, stagger time.Duration) (net.Conn, error) {
+	if len(addrs) == 0 {
+		return nil, errors.New("no addresses to connect to")
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	type result struct {
+		conn net.Conn
+		err  error
+		addr netip.Addr
+	}
+	results := make(chan result, len(addrs))
+	started, running := 0, 0
+	start := func() {
+		a := addrs[started]
+		started++
+		running++
+		go func() {
+			conn, err := dial(ctx, network, net.JoinHostPort(a.String(), port))
+			results <- result{conn, err, a}
+		}()
+	}
+	finish := func() {
+		cancel()
+		go func(n int) {
+			for ; n > 0; n-- {
+				if r := <-results; r.conn != nil {
+					r.conn.Close()
+				}
+			}
+		}(running)
+	}
+
+	start()
+	next := time.NewTimer(stagger)
+	defer next.Stop()
+	var lastErr error
+	for {
+		select {
+		case r := <-results:
+			running--
+			if r.err == nil {
+				failedAddrs.Delete(r.addr)
+				finish()
+				return r.conn, nil
+			}
+			lastErr = r.err
+			if ctx.Err() != nil {
+				finish()
+				return nil, lastErr
+			}
+			failedAddrs.Store(r.addr, time.Now().Add(failedAddrFor))
+			if started < len(addrs) {
+				start()
+				next.Reset(stagger)
+			} else if running == 0 {
+				finish()
+				return nil, lastErr
+			}
+		case <-next.C:
+			if started < len(addrs) {
+				start()
+				next.Reset(stagger)
+			}
+		case <-ctx.Done():
+			// The time is up: an attempt still running ends at once, and its
+			// error (a dial timeout) is the one to give.
+			r := <-results
+			running--
+			if r.err == nil {
+				finish()
+				return r.conn, nil
+			}
+			finish()
+			return nil, r.err
 		}
 	}
-	for _, a := range addrs {
-		if !a.Is4() {
-			out = append(out, a)
+}
+
+// orderAddrs puts IPv4 addresses first, IPv6 being often unusable on the
+// networks this program targets, and the addresses that failed lately
+// last.
+func orderAddrs(addrs []netip.Addr) []netip.Addr {
+	out := make([]netip.Addr, 0, len(addrs))
+	for _, failed := range []bool{false, true} {
+		for _, v4 := range []bool{true, false} {
+			for _, a := range addrs {
+				if a.Is4() == v4 && addrFailed(a) == failed {
+					out = append(out, a)
+				}
+			}
 		}
 	}
 	return out

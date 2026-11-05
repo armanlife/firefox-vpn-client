@@ -880,6 +880,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get apiRelay => 'خادم الترحيل';
 
   @override
+  String get apiRelayUse => 'استخدام خادم الترحيل';
+
+  @override
   String get apiRelayHint =>
       'Cloudflare Worker الخاص بك، أو relay.php على استضافتك.\nيُستخدم فقط عندما لا تجيب Mozilla مباشرة: يمر عبره تسجيل الدخول والحسابات وقائمة الخوادم، لا حركة VPN.';
 
@@ -1033,6 +1036,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String updateCheckFailed(String error) {
     return 'تعذّر التحقق من التحديثات: $error';
   }
+
+  @override
+  String get updateCheckNoNetwork =>
+      'تعذّر الوصول إلى GitHub. تحقّق من اتصالك بالإنترنت وحاول مرة أخرى.';
 
   @override
   String get updateNow => 'تحديث';

@@ -881,6 +881,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get apiRelay => 'Server relay';
 
   @override
+  String get apiRelayUse => 'Gunakan server relay';
+
+  @override
   String get apiRelayHint =>
       'Cloudflare Worker milik Anda, atau relay.php di hosting Anda sendiri.\nHanya dipakai saat Mozilla tidak menjawab langsung: proses masuk, akun, dan daftar server melewatinya, bukan lalu lintas VPN.';
 
@@ -1027,6 +1030,10 @@ class AppLocalizationsId extends AppLocalizations {
   String updateCheckFailed(String error) {
     return 'Tidak dapat memeriksa pembaruan: $error';
   }
+
+  @override
+  String get updateCheckNoNetwork =>
+      'Tidak dapat menghubungi GitHub. Periksa koneksi internet Anda lalu coba lagi.';
 
   @override
   String get updateNow => 'Perbarui';

@@ -881,6 +881,9 @@ class AppLocalizationsAz extends AppLocalizations {
   String get apiRelay => 'Relay serveri';
 
   @override
+  String get apiRelayUse => 'Relay serverindən istifadə et';
+
+  @override
   String get apiRelayHint =>
       'Öz Cloudflare Worker-iniz və ya öz hostinqinizdəki relay.php.\nYalnız Mozilla birbaşa cavab vermədikdə istifadə olunur: ondan giriş, hesablar və server siyahısı keçir, VPN trafiki yox.';
 
@@ -1028,6 +1031,10 @@ class AppLocalizationsAz extends AppLocalizations {
   String updateCheckFailed(String error) {
     return 'Yeniləmələri yoxlamaq mümkün olmadı: $error';
   }
+
+  @override
+  String get updateCheckNoNetwork =>
+      'GitHub-a qoşulmaq mümkün olmadı. İnternet bağlantınızı yoxlayın və yenidən cəhd edin.';
 
   @override
   String get updateNow => 'Yenilə';

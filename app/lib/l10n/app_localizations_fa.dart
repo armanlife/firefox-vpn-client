@@ -875,6 +875,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get apiRelay => 'سرور رله';
 
   @override
+  String get apiRelayUse => 'استفاده از سرور رله';
+
+  @override
   String get apiRelayHint =>
       'Cloudflare Worker خودتان، یا فایل relay.php روی هاست خودتان.\nفقط وقتی موزیلا مستقیم جواب ندهد استفاده می‌شود: لاگین، حساب‌ها و لیست سرورها از آن عبور می‌کنند، نه ترافیک VPN.';
 
@@ -1021,6 +1024,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String updateCheckFailed(String error) {
     return 'بررسی به‌روزرسانی ممکن نشد: $error';
   }
+
+  @override
+  String get updateCheckNoNetwork =>
+      'اتصال به GitHub برقرار نشد. اتصال اینترنت را بررسی کنید و دوباره امتحان کنید.';
 
   @override
   String get updateNow => 'به‌روزرسانی';

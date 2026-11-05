@@ -881,6 +881,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get apiRelay => 'Máy chủ chuyển tiếp';
 
   @override
+  String get apiRelayUse => 'Dùng máy chủ chuyển tiếp';
+
+  @override
   String get apiRelayHint =>
       'Cloudflare Worker của riêng bạn, hoặc relay.php trên hosting của bạn.\nChỉ dùng khi Mozilla không trả lời trực tiếp: đăng nhập, tài khoản và danh sách máy chủ đi qua nó, không phải lưu lượng VPN.';
 
@@ -1026,6 +1029,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String updateCheckFailed(String error) {
     return 'Không thể kiểm tra cập nhật: $error';
   }
+
+  @override
+  String get updateCheckNoNetwork =>
+      'Không thể kết nối tới GitHub. Hãy kiểm tra kết nối internet và thử lại.';
 
   @override
   String get updateNow => 'Cập nhật';

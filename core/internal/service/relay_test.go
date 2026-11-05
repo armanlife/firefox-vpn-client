@@ -35,7 +35,15 @@ func TestAPIRelayKeepsOtherTransports(t *testing.T) {
 		t.Fatal("no relay must leave the fixture in place")
 	}
 
+	// Turned off (network.api_relay_enabled), the address stays unused.
 	if err := configureAPIRelay(config.Network{APIRelay: "https://relay.example/?secret=k"}); err != nil {
+		t.Fatal(err)
+	}
+	if controlplane.Transport() != (http.RoundTripper)(fixture) || apiRelayTransport != nil {
+		t.Fatal("a relay turned off must not be installed")
+	}
+
+	if err := configureAPIRelay(config.Network{APIRelay: "https://relay.example/?secret=k", APIRelayEnabled: true}); err != nil {
 		t.Fatal(err)
 	}
 	if controlplane.Transport() == (http.RoundTripper)(fixture) || controlplane.Transport() != apiRelayTransport {
@@ -50,7 +58,7 @@ func TestAPIRelayKeepsOtherTransports(t *testing.T) {
 	if apiRelayTransport != nil {
 		t.Fatal("no relay is recorded")
 	}
-	if err := configureAPIRelay(config.Network{APIRelay: "http://relay.example/"}); err == nil {
+	if err := configureAPIRelay(config.Network{APIRelay: "http://relay.example/", APIRelayEnabled: true}); err == nil {
 		t.Fatal("a plain-http relay must be refused")
 	}
 }

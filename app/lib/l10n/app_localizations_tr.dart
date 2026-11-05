@@ -881,6 +881,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get apiRelay => 'Aktarma sunucusu';
 
   @override
+  String get apiRelayUse => 'Aktarma sunucusunu kullan';
+
+  @override
   String get apiRelayHint =>
       'Kendi Cloudflare Worker\'ınız veya kendi barındırmanızdaki relay.php.\nYalnızca Mozilla doğrudan yanıt vermediğinde kullanılır: ondan giriş, hesaplar ve sunucu listesi geçer, VPN trafiği geçmez.';
 
@@ -1027,6 +1030,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String updateCheckFailed(String error) {
     return 'Güncellemeler kontrol edilemedi: $error';
   }
+
+  @override
+  String get updateCheckNoNetwork =>
+      'GitHub\'a ulaşılamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.';
 
   @override
   String get updateNow => 'Güncelle';

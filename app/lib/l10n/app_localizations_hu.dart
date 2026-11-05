@@ -887,6 +887,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get apiRelay => 'Közvetítő szerver';
 
   @override
+  String get apiRelayUse => 'A továbbítószerver használata';
+
+  @override
   String get apiRelayHint =>
       'Saját Cloudflare Worker, vagy relay.php a saját tárhelyén.\nCsak akkor használatos, ha a Mozilla közvetlenül nem válaszol: a bejelentkezés, a fiókok és a szerverlista megy rajta keresztül, a VPN-forgalom nem.';
 
@@ -1035,6 +1038,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String updateCheckFailed(String error) {
     return 'Nem sikerült frissítéseket keresni: $error';
   }
+
+  @override
+  String get updateCheckNoNetwork =>
+      'A GitHub nem érhető el. Ellenőrizze az internetkapcsolatot, és próbálja újra.';
 
   @override
   String get updateNow => 'Frissítés';

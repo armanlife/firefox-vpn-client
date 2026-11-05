@@ -585,6 +585,11 @@
                 <div class="set-list">
                   <div class="set-row">
                     <span class="set-ic"><svg><use href="#i-swap"/></svg></span>
+                    <span class="set-text"><label for="f-relay-on">Use the relay server</label><small>Off: the address below stays, and the requests go only directly.</small></span>
+                    <span class="set-ctl"><label class="switch"><input type="checkbox" id="f-relay-on" name="network.api_relay_enabled"><span></span></label></span>
+                  </div>
+                  <div class="set-row">
+                    <span class="set-ic"><svg><use href="#i-swap"/></svg></span>
                     <span class="set-text"><label for="f-relay">Relay server</label><small>Your own Cloudflare Worker, or relay.php on your own host.<br>Used only when Mozilla doesn't answer directly: the sign-in, accounts, and server list go through it, not the VPN traffic.</small></span>
                     <span class="set-ctl"><input id="f-relay" name="network.api_relay" spellcheck="false" placeholder="https://relay.NAME.workers.dev/?secret=…"></span>
                   </div>

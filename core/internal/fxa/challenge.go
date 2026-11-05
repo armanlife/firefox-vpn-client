@@ -441,7 +441,9 @@ func installChallengeCookies(solverJar http.CookieJar, pageURL string) error {
 // contextWithMinDeadline returns a context with at least d of deadline left.
 // When the parent already has a longer deadline it is returned unchanged;
 // otherwise the deadline is extended while the parent's cancellation still
-// propagates.
+// propagates. The parent's deadline passing is not a cancellation: it is
+// the deadline being extended (a pass renewal's 15 s API timeout must not
+// cut a challenge solve that takes longer on a slow phone).
 func contextWithMinDeadline(ctx context.Context, d time.Duration) (context.Context, context.CancelFunc) {
 	if deadline, ok := ctx.Deadline(); ok && time.Until(deadline) >= d {
 		return ctx, func() {}
@@ -451,7 +453,9 @@ func contextWithMinDeadline(ctx context.Context, d time.Duration) (context.Conte
 	go func() {
 		select {
 		case <-ctx.Done():
-			cancel()
+			if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				cancel()
+			}
 		case <-watcherDone:
 		}
 	}()

@@ -13,6 +13,9 @@ import (
 	"net/url"
 	"time"
 
+	utls "github.com/refraction-networking/utls"
+
+	"github.com/armanlife/arman-vpn-client/core/internal/firefoxtls"
 	"github.com/armanlife/arman-vpn-client/core/internal/hellosplit"
 	"github.com/armanlife/arman-vpn-client/core/internal/resolver"
 )
@@ -20,6 +23,7 @@ import (
 const (
 	clientTimeout     = 30 * time.Second
 	dialTimeout       = 30 * time.Second
+	handshakeTimeout  = 10 * time.Second
 	errorBodyLogLimit = 16 * 1024
 )
 
@@ -28,11 +32,13 @@ const (
 // HTTP_PROXY and HTTPS_PROXY: another program's proxy left in the
 // environment (v2rayN's 127.0.0.1:10808), not running, refused every
 // sign-in and Guardian request, which then read as Mozilla being blocked.
-// The user's own relay is network.api_relay.
+// The user's own relay is network.api_relay. Its TLS starts with
+// Firefox's hello (firefoxTLS).
 var defaultTransport = func() *http.Transport {
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.Proxy = nil
 	t.DialContext = DialContext
+	t.DialTLSContext = firefoxTLS(DialContext, handshakeTimeout)
 	return t
 }()
 
@@ -52,8 +58,38 @@ func QuickTransport(wait time.Duration) *http.Transport {
 		}
 		return hellosplit.Wrap(conn), nil
 	}
+	t.DialTLSContext = firefoxTLS(t.DialContext, wait)
 	t.TLSHandshakeTimeout = wait
 	return t
+}
+
+// firefoxSessions lets a new connection to a server resume its TLS session.
+var firefoxSessions = utls.NewLRUClientSessionCache(64)
+
+// firefoxTLS connects with connect and completes TLS with desktop Firefox's
+// hello within wait, the way to Mozilla's servers looking like the Firefox
+// the User-Agent names (package firefoxtls). It offers HTTP/1.1 alone:
+// net/http speaks HTTP/2 only over its own TLS.
+func firefoxTLS(connect func(ctx context.Context, network, address string) (net.Conn, error), wait time.Duration) func(ctx context.Context, network, address string) (net.Conn, error) {
+	return func(ctx context.Context, network, address string) (net.Conn, error) {
+		raw, err := connect(ctx, network, address)
+		if err != nil {
+			return nil, err
+		}
+		host, _, err := net.SplitHostPort(address)
+		if err != nil {
+			raw.Close()
+			return nil, err
+		}
+		shakeCtx, cancel := context.WithTimeout(ctx, wait)
+		defer cancel()
+		conn, err := firefoxtls.Handshake(shakeCtx, raw, host, nil, firefoxSessions, "http/1.1")
+		if err != nil {
+			raw.Close()
+			return nil, err
+		}
+		return conn, nil
+	}
 }
 
 // DialContext connects through the configured resolver with a timeout; a

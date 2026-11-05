@@ -1641,6 +1641,12 @@ abstract class AppLocalizations {
   /// **'Relay server'**
   String get apiRelay;
 
+  /// No description provided for @apiRelayUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the relay server'**
+  String get apiRelayUse;
+
   /// No description provided for @apiRelayHint.
   ///
   /// In en, this message translates to:
@@ -1904,6 +1910,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not check for updates: {error}'**
   String updateCheckFailed(String error);
+
+  /// The update check could not reach GitHub (no connection, a timeout, or a refused TLS handshake).
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach GitHub. Check your internet connection and try again.'**
+  String get updateCheckNoNetwork;
 
   /// No description provided for @updateNow.
   ///

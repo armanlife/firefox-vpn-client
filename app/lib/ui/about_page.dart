@@ -49,7 +49,15 @@ class _AboutPageState extends State<AboutPage> {
             : l.updateAvailable(release.version);
       });
     } on Exception catch (e) {
-      if (mounted) setState(() => _result = l.updateCheckFailed('$e'));
+      // No connection, a timeout, or a refused handshake: say so in words,
+      // not as the exception's text.
+      final network = e is SocketException ||
+          e is TimeoutException ||
+          e is TlsException;
+      if (mounted) {
+        setState(() => _result =
+            network ? l.updateCheckNoNetwork : l.updateCheckFailed('$e'));
+      }
     } finally {
       if (mounted) setState(() => _checking = false);
     }

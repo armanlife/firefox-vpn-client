@@ -883,6 +883,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get apiRelay => 'Сервер-ретранслятор';
 
   @override
+  String get apiRelayUse => 'Использовать сервер-ретранслятор';
+
+  @override
   String get apiRelayHint =>
       'Ваш собственный Cloudflare Worker или relay.php на вашем хостинге.\nИспользуется, только когда Mozilla не отвечает напрямую: через него идут вход, аккаунты и список серверов, а не трафик VPN.';
 
@@ -1029,6 +1032,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String updateCheckFailed(String error) {
     return 'Не удалось проверить обновления: $error';
   }
+
+  @override
+  String get updateCheckNoNetwork =>
+      'Не удалось связаться с GitHub. Проверьте подключение к интернету и попробуйте ещё раз.';
 
   @override
   String get updateNow => 'Обновить';

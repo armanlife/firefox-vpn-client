@@ -57,6 +57,26 @@ func TestLoadKeepsDefaultsForOmittedFields(t *testing.T) {
 	}
 }
 
+// A relay set before network.api_relay_enabled existed stays in use; one
+// turned off keeps its address.
+func TestRelayEnabledByDefault(t *testing.T) {
+	path := filepath.Join(t.TempDir(), FileName)
+	if err := os.WriteFile(path, []byte(`{"network":{"api_relay":"https://relay.example/"}}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cfg, _, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Network.APIRelayInUse() != "https://relay.example/" {
+		t.Fatalf("a relay without the switch must stay in use: %+v", cfg.Network)
+	}
+	cfg.Network.APIRelayEnabled = false
+	if cfg.Network.APIRelayInUse() != "" || cfg.Network.APIRelay == "" {
+		t.Fatalf("turned off: %+v", cfg.Network)
+	}
+}
+
 func TestLoadRejectsInvalidConfig(t *testing.T) {
 	for name, body := range map[string]string{
 		"country and server":     `{"proxy":{"country":"US","server":"us.example:443"}}`,

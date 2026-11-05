@@ -887,6 +887,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get apiRelay => 'Servidor de retransmisión';
 
   @override
+  String get apiRelayUse => 'Usar el servidor de retransmisión';
+
+  @override
   String get apiRelayHint =>
       'Su propio Cloudflare Worker, o relay.php en su propio alojamiento.\nSolo se usa cuando Mozilla no responde directamente: el inicio de sesión, las cuentas y la lista de servidores pasan por él, no el tráfico de la VPN.';
 
@@ -1033,6 +1036,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String updateCheckFailed(String error) {
     return 'No se pudieron buscar actualizaciones: $error';
   }
+
+  @override
+  String get updateCheckNoNetwork =>
+      'No se pudo conectar con GitHub. Comprueba tu conexión a internet e inténtalo de nuevo.';
 
   @override
   String get updateNow => 'Actualizar';

@@ -637,9 +637,21 @@ class _SettingsPageState extends State<SettingsPage> {
   /// for the sign-in, accounts, and server list (network.api_relay). The
   /// core hides its name with Encrypted Client Hello by itself where the
   /// relay's name has a key (network.api_relay_ech, config.json only).
+  /// The switch (network.api_relay_enabled) keeps the address while the
+  /// requests go directly; without an address it stays off.
   Widget _bypass(AppLocalizations l) => Panel(
     title: l.sectionBypass,
     icon: Icons.shield_outlined,
+    trailing: Semantics(
+      label: l.apiRelayUse,
+      child: Switch(
+        value: _bool(['network', 'api_relay_enabled']) &&
+            _str(['network', 'api_relay']).isNotEmpty,
+        onChanged: _saving || _str(['network', 'api_relay']).isEmpty
+            ? null
+            : (on) => _save({['network', 'api_relay_enabled']: on}),
+      ),
+    ),
     child: _TextSetting(
       label: l.apiRelay,
       hint: l.apiRelayHint,

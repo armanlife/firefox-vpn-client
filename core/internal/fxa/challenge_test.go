@@ -29,6 +29,33 @@ func TestSolvePowFindsSuffix(t *testing.T) {
 	}
 }
 
+// The parent's deadline passing does not end the extended context (a 15 s
+// API timeout must not cut a challenge solve); cancelling the parent does.
+func TestContextWithMinDeadlineOutlivesParentDeadline(t *testing.T) {
+	t.Parallel()
+
+	parent, cancelParent := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancelParent()
+	ctx, cancel := contextWithMinDeadline(parent, time.Minute)
+	defer cancel()
+	<-parent.Done()
+	select {
+	case <-ctx.Done():
+		t.Fatalf("extended context ended with its parent's deadline: %v", ctx.Err())
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	parent2, cancelParent2 := context.WithTimeout(context.Background(), time.Second)
+	ctx2, cancel2 := contextWithMinDeadline(parent2, time.Minute)
+	defer cancel2()
+	cancelParent2()
+	select {
+	case <-ctx2.Done():
+	case <-time.After(time.Second):
+		t.Fatal("extended context did not end when its parent was cancelled")
+	}
+}
+
 func TestSolvePowRejectsInvalidTarget(t *testing.T) {
 	t.Parallel()
 

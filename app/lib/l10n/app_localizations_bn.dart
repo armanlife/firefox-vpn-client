@@ -880,6 +880,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get apiRelay => 'রিলে সার্ভার';
 
   @override
+  String get apiRelayUse => 'রিলে সার্ভার ব্যবহার করুন';
+
+  @override
   String get apiRelayHint =>
       'আপনার নিজের Cloudflare Worker, অথবা আপনার হোস্টে relay.php।\nশুধু Mozilla সরাসরি উত্তর না দিলে ব্যবহৃত হয়: সাইন-ইন, অ্যাকাউন্ট ও সার্ভার তালিকা এর মধ্য দিয়ে যায়, VPN ট্রাফিক নয়।';
 
@@ -1025,6 +1028,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String updateCheckFailed(String error) {
     return 'আপডেট যাচাই করা যায়নি: $error';
   }
+
+  @override
+  String get updateCheckNoNetwork =>
+      'GitHub-এ পৌঁছানো যায়নি। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।';
 
   @override
   String get updateNow => 'আপডেট করুন';

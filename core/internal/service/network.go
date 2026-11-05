@@ -71,7 +71,7 @@ func configureAPIRelay(n config.Network) error {
 	if proxyAddress != "" {
 		logx.Info("connections to Mozilla and the control plane go through the upstream proxy=%s", proxyAddress)
 	}
-	raw := strings.TrimSpace(n.APIRelay)
+	raw := strings.TrimSpace(n.APIRelayInUse())
 	if raw == "" {
 		// Only a relay this function set is taken away: another transport
 		// (a test's fixture) stays, so starting a daemon never sends a

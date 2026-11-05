@@ -71,14 +71,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     return EXIT_SUCCESS;
   }
 
-  flutter::DartProject project(L"data");
-  // Impeller draws only a black window on a card below Direct3D 11.
-  if (OldGraphicsCard()) {
-    project.set_impeller_switch(flutter::ImpellerSwitch::Disabled);
-  }
-
   std::vector<std::string> command_line_arguments =
       GetCommandLineArguments();
+
+  flutter::DartProject project(L"data");
+  // The graphics card draws only a black window if it is below Direct3D 11;
+  // --software-rendering asks for the same on any other card.
+  if (OldGraphicsCard() ||
+      HasArgument(command_line_arguments, "--software-rendering")) {
+    project.set_impeller_switch(flutter::ImpellerSwitch::Disabled);
+    DrawWithoutGraphicsCard();
+  }
 
   const std::wstring key = InstanceKey(command_line_arguments);
   HANDLE instance_mutex =
