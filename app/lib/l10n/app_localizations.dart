@@ -1395,6 +1395,12 @@ abstract class AppLocalizations {
   /// **'The sign-in page could not be opened.'**
   String get browserSignInBroken;
 
+  /// No description provided for @browserSignInBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Mozilla did not complete the final step of adding the account (HTTP 406).'**
+  String get browserSignInBlocked;
+
   /// No description provided for @browserSignInFallback.
   ///
   /// In en, this message translates to:

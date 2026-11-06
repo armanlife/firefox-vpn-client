@@ -754,6 +754,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'No se pudo abrir la página de inicio de sesión.';
 
   @override
+  String get browserSignInBlocked =>
+      'Mozilla no completó el último paso para añadir la cuenta (HTTP 406).';
+
+  @override
   String get browserSignInFallback => 'Iniciar sesión con correo y contraseña';
 
   @override

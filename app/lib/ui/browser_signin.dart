@@ -37,15 +37,25 @@ Future<void> startAddAccount(
   String email = '',
 }) async {
   if (settings.signInMethod == SignInMethod.browser && browserSignInSupported) {
-    await Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute<void>(
-        builder: (_) => BrowserSignInPage(core: core, email: email),
-      ),
+    await _openBrowserSignIn(
+      Navigator.of(context, rootNavigator: true),
+      core,
+      email,
     );
   } else {
     await showSignInDialog(context, core, email: email);
   }
 }
+
+Future<void> _openBrowserSignIn(
+  NavigatorState navigator,
+  CoreController core,
+  String email,
+) => navigator.push<void>(
+  MaterialPageRoute(
+    builder: (_) => BrowserSignInPage(core: core, email: email),
+  ),
+);
 
 /// The sign-in page Firefox desktop opens for sync: with these parameters
 /// accounts.firefox.com reports the signed-in session over its WebChannel
@@ -397,9 +407,22 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
       if (!mounted || id != _signIn || !state.finished) return;
       _stopFollowing(cancel: false);
       final navigator = Navigator.of(context);
+      final page = ModalRoute.of(context);
+      final core = widget.core;
       // The dialog opens over the page below this one.
       navigator.pop();
-      await showSignInDialog(navigator.context, widget.core, started: state);
+      await showSignInDialog(
+        navigator.context,
+        core,
+        started: state,
+        onBrowserRetry: () async {
+          // Let the previous page release its WebView and proxy first.
+          await page?.completed;
+          if (navigator.mounted) {
+            await _openBrowserSignIn(navigator, core, state.email);
+          }
+        },
+      );
     } on Exception {
       // Asked again on the next tick.
     } finally {

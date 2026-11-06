@@ -750,6 +750,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get browserSignInBroken => 'Не удалось открыть страницу входа.';
 
   @override
+  String get browserSignInBlocked =>
+      'Mozilla не завершила последний шаг добавления аккаунта (HTTP 406).';
+
+  @override
   String get browserSignInFallback => 'Вход с почтой и паролем';
 
   @override

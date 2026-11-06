@@ -745,6 +745,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get browserSignInBroken => 'صفحه ورود باز نشد.';
 
   @override
+  String get browserSignInBlocked =>
+      'موزیلا درخواست نهایی افزودن حساب را نپذیرفت (خطای ۴۰۶).';
+
+  @override
   String get browserSignInFallback => 'ورود با ایمیل و رمز عبور';
 
   @override

@@ -212,6 +212,7 @@
   "signInMethodBrowser": "Tarayıcıyla giriş",
   "signInMethodApi": "Doğrudan giriş",
   "browserSignInBroken": "Giriş sayfası açılamadı.",
+  "browserSignInBlocked": "Mozilla, hesabı eklemenin son adımını tamamlamadı (HTTP 406).",
   "browserSignInFallback": "E-posta ve parola ile giriş",
   "backupExport": "Yedeği kaydet",
   "backupImport": "Yedeği içe aktar",

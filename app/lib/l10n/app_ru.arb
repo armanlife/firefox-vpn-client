@@ -212,6 +212,7 @@
   "signInMethodBrowser": "Вход через браузер",
   "signInMethodApi": "Прямой вход",
   "browserSignInBroken": "Не удалось открыть страницу входа.",
+  "browserSignInBlocked": "Mozilla не завершила последний шаг добавления аккаунта (HTTP 406).",
   "browserSignInFallback": "Вход с почтой и паролем",
   "backupExport": "Сохранить резервную копию",
   "backupImport": "Импортировать резервную копию",

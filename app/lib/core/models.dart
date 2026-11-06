@@ -634,6 +634,8 @@ abstract final class SignInError {
   static const tooManyCodes = 'too_many_codes';
   static const timedOut = 'timed_out';
   static const network = 'network';
+  static const blocked = 'blocked';
+  static const tokenBlocked = 'token_blocked';
 }
 
 class SignInState {

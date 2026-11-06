@@ -212,6 +212,7 @@
   "signInMethodBrowser": "Đăng nhập qua trình duyệt",
   "signInMethodApi": "Đăng nhập trực tiếp",
   "browserSignInBroken": "Không thể mở trang đăng nhập.",
+  "browserSignInBlocked": "Mozilla chưa hoàn tất bước cuối để thêm tài khoản (HTTP 406).",
   "browserSignInFallback": "Đăng nhập bằng email và mật khẩu",
   "backupExport": "Lưu bản sao lưu",
   "backupImport": "Nhập bản sao lưu",

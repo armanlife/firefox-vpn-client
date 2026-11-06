@@ -281,21 +281,16 @@ class _SwitchThresholdDialogState extends State<_SwitchThresholdDialog> {
 /// core's English for a reason the app does not know; null for none.
 /// [threshold] is the account-switch setting, in percent.
 String? accountReason(AppLocalizations l, Account a, double threshold) {
-  final time = a.retryAt == null ? null : formatTime(a.retryAt!.toLocal());
-  final detail = a.reasonDetail.isEmpty ? null : ltr(a.reasonDetail);
   final known = switch (a.reasonCode) {
     'quota_threshold' => l.reasonQuotaThreshold(
       (threshold > 0 ? threshold : 95).round(),
     ),
     'quota_exhausted' => l.reasonQuotaExhausted,
-    'signin_required' => l.reasonSignInRequired,
-    'signin_confirm' => l.reasonSignInConfirm,
-    'signin_failed' when detail != null => l.reasonSignInFailed(detail),
-    'signin_wait' when time != null => l.reasonSignInWait(time),
-    'signin_retry' when detail != null && time != null => l.reasonSignInRetry(
-      detail,
-      time,
-    ),
+    'signin_required' ||
+    'signin_confirm' ||
+    'signin_failed' ||
+    'signin_wait' ||
+    'signin_retry' => l.reasonSignInRequired,
     'not_entitled' => l.reasonNotEntitled,
     _ => null,
   };
@@ -536,25 +531,25 @@ class _AccountCard extends StatelessWidget {
                           Text(reason, style: muted),
                         ],
                         const SizedBox(height: 12),
-                        if (usage == null)
-                          Text(l.quotaNotRead, style: muted)
-                        else if (usage.unlimited)
+                        if (usage?.unlimited == true)
                           Text(l.unlimitedQuota, style: muted)
                         else ...[
                           QuotaBar(
-                            percent: a.usedPercent,
+                            percent: usage == null ? 0 : a.usedPercent,
                             threshold: threshold,
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            [
-                              l.usedOf(
-                                formatBytes(usage.usedBytes),
-                                formatBytes(usage.limitBytes),
-                              ),
-                              if (usage.resetAt != null)
-                                l.resets(formatDate(l, usage.resetAt!)),
-                            ].join(' · '),
+                            usage == null
+                                ? ltr('0 MB')
+                                : [
+                                    l.usedOf(
+                                      formatBytes(usage.usedBytes),
+                                      formatBytes(usage.limitBytes),
+                                    ),
+                                    if (usage.resetAt != null)
+                                      l.resets(formatDate(l, usage.resetAt!)),
+                                  ].join(' · '),
                             style: muted,
                           ),
                         ],

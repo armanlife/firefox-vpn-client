@@ -6,7 +6,7 @@ Read [architecture](ARCHITECTURE.md) for call boundaries and [sessions](SESSIONS
 
 | Credential | Used by | Source and storage |
 | --- | --- | --- |
-| Firefox Account password | Sign-in only | Typed in the dashboard or on the terminal; never stored |
+| Firefox Account password | User-initiated sign-in | Stored encrypted for **Sign in again** |
 | FxA session token | HAWK-authenticated sign-in steps and OAuth issuance | Created by sign-in; process memory only |
 | OAuth access token | Guardian API requests | FxA response; `user-data/accounts/<id>/credentials.json` |
 | OAuth refresh token | FxA refresh grant | Issued with offline access; stored with the access token |
@@ -33,7 +33,7 @@ The password's key stretching uses the email exactly as the account has it, so F
 
 An account can also come from a browser sign-in (`POST /signin/browser`): the app's webview shows accounts.firefox.com as Firefox desktop's sync sign-in (`context=fx_desktop_v3&service=sync`) and captures the session token from the page's `fxaccounts:login` WebChannel message, with every code and CAPTCHA handled in the page itself. The page sends that message right after the password, before any code the sign-in asks for, so the app hands the token over at once and keeps the page open. The core (`startBrowser` in `signin_flow.go`) asks `GET /recovery_email/status` (`fxa.SessionVerified`) every 3 seconds until FxA reports the session confirmed, then exchanges the token (`fxa.OAuthToken`, retried briefly while FxA still answers errnos 104 and 138); the app closes the page once that sign-in has finished, and cancels it when the page is closed first. The account is stored without a password, so signing it in again goes through the browser too. The webview reaches the pages through the core's sign-in proxy (`POST /signin/browser/proxy`, `internal/signinproxy`), which connects the way the core's own account requests do, with no account and the VPN off; the app sets it with WebView2's `--proxy-server` on Windows, androidx.webkit's `ProxyController` on Android, and `WKWebsiteDataStore.proxyConfigurations` on macOS 14 and later (on earlier macOS the page connects by itself).
 
-After verification, `fxa.OAuthToken` issues offline OAuth credentials, the account is stored (an existing account with the same email is updated and becomes ready), its quota is read, and the account manager reloads. The session token and password are discarded.
+After verification, `fxa.OAuthToken` issues offline OAuth credentials, the account is stored (an existing account with the same email is updated and becomes ready), its quota is read, and the account manager reloads. The temporary session token is discarded.
 
 Each account's credentials are loaded by `AccountPool.AuthFor` and refreshed by `FreshRuntimeAuth`/`refreshRuntimeAuth` (`internal/proxy`); refreshed credentials are written back to that account's own file through `runtimeAuth.persist`.
 
@@ -71,25 +71,15 @@ Every Guardian request sends `Authorization: Bearer`, `Content-Type: application
 
 Each account keeps its OAuth credentials in `user-data/accounts/<id>/credentials.json` (fields `access_token`, `refresh_token`, `scope`, `obtained_at`, `expires_in`, and `password`), written through `securefile.WritePrivate`: temporary file in the same folder, owner-only permissions on POSIX, write/close, rename, and a replacement fallback that can remove the old file before a retry. On Windows the file inherits the data folder's ACL.
 
-The Firefox Account password is stored too, so revoked tokens can be replaced without the user ([password.go](../internal/accounts/password.go)): `password` is `v1:` plus base64 of an AES-256-GCM nonce and ciphertext, under a random key in `user-data/accounts/secret.key`. This keeps it out of plain sight; anyone with the whole data folder can decrypt it. Saving refreshed tokens keeps the password (`writeCredentialsLocked`). The API never returns it; `GET /accounts` only reports `has_password`.
+Direct sign-in saves the Firefox Account password for the user-initiated **Sign in again** action ([password.go](../internal/accounts/password.go)): `password` is `v1:` plus base64 of an AES-256-GCM nonce and ciphertext, under a random key in `user-data/accounts/secret.key`. This keeps it out of plain sight; anyone with the whole data folder can decrypt it. Saving refreshed tokens keeps the password (`writeCredentialsLocked`). The API never returns it; `GET /accounts` only reports `has_password`.
 
-**Auto re-login.** When an account's tokens stop working and cannot be renewed, `AccountPool.passFor` calls `AccountPool.Relogin`, which signs in with the stored password. That is the case when the stored credentials cannot be read, when the refresh token is refused (`ErrReauthRequired`), and when Guardian keeps refusing the access token after a refresh (`ErrTokenInvalid` without `ErrNotEntitled`; an account Guardian does not entitle is not helped by new tokens). The outcomes:
-
-| Sign-in result | Account |
-| --- | --- |
-| Accepted without confirmation | New tokens are stored, the device record is renewed, and the account continues in the same request |
-| Mozilla asks for a confirmation code, an unblock code, or a CAPTCHA | `reauth_required` with a reason saying so; **Sign in again** in the dashboard signs in with the stored password (`POST /signin {account_id}`) and only asks for the code |
-| Mozilla refuses the password or the sign-in (HTTP 400/401/403) | `reauth_required` with Mozilla's message |
-| Mozilla unreachable, HTTP 429 or 5xx | `unavailable` for five minutes, then tried again; the next account serves meanwhile |
-| Tokens refused again within 30 minutes of an automatic sign-in | `unavailable` until 30 minutes after that sign-in, so a sign-in that Mozilla keeps confirming by email does not send a mail every minute |
-
-Without a stored password, a refused refresh token makes the account `reauth_required` and a Guardian refusal makes it `unavailable` for 15 minutes.
+A rejected refresh token or a refreshed access token still refused by Guardian marks the account for **Sign in again**. The dashboard can reuse a saved password only when the user chooses that action. Background renewal uses existing OAuth credentials.
 
 ### Connected services name
 
-`AccountPool.EnsureDevice` registers a device record named "Firefox's built-in VPN" (type `desktop`) with `POST /v1/account/device`, authenticated with the account's refresh token, which is how the Mozilla account's connected services page lists this program. Firefox's own built-in VPN takes its token through the signed-in Firefox (`fxAccounts.getOAuthToken`, scope `profile` and `vpn`) with the same Firefox client ID this program uses. The record is made once per refresh token (`device_id` and a token fingerprint in `account.json`, written with `Store.SaveDevice`; the account manager saves only its own fields with `Store.SaveState`, so it never erases the record): at sign-in, after an automatic sign-in, and at startup for accounts without one. When FxA refuses the refresh token there (errno 110, for example after the entry was removed on the connected services page), `AccountPool.RecoverRevoked` signs in again at once instead of waiting for the access token to expire; if that needs the user, the account is marked for **Sign in again**, except while it is the only usable active account. Other failures are logged and change nothing else. A Guardian 401 in the quota check renews at once too.
+`AccountPool.EnsureDevice` registers a device record named "Firefox's built-in VPN" (type `desktop`) with `POST /v1/account/device`, authenticated with the account's refresh token, which is how the Mozilla account's connected services page lists this program. Firefox's own built-in VPN takes its token through the signed-in Firefox (`fxAccounts.getOAuthToken`, scope `profile` and `vpn`) with the same Firefox client ID this program uses. The record is made once per refresh token (`device_id` and a token fingerprint in `account.json`, written with `Store.SaveDevice`; the account manager saves only its own fields with `Store.SaveState`, so it never erases the record): at sign-in and at startup for accounts without one. When FxA refuses the refresh token there (for example after the entry was removed from connected services), the account is marked for **Sign in again**. The only active account can continue until its current access token stops working. Other failures are logged and change nothing else. A Guardian 401 in the quota check renews at once too.
 
-Every sign-in (dashboard, terminal, automatic) ends its session token with `fxa.DestroySession` (`POST /v1/session/destroy`) as soon as the OAuth tokens exist, and an automatic sign-in that Mozilla wants confirmed ends it too (**Sign in again** starts a new one). The program needs only the refresh token; a session left alive appeared in connected services as a second entry named "unknown" next to "Firefox's built-in VPN". OAuth tokens are separate from the session in FxA (Firefox itself destroys its session and its OAuth tokens separately when signing out). Entries named "unknown" left by earlier versions can be signed out on the connected services page.
+A completed sign-in ends its session token with `fxa.DestroySession` (`POST /v1/session/destroy`) once the OAuth tokens exist. The program needs only the refresh token; a session left alive appeared in connected services as a second entry named "unknown" next to "Firefox's built-in VPN". OAuth tokens are separate from the session in FxA (Firefox itself destroys its session and its OAuth tokens separately when signing out). Entries named "unknown" left by earlier versions can be signed out on the connected services page.
 
 `runtimeAuth.accessTokenValid` applies a two-minute margin. Loading credentials keeps their acquisition time; it never resets the access-token lifetime.
 
@@ -144,7 +134,7 @@ Startup, renewal, quota checks, and manual account switches all obtain passes th
 - HTTP 401 triggers an OAuth refresh; HTTP 403 (also after a refresh) triggers Guardian activation (`recoverGuardianRejection`).
 - Transient network/server failures and HTTP 451 return without trying other accounts, because every account would fail the same way.
 - Quota at the switch threshold, HTTP 429, a spent quota, an FxA sign-in requirement, or a persistent Guardian rejection move to the next usable account; see [MULTI-ACCOUNT.md](MULTI-ACCOUNT.md).
-- The quota monitor reads usage with `HEAD` and only fetches a pass when the active account must hand over.
+- The quota monitor reads usage with `HEAD` and only fetches a pass when the active account must hand over. When a user clicks **Refresh quota** and Guardian refuses `HEAD` with HTTP 403, the service tries the normal pass `GET` once and reads only the quota headers. The current tunnel keeps its pass.
 - A CONNECT HTTP 429 is a transport-level error observation; it does not alone trigger immediate session reconstruction.
 
 Do not infer live quota-exhaustion behavior from parsing quota headers. The historical live run observed quota values but did not deliberately exhaust an account.
@@ -153,9 +143,13 @@ Do not infer live quota-exhaustion behavior from parsing quota headers. The hist
 
 [internal/controlplane](../internal/controlplane/client.go) owns a shared 30-second HTTP client and cookie jar. Configure `controlplane.SetTransport` before requests start. This client is distinct from data-plane sessions.
 
+Control-plane and challenge requests set `Accept-Encoding: identity`. In live HTTP/1.1 tests against Mozilla's token endpoint, Go's automatic `gzip` header received HTTP 406, while `identity` reached FxA for both the sign-in and refresh grants. Challenge probes on the website and API responses are evaluated separately.
+
 When the account API returns HTTP 406 during refresh, the core first tries Mozilla's published OAuth token endpoint once with the same refresh grant. Both endpoints use the same refresh tokens. If the OAuth endpoint is unreachable or also returns 406, the original account-API challenge flow runs. A confirmed invalid refresh token (OAuth HTTP 400, errno 108) requires reauthentication.
 
-When the Hawk-signed sign-in token exchange returns HTTP 406, the core uses the same verified session to request an authorization code with S256 PKCE and a fresh state value. After matching the returned state, it exchanges the code and verifier at Mozilla's OAuth token endpoint. This keeps email, TOTP, and unblock verification in the existing sign-in flow. Only the authorization request carries the session's Hawk credential.
+When the Hawk-signed token exchange in the app or dashboard's direct sign-in returns HTTP 406, the core retries the same grant over HTTP/2 with the Firefox TLS profile. This retry uses the default control-plane route and shares the original recovery budget. It runs after the initial 406 and can run again after the first solve. A transport error or another 406 leaves the existing recovery available.
+
+The core can also use the same verified session to request an authorization code with S256 PKCE and a fresh state value. After matching the returned state, it exchanges the code and verifier at Mozilla's OAuth token endpoint. If either step of the alternate grant returns HTTP 406, both grants share one challenge recovery budget. After each solve, the core retries the original token request first and tries the alternate grant again if the original still returns 406. Other FxA errors retain their codes for the sign-in flow. This keeps email, TOTP, and unblock verification in the existing sign-in flow. Only the authorization request carries the session's Hawk credential in the alternate grant.
 
 [challenge.go](../internal/fxa/challenge.go) handles account-API HTTP 406 challenges, PoW/PAT, and challenge cookies. The CLI and runtime token refresh limit the first HTTP attempt of each FxA call to 15 seconds. After the first 406, the fallback, up to five challenge solves, and their API retries share a 90-second budget. Each solve may take up to 60 seconds within that budget. The caller's operation deadline and cancellation still apply. Every successful solve is followed by a retry if the budget permits, including the fifth.
 

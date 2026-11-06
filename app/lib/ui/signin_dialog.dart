@@ -20,18 +20,30 @@ Future<void> showSignInDialog(
   CoreController core, {
   String email = '',
   SignInState? started,
+  VoidCallback? onBrowserRetry,
 }) => showDialog<void>(
   context: context,
   barrierDismissible: false,
-  builder: (_) => _SignInDialog(core: core, email: email, started: started),
+  builder: (_) => _SignInDialog(
+    core: core,
+    email: email,
+    started: started,
+    onBrowserRetry: onBrowserRetry,
+  ),
 );
 
 class _SignInDialog extends StatefulWidget {
-  const _SignInDialog({required this.core, required this.email, this.started});
+  const _SignInDialog({
+    required this.core,
+    required this.email,
+    this.started,
+    this.onBrowserRetry,
+  });
 
   final CoreController core;
   final String email;
   final SignInState? started;
+  final VoidCallback? onBrowserRetry;
 
   @override
   State<_SignInDialog> createState() => _SignInDialogState();
@@ -91,7 +103,9 @@ class _SignInDialogState extends State<_SignInDialog> {
     _poll?.cancel();
     final fromForm = _checking != null;
     _checking = null;
-    if (s.step == SignInStep.failed && _formProblems.contains(s.errorCode)) {
+    if (widget.onBrowserRetry == null &&
+        s.step == SignInStep.failed &&
+        _formProblems.contains(s.errorCode)) {
       _state = null;
       _formProblem = s.errorCode;
       _formProblemText = s.error;
@@ -199,14 +213,22 @@ class _SignInDialogState extends State<_SignInDialog> {
     if (mounted) Navigator.of(context).pop();
   }
 
-  void _restart() => setState(() {
-    _poll?.cancel();
-    _state = null;
-    _checking = null;
-    _error = null;
-    _formProblem = '';
-    _answer.clear();
-  });
+  void _restart() {
+    final browserRetry = widget.onBrowserRetry;
+    if (browserRetry != null) {
+      Navigator.of(context).pop();
+      browserRetry();
+      return;
+    }
+    setState(() {
+      _poll?.cancel();
+      _state = null;
+      _checking = null;
+      _error = null;
+      _formProblem = '';
+      _answer.clear();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -392,6 +414,9 @@ class _SignInDialogState extends State<_SignInDialog> {
         SignInError.tooManyCodes => l.signInTooManyCodes,
         SignInError.timedOut => l.signInTimedOut,
         SignInError.network => l.signInNetwork,
+        SignInError.tokenBlocked => l.browserSignInBlocked,
+        SignInError.blocked when widget.onBrowserRetry != null =>
+          l.browserSignInBlocked,
         _ => text,
       };
 
@@ -399,8 +424,10 @@ class _SignInDialogState extends State<_SignInDialog> {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final instruction = _instruction(l, s);
-    final error =
-        _error ?? (s.error.isEmpty ? null : _problem(l, s.errorCode, s.error));
+    final error = s.step == SignInStep.working
+        ? null
+        : _error ??
+              (s.error.isEmpty ? null : _problem(l, s.errorCode, s.error));
     final numericCode =
         s.step == SignInStep.needEmailCode || s.step == SignInStep.needTotp;
     return Column(

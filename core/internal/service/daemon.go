@@ -811,7 +811,7 @@ func (d *Daemon) addSignedInAccount(email, password string, token *fxa.TokenResp
 	if err := d.accountsChanged(); err != nil {
 		return acc, err
 	}
-	if err := d.refreshAccountUsage(acc.ID); err != nil {
+	if err := d.refreshAccountUsage(acc.ID, false); err != nil {
 		logx.Debug("reading the new account's quota failed account=%s err=%s", logx.Email(acc.Name()), logx.Err(err))
 	}
 	return acc, nil
@@ -902,8 +902,8 @@ func (d *Daemon) activateAccount(id string) error {
 	return nil
 }
 
-// refreshAccountUsage reads an account's quota without minting a pass.
-func (d *Daemon) refreshAccountUsage(id string) error {
+// refreshAccountUsage allows a pass request only on an explicit refresh.
+func (d *Daemon) refreshAccountUsage(id string, manual bool) error {
 	acc, err := d.store.Get(id)
 	if err != nil {
 		return err
@@ -917,17 +917,20 @@ func (d *Daemon) refreshAccountUsage(id string) error {
 	if auth, err = proxy.FreshRuntimeAuth(ctx, auth); err != nil {
 		return err
 	}
-	usage, err := guardian.FetchProxyUsage(ctx, d.config().Network.GuardianEndpoint, auth.Token.AccessToken)
+	fetchUsage := guardian.FetchProxyUsage
+	if manual {
+		fetchUsage = guardian.RefreshProxyUsage
+	}
+	usage, err := fetchUsage(ctx, d.config().Network.GuardianEndpoint, auth.Token.AccessToken)
 	if err != nil {
 		return err
 	}
-	if _, err := d.mgr.ObserveUsage(id, proxy.AccountUsage(usage)); err == nil {
+	reading := proxy.AccountUsage(usage)
+	if _, err := d.mgr.ObserveUsage(id, reading); err == nil {
 		return nil
 	}
 	// Disabled accounts are not managed; record the usage directly.
-	u := proxy.AccountUsage(usage)
-	acc.Usage = &u
-	return d.store.Save(acc)
+	return d.store.SaveUsage(id, reading)
 }
 
 func (d *Daemon) saveConfig() error {

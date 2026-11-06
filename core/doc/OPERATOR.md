@@ -363,7 +363,7 @@ Live HTTP/3 has not been verified to work with Mozilla's proxies; UDP may also b
 ## Credentials and limits
 
 - Per account, `user-data/accounts/<id>/credentials.json` holds the OAuth access token (about one day), the refresh token for the scope `profile https://identity.mozilla.com/apps/vpn`, and the Firefox Account password, encrypted with a key kept in `user-data/accounts/secret.key`. The password lets the program sign in again by itself when Mozilla revokes the tokens. The encryption only keeps the password out of plain sight: anyone with the whole data folder can recover it, so keep the folder private and never share it. Sign-in itself still sends only `authPW`, derived from the password locally as Firefox does.
-- Each account appears in its Mozilla account's connected services as **Firefox's built-in VPN**. Tokens can be revoked there; the program then signs in again with the stored password, or asks for **Sign in again** when Mozilla wants a confirmation code.
+- Each account appears in its Mozilla account's connected services as **Firefox's built-in VPN**. If the refresh token is revoked there, use **Sign in again** to restore access.
 - On Windows the files take the data folder's normal permissions; on Linux they are `0600`.
 - The dashboard has no HTTPS.
 - Account eligibility, server availability, and quotas are decided by Mozilla. Respect the service's terms and quotas.

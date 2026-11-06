@@ -212,6 +212,7 @@
   "signInMethodBrowser": "Brauzerlə giriş",
   "signInMethodApi": "Birbaşa giriş",
   "browserSignInBroken": "Giriş səhifəsi açıla bilmədi.",
+  "browserSignInBlocked": "Mozilla hesabın əlavə edilməsinin son addımını tamamlamadı (HTTP 406).",
   "browserSignInFallback": "E-poçt və şifrə ilə giriş",
   "backupExport": "Ehtiyat nüsxəni saxla",
   "backupImport": "Ehtiyat nüsxəni idxal et",

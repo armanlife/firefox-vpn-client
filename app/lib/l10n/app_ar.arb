@@ -212,6 +212,7 @@
   "signInMethodBrowser": "تسجيل الدخول عبر المتصفح",
   "signInMethodApi": "تسجيل الدخول المباشر",
   "browserSignInBroken": "تعذّر فتح صفحة تسجيل الدخول.",
+  "browserSignInBlocked": "لم تُكمل Mozilla الخطوة الأخيرة لإضافة الحساب (خطأ HTTP 406).",
   "browserSignInFallback": "تسجيل الدخول بالبريد وكلمة المرور",
   "backupExport": "حفظ نسخة احتياطية",
   "backupImport": "استيراد نسخة احتياطية",

@@ -364,7 +364,7 @@ func (s *dashboardServer) handleAccountEnabled(w http.ResponseWriter, r *http.Re
 }
 
 func (s *dashboardServer) handleAccountRefresh(w http.ResponseWriter, r *http.Request) {
-	respondResult(w, s.d.refreshAccountUsage(r.PathValue("id")))
+	respondResult(w, s.d.refreshAccountUsage(r.PathValue("id"), true))
 }
 
 func (s *dashboardServer) handleAccountRemove(w http.ResponseWriter, r *http.Request) {

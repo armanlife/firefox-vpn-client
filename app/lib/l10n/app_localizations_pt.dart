@@ -750,6 +750,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String get browserSignInBroken => 'Não foi possível abrir a página de login.';
 
   @override
+  String get browserSignInBlocked =>
+      'A Mozilla não concluiu a última etapa para adicionar a conta (HTTP 406).';
+
+  @override
   String get browserSignInFallback => 'Entrar com e-mail e senha';
 
   @override

@@ -212,6 +212,7 @@
   "signInMethodBrowser": "透過瀏覽器登入",
   "signInMethodApi": "直接登入",
   "browserSignInBroken": "無法開啟登入頁面。",
+  "browserSignInBlocked": "Mozilla 未能完成新增帳號的最後一步（HTTP 406）。",
   "browserSignInFallback": "使用電子郵件和密碼登入",
   "backupExport": "儲存備份",
   "backupImport": "匯入備份",

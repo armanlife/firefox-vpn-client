@@ -1,0 +1,36 @@
+name: Bug report
+description: Report a problem with Arman VPN and share the details needed to investigate it.
+labels: [bug]
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Describe the problem, what you expected to happen, and any error shown in the app.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Android
+        - Android TV
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: |
+        Reproduce the problem, then open **Logs** in the Arman VPN app. Select **Copy** and paste the log here.
+        If you cannot get logs, explain why here.
+      render: text
+    validations:
+      required: true

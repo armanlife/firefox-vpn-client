@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -17,6 +18,7 @@ import (
 	"github.com/armanlife/arman-vpn-client/core/internal/accounts"
 	"github.com/armanlife/arman-vpn-client/core/internal/config"
 	"github.com/armanlife/arman-vpn-client/core/internal/fxa"
+	"github.com/armanlife/arman-vpn-client/core/internal/guardian"
 	"github.com/armanlife/arman-vpn-client/core/internal/logx"
 	"github.com/armanlife/arman-vpn-client/core/internal/proxy"
 )
@@ -53,6 +55,64 @@ func addTestAccount(t *testing.T, d *Daemon, name string) string {
 		t.Fatal(err)
 	}
 	return acc.ID
+}
+
+func TestManualQuotaRefreshReadsPassHeadersWhenHeadIsForbidden(t *testing.T) {
+	for _, status := range []int{http.StatusOK, http.StatusTooManyRequests, http.StatusForbidden} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			d := newTestDaemon(t)
+			id := addTestAccount(t, d, "quota")
+			if _, err := d.mgr.ObserveUsage(id, accounts.Usage{LimitBytes: 50 * testGiB, RemainingBytes: 49 * testGiB}); err != nil {
+				t.Fatal(err)
+			}
+			var methods []string
+			setCoreControlPlane(t, func(r *http.Request) (*http.Response, error) {
+				if r.URL.Path != "/api/v1/fpn/token" || r.Header.Get("Authorization") != "Bearer access-quota" {
+					return nil, fmt.Errorf("unexpected quota request %s %s", r.Method, r.URL.Path)
+				}
+				methods = append(methods, r.Method)
+				switch r.Method {
+				case http.MethodHead:
+					return coreResponse(r, http.StatusForbidden, "", nil), nil
+				case http.MethodGet:
+					if status == http.StatusForbidden {
+						return coreResponse(r, status, "", nil), nil
+					}
+					used := int64(2)
+					if status == http.StatusTooManyRequests {
+						used = 50
+					}
+					return coreResponse(r, status, "", quotaHeader(used)), nil
+				default:
+					return nil, fmt.Errorf("unexpected quota method %s", r.Method)
+				}
+			})
+			if err := d.refreshAccountUsage(id, false); !errors.Is(err, guardian.ErrNotEntitled) {
+				t.Fatalf("expected the background read to stop at HEAD: %v", err)
+			}
+			client := newDashboardClient(t, d)
+			wantStatus, wantRemaining := http.StatusOK, int64(48*testGiB)
+			switch status {
+			case http.StatusTooManyRequests:
+				wantRemaining = 0
+			case http.StatusForbidden:
+				wantStatus, wantRemaining = http.StatusBadRequest, 49*testGiB
+			}
+			if rec := client.do(http.MethodPost, "/api/accounts/"+id+"/refresh", nil); rec.Code != wantStatus {
+				t.Fatalf("manual quota refresh: %d %s", rec.Code, rec.Body)
+			}
+			if got := strings.Join(methods, ","); got != "HEAD,HEAD,GET" {
+				t.Fatalf("quota methods %s", got)
+			}
+			acc, err := d.store.Get(id)
+			if err != nil || acc.Usage == nil || acc.Usage.LimitBytes != 50*testGiB {
+				t.Fatalf("quota was not saved: %v", err)
+			}
+			if acc.Usage.RemainingBytes != wantRemaining {
+				t.Fatalf("unexpected remaining quota %d", acc.Usage.RemainingBytes)
+			}
+		})
+	}
 }
 
 type dashboardClient struct {

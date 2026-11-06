@@ -491,6 +491,7 @@
   "signInMethodBrowser": "Sign in with the browser",
   "signInMethodApi": "Sign in directly",
   "browserSignInBroken": "The sign-in page could not be opened.",
+  "browserSignInBlocked": "Mozilla did not complete the final step of adding the account (HTTP 406).",
   "browserSignInFallback": "Sign in with email and password",
   "backupExport": "Save a backup",
   "backupImport": "Import a backup",

@@ -212,6 +212,7 @@
   "signInMethodBrowser": "Masuk lewat peramban",
   "signInMethodApi": "Masuk langsung",
   "browserSignInBroken": "Halaman masuk tidak dapat dibuka.",
+  "browserSignInBlocked": "Mozilla tidak menyelesaikan langkah terakhir untuk menambahkan akun (HTTP 406).",
   "browserSignInFallback": "Masuk dengan email dan kata sandi",
   "backupExport": "Simpan cadangan",
   "backupImport": "Impor cadangan",

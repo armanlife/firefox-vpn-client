@@ -212,6 +212,7 @@
   "signInMethodBrowser": "Bejelentkezés böngészővel",
   "signInMethodApi": "Közvetlen bejelentkezés",
   "browserSignInBroken": "A bejelentkezési oldal nem nyitható meg.",
+  "browserSignInBlocked": "A Mozilla nem fejezte be a fiók hozzáadásának utolsó lépését (HTTP 406).",
   "browserSignInFallback": "Bejelentkezés e-maillel és jelszóval",
   "backupExport": "Biztonsági mentés készítése",
   "backupImport": "Biztonsági mentés importálása",

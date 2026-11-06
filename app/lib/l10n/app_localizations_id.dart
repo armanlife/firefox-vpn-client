@@ -747,6 +747,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get browserSignInBroken => 'Halaman masuk tidak dapat dibuka.';
 
   @override
+  String get browserSignInBlocked =>
+      'Mozilla tidak menyelesaikan langkah terakhir untuk menambahkan akun (HTTP 406).';
+
+  @override
   String get browserSignInFallback => 'Masuk dengan email dan kata sandi';
 
   @override

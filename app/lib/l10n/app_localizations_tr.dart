@@ -748,6 +748,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get browserSignInBroken => 'Giriş sayfası açılamadı.';
 
   @override
+  String get browserSignInBlocked =>
+      'Mozilla, hesabı eklemenin son adımını tamamlamadı (HTTP 406).';
+
+  @override
   String get browserSignInFallback => 'E-posta ve parola ile giriş';
 
   @override

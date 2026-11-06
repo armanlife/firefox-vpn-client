@@ -190,8 +190,8 @@ func solveChallengeOnHost(ctx context.Context, base string) error {
 			return err
 		}
 		req.Header.Set("Content-Type", "application/json")
+		controlplane.ApplyFirefoxHeaders(req)
 		req.Header.Set("Accept", "application/json")
-		req.Header.Set("User-Agent", controlplane.FirefoxUserAgent())
 		req.Header.Set("Origin", baseOrigin(base+prefix))
 
 		resp, err := client.Do(req)
@@ -251,7 +251,7 @@ func fetchText(ctx context.Context, client *http.Client, rawURL string) (string,
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("User-Agent", controlplane.FirefoxUserAgent())
+	controlplane.ApplyFirefoxHeaders(req)
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 
 	resp, err := client.Do(req)
@@ -420,9 +420,9 @@ func fetchPAT(ctx context.Context, client *http.Client, prefixURL, token string)
 	if err != nil {
 		return "", err
 	}
+	controlplane.ApplyFirefoxHeaders(req)
 	req.Header.Set("Accept", "text/plain")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", controlplane.FirefoxUserAgent())
 	req.Header.Set("Origin", baseOrigin(prefixURL))
 
 	resp, err := client.Do(req)

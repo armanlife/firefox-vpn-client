@@ -212,6 +212,7 @@
   "signInMethodBrowser": "Entrar pelo navegador",
   "signInMethodApi": "Entrar diretamente",
   "browserSignInBroken": "Não foi possível abrir a página de login.",
+  "browserSignInBlocked": "A Mozilla não concluiu a última etapa para adicionar a conta (HTTP 406).",
   "browserSignInFallback": "Entrar com e-mail e senha",
   "backupExport": "Salvar backup",
   "backupImport": "Importar backup",

@@ -727,6 +727,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get browserSignInBroken => '无法打开登录页面。';
 
   @override
+  String get browserSignInBlocked => 'Mozilla 未能完成添加账号的最后一步（HTTP 406）。';
+
+  @override
   String get browserSignInFallback => '使用邮箱和密码登录';
 
   @override
@@ -2300,6 +2303,9 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get browserSignInBroken => '無法開啟登入頁面。';
+
+  @override
+  String get browserSignInBlocked => 'Mozilla 未能完成新增帳號的最後一步（HTTP 406）。';
 
   @override
   String get browserSignInFallback => '使用電子郵件和密碼登入';

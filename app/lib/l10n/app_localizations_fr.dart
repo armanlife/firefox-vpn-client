@@ -755,6 +755,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'La page de connexion n\'a pas pu être ouverte.';
 
   @override
+  String get browserSignInBlocked =>
+      'Mozilla n’a pas terminé la dernière étape de l’ajout du compte (HTTP 406).';
+
+  @override
   String get browserSignInFallback => 'Connexion avec e-mail et mot de passe';
 
   @override

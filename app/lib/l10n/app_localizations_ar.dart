@@ -749,6 +749,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get browserSignInBroken => 'تعذّر فتح صفحة تسجيل الدخول.';
 
   @override
+  String get browserSignInBlocked =>
+      'لم تُكمل Mozilla الخطوة الأخيرة لإضافة الحساب (خطأ HTTP 406).';
+
+  @override
   String get browserSignInFallback => 'تسجيل الدخول بالبريد وكلمة المرور';
 
   @override

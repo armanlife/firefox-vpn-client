@@ -212,6 +212,7 @@
   "signInMethodBrowser": "Connexion par le navigateur",
   "signInMethodApi": "Connexion directe",
   "browserSignInBroken": "La page de connexion n'a pas pu être ouverte.",
+  "browserSignInBlocked": "Mozilla n’a pas terminé la dernière étape de l’ajout du compte (HTTP 406).",
   "browserSignInFallback": "Connexion avec e-mail et mot de passe",
   "backupExport": "Enregistrer une sauvegarde",
   "backupImport": "Importer une sauvegarde",

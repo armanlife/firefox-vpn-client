@@ -212,6 +212,7 @@
   "signInMethodBrowser": "Iniciar sesión con el navegador",
   "signInMethodApi": "Iniciar sesión directamente",
   "browserSignInBroken": "No se pudo abrir la página de inicio de sesión.",
+  "browserSignInBlocked": "Mozilla no completó el último paso para añadir la cuenta (HTTP 406).",
   "browserSignInFallback": "Iniciar sesión con correo y contraseña",
   "backupExport": "Guardar copia de seguridad",
   "backupImport": "Importar copia de seguridad",

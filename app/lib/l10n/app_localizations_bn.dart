@@ -748,6 +748,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String get browserSignInBroken => 'সাইন-ইন পৃষ্ঠা খোলা যায়নি।';
 
   @override
+  String get browserSignInBlocked =>
+      'Mozilla অ্যাকাউন্ট যোগ করার শেষ ধাপটি সম্পন্ন করেনি (HTTP 406)।';
+
+  @override
   String get browserSignInFallback => 'ইমেল ও পাসওয়ার্ড দিয়ে সাইন ইন';
 
   @override

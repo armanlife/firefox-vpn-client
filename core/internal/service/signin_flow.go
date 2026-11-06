@@ -171,11 +171,13 @@ const (
 	signInTimedOut        = "timed_out"             // nobody answered in time
 	signInNetwork         = "network"               // Mozilla could not be reached
 	signInBlocked         = "blocked"               // Fastly's bot check refused the sign-in
+	signInTokenBlocked    = "token_blocked"         // Fastly refused the final direct token exchange
 )
 
 var (
-	errTooManyCodes   = errors.New("too many wrong codes; start the sign-in again")
-	errSignInTimedOut = errors.New("the sign-in timed out")
+	errTooManyCodes       = errors.New("too many wrong codes; start the sign-in again")
+	errSignInTimedOut     = errors.New("the sign-in timed out")
+	errSignInTokenBlocked = errors.New("the final token request was refused")
 )
 
 // signInProblem is what went wrong with an answer or the sign-in.
@@ -379,8 +381,11 @@ func (s *signIn) signIn(ctx context.Context, d *Daemon, email, password string) 
 	}
 
 	s.set(stepWorking, "Getting the account token", signInProblem{}, "")
-	token, err := fxa.OAuthToken(ctx, resp.SessionToken)
+	token, err := fxa.OAuthTokenDirect(ctx, resp.SessionToken)
 	if err != nil {
+		if errors.Is(err, fxa.ErrChallengeBlocked) {
+			return "", fmt.Errorf("%w: %w", errSignInTokenBlocked, err)
+		}
 		return "", err
 	}
 	// The sign-in session is not needed once the tokens exist; left alive
@@ -485,6 +490,8 @@ func signInFailure(err error) signInProblem {
 		return signInProblem{signInTooManyCodes, "Too many wrong codes. Start the sign-in again."}
 	case errors.Is(err, errSignInTimedOut):
 		return signInProblem{signInTimedOut, "The sign-in took too long. Start it again."}
+	case errors.Is(err, errSignInTokenBlocked):
+		return signInProblem{signInTokenBlocked, "Mozilla did not complete the final step of adding the account (HTTP 406)."}
 	case errors.Is(err, fxa.ErrChallengeBlocked):
 		return signInProblem{signInBlocked, "Mozilla's security check refused this sign-in from here. Sign in with the browser in the Arman VPN app instead."}
 	case fxa.HTTPStatus(err) == http.StatusTooManyRequests:

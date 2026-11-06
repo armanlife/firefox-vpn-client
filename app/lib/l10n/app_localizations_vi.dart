@@ -749,6 +749,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get browserSignInBroken => 'Không thể mở trang đăng nhập.';
 
   @override
+  String get browserSignInBlocked =>
+      'Mozilla chưa hoàn tất bước cuối để thêm tài khoản (HTTP 406).';
+
+  @override
   String get browserSignInFallback => 'Đăng nhập bằng email và mật khẩu';
 
   @override

@@ -753,6 +753,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get browserSignInBroken => 'A bejelentkezési oldal nem nyitható meg.';
 
   @override
+  String get browserSignInBlocked =>
+      'A Mozilla nem fejezte be a fiók hozzáadásának utolsó lépését (HTTP 406).';
+
+  @override
   String get browserSignInFallback => 'Bejelentkezés e-maillel és jelszóval';
 
   @override

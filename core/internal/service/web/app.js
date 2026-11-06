@@ -959,7 +959,6 @@ function renderAccounts() {
       account.active && status === "ready" ? el("span", { class: "chip active", text: "Active" }) : el("span", { class: "chip " + status, text: statusLabel(account, status) }),
       account.email && account.email !== account.name ? el("span", { text: account.email }) : null,
       account.retry_at && account.status !== "ready" ? el("span", { text: `until ${formatTime(account.retry_at)}` }) : null,
-      account.has_password ? el("span", { class: "chip", title: "The password is saved (encrypted). When this account's tokens stop working and cannot be renewed, the program signs in again by itself.", text: "Auto re-login" }) : null,
     );
     const reason = account.reason ? el("div", { class: "account-meta", text: account.reason }) : null;
     const actions = el("div", { class: "account-actions" },
@@ -1264,7 +1263,7 @@ function renderSignIn(view) {
   const submit = $("#signin-submit");
   const form = $("#signin-form");
   // What went wrong shows apart from the instruction, in red.
-  $("#signin-error").textContent = view.error || "";
+  $("#signin-error").textContent = view.step === "working" ? "" : view.error || "";
   message.style.display = "";
   captcha.hidden = true;
   label.hidden = true;

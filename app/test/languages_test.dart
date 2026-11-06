@@ -50,7 +50,7 @@ void main() {
     );
     expect(
       accountReason(fa, account('signin_failed', 'failed', 'bad password'), 95),
-      contains('bad password'),
+      fa.reasonSignInRequired,
     );
     // A reason this app does not know: the core's words.
     expect(

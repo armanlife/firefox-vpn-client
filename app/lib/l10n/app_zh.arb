@@ -212,6 +212,7 @@
   "signInMethodBrowser": "通过浏览器登录",
   "signInMethodApi": "直接登录",
   "browserSignInBroken": "无法打开登录页面。",
+  "browserSignInBlocked": "Mozilla 未能完成添加账号的最后一步（HTTP 406）。",
   "browserSignInFallback": "使用邮箱和密码登录",
   "backupExport": "保存备份",
   "backupImport": "导入备份",

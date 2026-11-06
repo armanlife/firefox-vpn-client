@@ -338,6 +338,9 @@ class FakeApi implements CoreApi {
   /// code asked for.
   Map<String, Object?>? signInOutcome;
 
+  /// Overrides the usual email-code step when the sign-in is polled.
+  Map<String, Object?>? signInProgress;
+
   @override
   Future<SignInState> startSignIn(String email, String password) async {
     signInEmail = email;
@@ -355,6 +358,7 @@ class FakeApi implements CoreApi {
     'email': signInEmail,
     'step': SignInStep.needEmailCode,
     'password_accepted': true,
+    ...?signInProgress,
   });
 
   @override
@@ -607,6 +611,113 @@ void main() {
 
     await tester.pumpWidget(const SizedBox());
     core.dispose();
+  });
+
+  testWidgets('direct sign-in shows a 406 only after the final failure', (
+    tester,
+  ) async {
+    stillMotion(tester);
+    final api = FakeApi()
+      ..signInOutcome = {
+        'password_accepted': true,
+        'error': 'Token request returned HTTP 406.',
+        'error_code': SignInError.tokenBlocked,
+      };
+    final core = CoreController(
+      () async => api,
+      pollInterval: const Duration(hours: 1),
+    );
+    core.start();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSignInDialog(context, core),
+            child: const Text('add'),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('add'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).at(0), 'me@example.com');
+    await tester.enterText(find.byType(TextField).at(1), 'pw');
+    await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
+    await tester.pump();
+    await tester.pump();
+
+    final l = lookupAppLocalizations(const Locale('en'));
+    expect(find.text(l.signingIn), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.textContaining('406'), findsNothing);
+
+    api.signInProgress = {...api.signInOutcome!, 'step': SignInStep.failed};
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    expect(find.text(l.browserSignInBlocked), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  testWidgets('a blocked browser sign-in retries in the browser', (
+    tester,
+  ) async {
+    stillMotion(tester);
+    final core = CoreController(() async => FakeApi());
+    addTearDown(core.dispose);
+    const rawError =
+        "Mozilla's security check refused this sign-in from here. "
+        'Sign in with the browser in the Arman VPN app instead.';
+    final state = SignInState.fromJson({
+      'email': 'me@example.com',
+      'step': SignInStep.failed,
+      'error': rawError,
+      'error_code': 'blocked',
+    });
+    var retries = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showSignInDialog(
+              context,
+              core,
+              started: state,
+              onBrowserRetry: () => retries++,
+            ),
+            child: const Text('add'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('add'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Mozilla did not complete the final step of adding the account '
+        '(HTTP 406).',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text(rawError), findsNothing);
+    expect(retries, 0);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Try again'));
+    await tester.pumpAndSettle();
+
+    expect(retries, 1);
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(TextField), findsNothing);
   });
 
   testWidgets('an email without an account says so and how to make one', (
@@ -1153,63 +1264,72 @@ void main() {
     core.dispose();
   });
 
-  testWidgets('the accounts page has the switching with a second account', (
-    tester,
-  ) async {
-    stillMotion(tester);
-    tester.view.physicalSize = const Size(1200, 1400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+  testWidgets(
+    'the accounts page shows quota bars and switching for two accounts',
+    (tester) async {
+      stillMotion(tester);
+      tester.view.physicalSize = const Size(1200, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
 
-    final api = FakeApi();
-    final core = CoreController(
-      () async => api,
-      pollInterval: const Duration(hours: 1),
-    );
-    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
-    core.start();
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Accounts').first);
-    await tester.pumpAndSettle();
+      final api = FakeApi();
+      api.accountsJson.last.remove('usage');
+      final core = CoreController(
+        () async => api,
+        pollInterval: const Duration(hours: 1),
+      );
+      await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+      core.start();
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Accounts').first);
+      await tester.pumpAndSettle();
 
-    final row = find.text('Account switching');
-    expect(row, findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.ancestor(of: row, matching: find.byType(ListTile)),
-        matching: find.textContaining('90%'),
-      ),
-      findsOneWidget,
-    );
+      expect(find.textContaining('0 MB'), findsOneWidget);
+      expect(
+        tester
+            .widgetList<QuotaBar>(find.byType(QuotaBar))
+            .map((bar) => bar.percent),
+        [40.0, 0.0],
+      );
+      final row = find.text('Account switching');
+      expect(row, findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.ancestor(of: row, matching: find.byType(ListTile)),
+          matching: find.textContaining('90%'),
+        ),
+        findsOneWidget,
+      );
 
-    await tester.tap(row);
-    await tester.pumpAndSettle();
-    final field = find.descendant(
-      of: find.byType(AlertDialog),
-      matching: find.byType(TextField),
-    );
-    expect(tester.widget<TextField>(field).controller!.text, '90');
-    await tester.enterText(field, '0');
-    await tester.tap(find.text('Save'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('from 1 to 100'), findsOneWidget);
-    expect(api.config['accounts'], isNull);
-    await tester.enterText(field, '70');
-    await tester.tap(find.text('Save'));
-    await tester.pumpAndSettle();
-    expect(find.byType(AlertDialog), findsNothing);
-    final accounts = api.config['accounts'] as Map<String, Object?>;
-    expect(accounts['switch_threshold_percent'], 70);
+      await tester.tap(row);
+      await tester.pumpAndSettle();
+      final field = find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(TextField),
+      );
+      expect(tester.widget<TextField>(field).controller!.text, '90');
+      await tester.enterText(field, '0');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('from 1 to 100'), findsOneWidget);
+      expect(api.config['accounts'], isNull);
+      await tester.enterText(field, '70');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      final accounts = api.config['accounts'] as Map<String, Object?>;
+      expect(accounts['switch_threshold_percent'], 70);
 
-    // One account: nothing to switch to.
-    api.accountsJson.removeLast();
-    await core.refresh(accountsToo: true);
-    await tester.pumpAndSettle();
-    expect(row, findsNothing);
+      // One account: nothing to switch to.
+      api.accountsJson.removeLast();
+      await core.refresh(accountsToo: true);
+      await tester.pumpAndSettle();
+      expect(row, findsNothing);
 
-    await tester.pumpWidget(const SizedBox());
-    core.dispose();
-  });
+      await tester.pumpWidget(const SizedBox());
+      core.dispose();
+    },
+  );
 
   testWidgets('a computer lists the settings in the same groups', (
     tester,

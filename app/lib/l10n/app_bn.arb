@@ -212,6 +212,7 @@
   "signInMethodBrowser": "ব্রাউজার দিয়ে সাইন ইন",
   "signInMethodApi": "সরাসরি সাইন ইন",
   "browserSignInBroken": "সাইন-ইন পৃষ্ঠা খোলা যায়নি।",
+  "browserSignInBlocked": "Mozilla অ্যাকাউন্ট যোগ করার শেষ ধাপটি সম্পন্ন করেনি (HTTP 406)।",
   "browserSignInFallback": "ইমেল ও পাসওয়ার্ড দিয়ে সাইন ইন",
   "backupExport": "ব্যাকআপ সংরক্ষণ করুন",
   "backupImport": "ব্যাকআপ ইমপোর্ট করুন",
