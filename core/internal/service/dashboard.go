@@ -220,6 +220,9 @@ func (s *dashboardServer) handler() http.Handler {
 	mux.HandleFunc("POST /api/accounts/{id}/enabled", s.handleAccountEnabled)
 	mux.HandleFunc("POST /api/accounts/{id}/refresh", s.handleAccountRefresh)
 	mux.HandleFunc("DELETE /api/accounts/{id}", s.handleAccountRemove)
+	mux.HandleFunc("GET /api/backup", s.handleBackupExport)
+	mux.HandleFunc("POST /api/backup/inspect", s.handleBackupInspect)
+	mux.HandleFunc("POST /api/backup/import", s.handleBackupImport)
 
 	mux.HandleFunc("POST /api/signin", s.handleSignInStart)
 	// The literal path wins over the {id} patterns below; ids are 24 hex

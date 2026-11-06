@@ -11,13 +11,16 @@ import '../app_settings.dart';
 import '../core/android_core.dart';
 import '../core/core_api.dart';
 import '../core/core_controller.dart';
+import '../desktop/desktop_bridge.dart';
 import '../l10n/app_localizations.dart';
 import 'signin_dialog.dart';
 import 'widgets.dart';
 
 /// Whether this platform has the in-app browser for the browser sign-in
-/// (WebView2 on Windows, the system WebView on Android).
-bool get browserSignInSupported => Platform.isWindows || Platform.isAndroid;
+/// (WebView2 on Windows, the system WebView on Android, WKWebView on
+/// macOS).
+bool get browserSignInSupported =>
+    Platform.isWindows || Platform.isAndroid || Platform.isMacOS;
 
 /// The Windows browser views share one WebView2 environment, made once per
 /// run of the app with the sign-in proxy it is given then; the core is
@@ -59,8 +62,27 @@ String _loginUrl(String email) => Uri.https('accounts.firefox.com', '/', {
 /// to what looks like Firefox.
 String get _userAgent => Platform.isAndroid
     ? 'Mozilla/5.0 (Android 14; Mobile; rv:145.0) Gecko/145.0 Firefox/145.0'
+    : Platform.isMacOS
+    ? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:145.0) '
+          'Gecko/20100101 Firefox/145.0'
     : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) '
           'Gecko/20100101 Firefox/145.0';
+
+/// Sends this app's web views (Android's WebView, macOS's WKWebView)
+/// through the proxy at [address], or straight out again when it is null.
+/// False when the system's web view cannot take a proxy: the view then
+/// connects by itself.
+Future<bool> _setViewProxy(String? address) async {
+  try {
+    return Platform.isAndroid
+        ? await AndroidCore.setWebViewProxy(address)
+        : await DesktopBridge.setWebViewProxy(address);
+  } on PlatformException {
+    return false;
+  } on MissingPluginException {
+    return false;
+  }
+}
 
 /// Follows the WebChannel of accounts.firefox.com, as Firefox desktop
 /// would: answers the page's status questions, and reports the session the
@@ -107,7 +129,7 @@ class FxaWebChannel {
 })();
 ''';
 
-  /// A message from the injected JavaScript: a JSON string (Android's
+  /// A message from the injected JavaScript: a JSON string (webview_flutter's
   /// channel) or an already decoded map (WebView2's web messages).
   void handle(Object? raw) {
     Object? m = raw;
@@ -184,7 +206,8 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
 
   ww.WebviewController? _windows;
   StreamSubscription<Object?>? _messages;
-  wf.WebViewController? _android;
+  // Android and macOS: webview_flutter's view.
+  wf.WebViewController? _view;
   String? _error;
   bool _loading = true;
   // The core's sign-in that follows the page's session, and the timer
@@ -193,9 +216,9 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
   Timer? _follow;
   bool _reading = false;
   // Whether this page opened the core's sign-in proxy, and set it as the
-  // Android WebView's proxy: both are undone when it closes.
+  // web view's proxy (Android, macOS): both are undone when it closes.
   bool _proxyOpen = false;
-  bool _androidProxySet = false;
+  bool _viewProxySet = false;
 
   @override
   void initState() {
@@ -209,7 +232,7 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
     _stopFollowing(cancel: true);
     _messages?.cancel();
     _windows?.dispose();
-    if (_androidProxySet) AndroidCore.setWebViewProxy(null).ignore();
+    if (_viewProxySet) _setViewProxy(null).ignore();
     if (_proxyOpen) widget.core.api?.closeSignInProxy().ignore();
     super.dispose();
   }
@@ -220,7 +243,7 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
       if (Platform.isWindows) {
         await _initWindows(proxy);
       } else {
-        await _initAndroid(proxy);
+        await _initView(proxy);
       }
     } on Exception catch (e) {
       // No WebView2 runtime, or the webview failed to start.
@@ -288,16 +311,16 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
     setState(() => _windows = c);
   }
 
-  Future<void> _initAndroid(String? proxy) async {
+  Future<void> _initView(String? proxy) async {
     // Set before the first page loads: the override applies to the
     // requests that start after it.
     if (proxy != null) {
-      final set = await AndroidCore.setWebViewProxy(proxy);
+      final set = await _setViewProxy(proxy);
       if (!mounted) {
-        if (set) AndroidCore.setWebViewProxy(null).ignore();
+        if (set) _setViewProxy(null).ignore();
         return;
       }
-      _androidProxySet = set;
+      _viewProxySet = set;
     }
     final hook = FxaWebChannel.hookJs(
       'ArmanFxa.postMessage(JSON.stringify(o));',
@@ -322,12 +345,12 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
         ),
       )
       ..loadRequest(Uri.parse(_loginUrl(widget.email)));
-    setState(() => _android = c);
+    setState(() => _view = c);
   }
 
   void _runJs(String js) {
     _windows?.executeScript(js);
-    _android?.runJavaScript(js);
+    _view?.runJavaScript(js);
   }
 
   /// The page signed in with a session: the core follows it from here. It
@@ -406,8 +429,8 @@ class _BrowserSignInPageState extends State<BrowserSignInPage> {
     final l = AppLocalizations.of(context);
     final view = _windows != null
         ? ww.Webview(_windows!)
-        : _android != null
-        ? wf.WebViewWidget(controller: _android!)
+        : _view != null
+        ? wf.WebViewWidget(controller: _view!)
         : null;
     return Scaffold(
       // No way to the form up here: two sign-in offers at once mislead.

@@ -1,6 +1,8 @@
 import Cocoa
 import FlutterMacOS
+import Network
 import UserNotifications
+import WebKit
 
 class MainFlutterWindow: NSWindow {
   private(set) var bridge: DesktopBridge?
@@ -29,9 +31,10 @@ class MainFlutterWindow: NSWindow {
 /// The native side of lib/desktop/desktop_bridge.dart (channel
 /// "app/desktop"), as windows/runner/desktop_bridge.cpp and
 /// linux/runner/desktop_bridge.cc are elsewhere: the window's close button,
-/// the menu bar icon and its menu, notifications, and starting at sign-in
-/// (a LaunchAgent). While the window is hidden the app lives in the menu
-/// bar only, without a Dock icon.
+/// the menu bar icon and its menu, notifications, starting at sign-in
+/// (a LaunchAgent), and the browser sign-in's web view proxy. While the
+/// window is hidden the app lives in the menu bar only, without a Dock
+/// icon.
 class DesktopBridge: NSObject, NSWindowDelegate, UNUserNotificationCenterDelegate {
   private let channel: FlutterMethodChannel
   private weak var window: NSWindow?
@@ -91,6 +94,9 @@ class DesktopBridge: NSObject, NSWindowDelegate, UNUserNotificationCenterDelegat
       show()
     case "hide":
       hide()
+    case "setWebViewProxy":
+      result(setWebViewProxy(args["address"] as? String))
+      return
     case "quit":
       allowClose = true
       if let item = statusItem {
@@ -104,6 +110,29 @@ class DesktopBridge: NSObject, NSWindowDelegate, UNUserNotificationCenterDelegat
       return
     }
     result(nil)
+  }
+
+  /// The browser sign-in's web view goes through the core's sign-in proxy
+  /// (an address, "127.0.0.1:port"), or straight out again (nil). It is set
+  /// on the default website data store, which the app's web views use, for
+  /// the connections they start from then on. It needs macOS 14; earlier,
+  /// it answers false and the view connects by itself.
+  private func setWebViewProxy(_ address: String?) -> Bool {
+    guard #available(macOS 14.0, *) else { return false }
+    let store = WKWebsiteDataStore.default()
+    guard let address = address, !address.isEmpty else {
+      store.proxyConfigurations = []
+      return true
+    }
+    guard let colon = address.lastIndex(of: ":"),
+      let number = UInt16(address[address.index(after: colon)...]),
+      let port = NWEndpoint.Port(rawValue: number)
+    else { return false }
+    let host = NWEndpoint.Host(String(address[..<colon]))
+    store.proxyConfigurations = [
+      ProxyConfiguration(httpCONNECTProxy: .hostPort(host: host, port: port))
+    ]
+    return true
   }
 
   func windowShouldClose(_ sender: NSWindow) -> Bool {

@@ -192,6 +192,9 @@ func (d *Daemon) SetTunStatus(s TunStatus) {
 	}
 }
 
+// TunMTU is tun.mtu: the VPN interface's MTU, 0 for its own.
+func (d *Daemon) TunMTU() int { return d.config().Tun.MTU }
+
 // TunPrograms is tun.programs, which the TUN sends directly.
 func (d *Daemon) TunPrograms() []config.TunProgram {
 	return slices.Clone(d.config().Tun.Programs)

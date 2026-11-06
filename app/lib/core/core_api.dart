@@ -458,6 +458,70 @@ class CoreApi {
     ];
   }
 
+  /// The backup file: the data folder (accounts and settings) as a zip,
+  /// and the name the core gives it.
+  Future<({String name, Uint8List bytes})> exportBackup() async {
+    final uri = endpoint.baseUri.replace(path: '/api/backup');
+    try {
+      final req = await _client.getUrl(uri).timeout(_slow);
+      req.headers.set('X-Local-Token', endpoint.token);
+      final res = await req.close().timeout(_slow);
+      final bytes =
+          (await res
+                  .fold<BytesBuilder>(
+                    BytesBuilder(),
+                    (b, chunk) => b..add(chunk),
+                  )
+                  .timeout(_slow))
+              .takeBytes();
+      if (res.statusCode != 200) {
+        final message = switch (jsonDecode(utf8.decode(bytes))) {
+          {'error': final String e} => e,
+          _ => 'HTTP ${res.statusCode}',
+        };
+        throw CoreApiException(res.statusCode, message);
+      }
+      final disposition = res.headers.value('content-disposition') ?? '';
+      final name =
+          RegExp(r'filename="([^"]+)"').firstMatch(disposition)?.group(1) ??
+          'Arman-VPN-backup.zip';
+      return (name: name, bytes: bytes);
+    } on SocketException catch (e) {
+      throw CoreUnavailable(
+        CoreProblem.notAnswering,
+        '${endpoint.baseUri}: ${e.message}',
+      );
+    } on HttpException catch (e) {
+      throw CoreUnavailable(CoreProblem.notAnswering, e.message);
+    } on TimeoutException {
+      throw CoreUnavailable(
+        CoreProblem.notAnswering,
+        '${endpoint.baseUri}: timeout',
+      );
+    } on FormatException {
+      throw const CoreUnavailable(
+        CoreProblem.notAnswering,
+        'unreadable answer',
+      );
+    }
+  }
+
+  /// Which accounts a backup file holds; 400 when it is no backup.
+  Future<BackupContents> inspectBackup(Uint8List zip) async =>
+      BackupContents.fromJson(
+        await _json('POST', '/api/backup/inspect', {
+          'data': base64Encode(zip),
+        }, _slow),
+      );
+
+  /// Adds the accounts of a backup file.
+  Future<BackupImported> importBackup(Uint8List zip) async =>
+      BackupImported.fromJson(
+        await _json('POST', '/api/backup/import', {
+          'data': base64Encode(zip),
+        }, _slow),
+      );
+
   /// A country's flag (SVG) by its two-letter code, from the core: built
   /// in there, or downloaded once and kept. Null when it has none.
   Future<Uint8List?> flag(String code) async {

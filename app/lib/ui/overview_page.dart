@@ -80,7 +80,7 @@ class OverviewPage extends StatelessWidget {
 }
 
 /// Opens the connection settings under "Mozilla's servers are blocked":
-/// HTTP/2 or HTTP/3, one of which a network may let through.
+/// HTTP/2, HTTP/3, or HTTP/1.1, one of which a network may let through.
 class _ConnectionSettingsButton extends StatelessWidget {
   const _ConnectionSettingsButton({required this.onPressed, this.label});
 

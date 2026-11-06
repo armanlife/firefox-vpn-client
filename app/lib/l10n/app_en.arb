@@ -492,6 +492,27 @@
   "signInMethodApi": "Sign in directly",
   "browserSignInBroken": "The sign-in page could not be opened.",
   "browserSignInFallback": "Sign in with email and password",
+  "backupExport": "Save a backup",
+  "backupImport": "Import a backup",
+  "backupSaved": "Saved: {name}",
+  "@backupSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "backupImportTitle": "Add these accounts?",
+  "backupAccountExists": "Already added; it signs in from the file",
+  "backupImportAction": "Add",
+  "backupImported": "{count, plural, =1{1 account added} other{{count} accounts added}}",
+  "@backupImported": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sectionDns": "DNS",
   "dnsPreset": "DNS servers",
   "dnsSystem": "System",
@@ -502,7 +523,17 @@
   "testDns": "Test DNS",
   "transport": "Protocol",
   "transportH3": "HTTP/3 (QUIC)",
+  "ipVersion": "IP version",
+  "ipVersionAuto": "Auto (IPv4, then IPv6)",
+  "ipVersionDual": "Both at once (dual-stack)",
+  "ipVersionV6First": "IPv6 first, then IPv4",
+  "ipVersionV4": "IPv4 only",
+  "ipVersionV6": "IPv6 only",
+  "tunMtu": "MTU",
+  "tunMtuHint": "The VPN interface's packet size, 1280 to 9000. Empty: automatic.",
+  "tunMtuInvalid": "A number from 1280 to 9000, or empty",
   "transportH2": "HTTP/2 (TCP)",
+  "transportH1": "HTTP/1.1 (TLS)",
   "directRules": "Direct",
   "directRulesHint": "Sites and addresses in this list open without the VPN, straight through your own internet. The chosen country's rules are already here: add, change, or remove lines. Choosing another country replaces them with its own.",
   "restoreRegionRules": "Restore the region's rules",

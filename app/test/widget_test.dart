@@ -1119,6 +1119,40 @@ void main() {
     core.dispose();
   });
 
+  testWidgets('the accounts page offers saving and taking in a backup', (
+    tester,
+  ) async {
+    stillMotion(tester);
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final core = CoreController(
+      () async => FakeApi(),
+      pollInterval: const Duration(hours: 1),
+    );
+    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+    core.start();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Accounts').first);
+    await tester.pumpAndSettle();
+
+    // Beside Add account, in plain sight.
+    final more = find.byIcon(Icons.more_vert_rounded);
+    expect(more, findsOneWidget);
+    await tester.tap(more);
+    await tester.pumpAndSettle();
+    expect(find.text('Save a backup'), findsOneWidget);
+    expect(find.text('Import a backup'), findsOneWidget);
+    expect(find.text('Backup'), findsNothing);
+    await tester.tapAt(Offset.zero);
+    await tester.pumpAndSettle();
+    expect(find.text('Save a backup'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
   testWidgets('the accounts page has the switching with a second account', (
     tester,
   ) async {
@@ -1263,6 +1297,89 @@ void main() {
 
     // ECH works by itself: there is nothing to choose.
     expect(find.textContaining('ECH'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  testWidgets('the IP version is Auto until another is chosen', (tester) async {
+    stillMotion(tester);
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final api = FakeApi();
+    final core = CoreController(
+      () async => api,
+      pollInterval: const Duration(hours: 1),
+    );
+    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+    core.start();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Connection').first);
+    await tester.pumpAndSettle();
+
+    final row = find.text('IP version');
+    await tester.ensureVisible(row);
+    await tester.pumpAndSettle();
+    expect(find.text('Auto (IPv4, then IPv6)'), findsOneWidget);
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('IPv6 only'));
+    await tester.pumpAndSettle();
+    expect((api.config['proxy'] as Map<String, Object?>)['ip_version'], 'ipv6');
+
+    await tester.pumpWidget(const SizedBox());
+    core.dispose();
+  });
+
+  testWidgets('the MTU field shows the device default until one is set', (
+    tester,
+  ) async {
+    stillMotion(tester);
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final api = FakeApi();
+    final core = CoreController(
+      () async => api,
+      pollInterval: const Duration(hours: 1),
+    );
+    await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+    core.start();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Connection').first);
+    await tester.pumpAndSettle();
+
+    final field = find.widgetWithText(TextField, 'MTU');
+    await tester.ensureVisible(field);
+    await tester.pumpAndSettle();
+    // A computer's TUN: 9000 (the tests run on a desktop).
+    String shown() => tester.widget<TextField>(field).controller!.text;
+    expect(shown(), '9000');
+
+    Future<void> save(String text) async {
+      await tester.enterText(field, text);
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.ancestor(of: field, matching: find.byType(Column)).first,
+          matching: find.widgetWithText(FilledButton, 'Save'),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await save('1400');
+    expect((api.config['tun'] as Map<String, Object?>)['mtu'], 1400);
+    await save('');
+    expect((api.config['tun'] as Map<String, Object?>)['mtu'], 0);
+    expect(shown(), '9000');
 
     await tester.pumpWidget(const SizedBox());
     core.dispose();
@@ -1806,8 +1923,9 @@ void main() {
     // The proxy login: one form, both fields saved together.
     await tester.tap(find.text('Proxy login'));
     await tester.pumpAndSettle();
-    // Its form's Save, before the Worker's at the end of the page.
-    final save = find.widgetWithText(FilledButton, 'Save').first;
+    // Its form's Save: after the MTU's in the connection section, before
+    // the Worker's at the end of the page.
+    final save = find.widgetWithText(FilledButton, 'Save').at(1);
     await tester.enterText(
       find.widgetWithText(TextField, 'Proxy username'),
       'user',

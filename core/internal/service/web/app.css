@@ -808,3 +808,21 @@ dialog::backdrop { background: rgba(5, 7, 12, .6); backdrop-filter: blur(3px); }
   .save-bar { flex-wrap: wrap; }
   .hero-text h2 { font-size: 1.3rem; }
 }
+
+/* The accounts page's "more" menu (backup). */
+.more-menu { position: relative; }
+.more-menu > summary { list-style: none; padding: 0 .55rem; }
+.more-menu > summary::-webkit-details-marker { display: none; }
+.more-menu .menu-panel {
+  position: absolute; inset-inline-end: 0; top: calc(100% + 6px); z-index: 30;
+  display: flex; flex-direction: column; min-width: 210px; padding: 6px;
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); box-shadow: var(--shadow);
+}
+.more-menu .menu-panel button {
+  display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem;
+  background: none; border: 0; border-radius: 7px; color: var(--text);
+  font: inherit; text-align: start; cursor: pointer; white-space: nowrap;
+}
+.more-menu .menu-panel button:hover { background: var(--surface-3); }
+.more-menu .menu-panel svg { width: 16px; height: 16px; fill: currentColor; }

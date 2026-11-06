@@ -80,7 +80,9 @@ func TestRelayEnabledByDefault(t *testing.T) {
 func TestLoadRejectsInvalidConfig(t *testing.T) {
 	for name, body := range map[string]string{
 		"country and server":     `{"proxy":{"country":"US","server":"us.example:443"}}`,
-		"bad transport":          `{"proxy":{"transport":"h1"}}`,
+		"bad transport":          `{"proxy":{"transport":"h4"}}`,
+		"bad ip version":         `{"proxy":{"ip_version":"ipv5"}}`,
+		"mtu too small":          `{"tun":{"mtu":576}}`,
 		"threshold too high":     `{"accounts":{"switch_threshold_percent":120}}`,
 		"duration as number":     `{"proxy":{"idle_sleep":20}}`,
 		"duplicate account":      `{"accounts":{"order":[{"id":"a","enabled":true},{"id":"a","enabled":true}]}}`,
@@ -488,6 +490,19 @@ func TestCleanUpstreamProxy(t *testing.T) {
 	} {
 		if got := CleanUpstreamProxy(in_); got != want {
 			t.Errorf("%q: %q, want %q", in_, got, want)
+		}
+	}
+}
+
+func TestIPVersionDefaultsToAuto(t *testing.T) {
+	if got := Default().Proxy.IPVersion; got != "auto" {
+		t.Fatalf("default ip_version = %q, want auto", got)
+	}
+	for _, v := range []string{"", "auto", "dual", "ipv6_first", "ipv4", "ipv6"} {
+		cfg := Default()
+		cfg.Proxy.IPVersion = v
+		if err := cfg.Validate(); err != nil {
+			t.Errorf("%q refused: %v", v, err)
 		}
 	}
 }

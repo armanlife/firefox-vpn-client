@@ -753,6 +753,39 @@ class AppLocalizationsRu extends AppLocalizations {
   String get browserSignInFallback => 'Вход с почтой и паролем';
 
   @override
+  String get backupExport => 'Сохранить резервную копию';
+
+  @override
+  String get backupImport => 'Импортировать резервную копию';
+
+  @override
+  String backupSaved(String name) {
+    return 'Сохранено: $name';
+  }
+
+  @override
+  String get backupImportTitle => 'Добавить эти аккаунты?';
+
+  @override
+  String get backupAccountExists => 'Уже добавлен; вход будет взят из файла';
+
+  @override
+  String get backupImportAction => 'Добавить';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Добавлено $count аккаунта',
+      many: 'Добавлено $count аккаунтов',
+      few: 'Добавлено $count аккаунта',
+      one: 'Добавлен $count аккаунт',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -784,7 +817,38 @@ class AppLocalizationsRu extends AppLocalizations {
   String get transportH3 => 'HTTP/3 (QUIC)';
 
   @override
+  String get ipVersion => 'Версия IP';
+
+  @override
+  String get ipVersionAuto => 'Авто (сначала IPv4, затем IPv6)';
+
+  @override
+  String get ipVersionDual => 'Оба сразу (dual-stack)';
+
+  @override
+  String get ipVersionV6First => 'Сначала IPv6, затем IPv4';
+
+  @override
+  String get ipVersionV4 => 'Только IPv4';
+
+  @override
+  String get ipVersionV6 => 'Только IPv6';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint =>
+      'Размер пакета интерфейса VPN, от 1280 до 9000. Пусто: автоматически.';
+
+  @override
+  String get tunMtuInvalid => 'Число от 1280 до 9000 или пусто';
+
+  @override
   String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
 
   @override
   String get directRules => 'Напрямую';

@@ -86,7 +86,17 @@ type Tun struct {
 	// QUIC carries apps' QUIC (UDP to port 443) through the VPN (the phone's
 	// too); by default it is refused, and apps fall back to TCP.
 	QUIC bool `json:"quic,omitempty"`
+	// MTU is the VPN interface's MTU (the phone's VPN and the desktop's TUN
+	// adapter), MinTunMTU to MaxTunMTU; 0 keeps each one's own (1500 on the
+	// phone, 9000 on the desktop).
+	MTU int `json:"mtu,omitempty"`
 }
+
+// The bounds of tun.mtu: IPv6 needs 1280.
+const (
+	MinTunMTU = 1280
+	MaxTunMTU = 9000
+)
 
 // TunProgram is a program that skips the VPN.
 type TunProgram struct {
@@ -193,8 +203,15 @@ type Proxy struct {
 	Country string `json:"country"`
 	// Server pins an exact upstream host:port.
 	Server string `json:"server"`
-	// Transport is "h2" (HTTP/2 over TCP) or "h3" (HTTP/3 over QUIC).
-	Transport           string `json:"transport"`
+	// Transport is "h2" (HTTP/2 over TCP), "h3" (HTTP/3 over QUIC), or "h1"
+	// (HTTP/1.1 over TLS, a connection per tunnel).
+	Transport string `json:"transport"`
+	// IPVersion is the IP version of the connections to Mozilla's servers
+	// alone (not the sign-in, the DNS, or the API): "auto" tries IPv4 first
+	// and IPv6 when IPv4 does not connect; "dual" both at once (dual-stack);
+	// "ipv6_first" IPv6 first, then IPv4; "ipv4" and "ipv6" keep to one.
+	// Empty is "auto".
+	IPVersion           string `json:"ip_version,omitempty"`
 	UpstreamConnections int    `json:"upstream_connections"`
 	MaxConnections      int    `json:"max_connections"`
 	// IdleSleep, when not 0, lets the proxy sleep after this long without
@@ -311,6 +328,7 @@ func Default() Config {
 		Proxy: Proxy{
 			Listen:              DefaultProxyListen,
 			Transport:           "h2",
+			IPVersion:           "auto",
 			UpstreamConnections: 1,
 			MaxConnections:      256,
 			IdleSleep:           Duration(DefaultIdleSleep),
@@ -626,8 +644,13 @@ func (c Config) Validate() error {
 	if strings.TrimSpace(p.Country) != "" && strings.TrimSpace(p.Server) != "" {
 		return errors.New("proxy.country and proxy.server are mutually exclusive")
 	}
-	if p.Transport != "h2" && p.Transport != "h3" {
-		return fmt.Errorf("proxy.transport must be \"h2\" or \"h3\", not %q", p.Transport)
+	if p.Transport != "h2" && p.Transport != "h3" && p.Transport != "h1" {
+		return fmt.Errorf("proxy.transport must be \"h2\", \"h3\", or \"h1\", not %q", p.Transport)
+	}
+	switch p.IPVersion {
+	case "", "auto", "dual", "ipv6_first", "ipv4", "ipv6":
+	default:
+		return fmt.Errorf("proxy.ip_version must be \"auto\", \"dual\", \"ipv6_first\", \"ipv4\", or \"ipv6\", not %q", p.IPVersion)
 	}
 	if p.UpstreamConnections < 1 {
 		return errors.New("proxy.upstream_connections must be at least 1")
@@ -702,6 +725,9 @@ func (c Config) Validate() error {
 	case SystemProxySet, SystemProxyClear, SystemProxyTun:
 	default:
 		return fmt.Errorf("system_proxy.mode %q is not supported; it must be %q, %q, or %q", c.SystemProxy.Mode, SystemProxySet, SystemProxyClear, SystemProxyTun)
+	}
+	if c.Tun.MTU != 0 && (c.Tun.MTU < MinTunMTU || c.Tun.MTU > MaxTunMTU) {
+		return fmt.Errorf("tun.mtu must be 0 (automatic) or from %d to %d, not %d", MinTunMTU, MaxTunMTU, c.Tun.MTU)
 	}
 	if len(c.Tun.Programs) > MaxTunPrograms {
 		return fmt.Errorf("tun.programs holds at most %d programs", MaxTunPrograms)

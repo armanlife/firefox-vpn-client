@@ -751,6 +751,36 @@ class AppLocalizationsBn extends AppLocalizations {
   String get browserSignInFallback => 'ইমেল ও পাসওয়ার্ড দিয়ে সাইন ইন';
 
   @override
+  String get backupExport => 'ব্যাকআপ সংরক্ষণ করুন';
+
+  @override
+  String get backupImport => 'ব্যাকআপ ইমপোর্ট করুন';
+
+  @override
+  String backupSaved(String name) {
+    return 'সংরক্ষিত: $name';
+  }
+
+  @override
+  String get backupImportTitle => 'এই অ্যাকাউন্টগুলো যোগ করবেন?';
+
+  @override
+  String get backupAccountExists => 'আগে থেকেই আছে; ফাইল থেকে সাইন ইন হবে';
+
+  @override
+  String get backupImportAction => 'যোগ করুন';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countটি অ্যাকাউন্ট যোগ হয়েছে',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -782,7 +812,38 @@ class AppLocalizationsBn extends AppLocalizations {
   String get transportH3 => 'HTTP/3 (QUIC)';
 
   @override
+  String get ipVersion => 'IP সংস্করণ';
+
+  @override
+  String get ipVersionAuto => 'স্বয়ংক্রিয় (প্রথমে IPv4, পরে IPv6)';
+
+  @override
+  String get ipVersionDual => 'দুটোই একসাথে (dual-stack)';
+
+  @override
+  String get ipVersionV6First => 'প্রথমে IPv6, পরে IPv4';
+
+  @override
+  String get ipVersionV4 => 'শুধু IPv4';
+
+  @override
+  String get ipVersionV6 => 'শুধু IPv6';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint =>
+      'VPN ইন্টারফেসের প্যাকেটের আকার, 1280 থেকে 9000। খালি: স্বয়ংক্রিয়।';
+
+  @override
+  String get tunMtuInvalid => '1280 থেকে 9000-এর মধ্যে একটি সংখ্যা, বা খালি';
+
+  @override
   String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
 
   @override
   String get directRules => 'সরাসরি';

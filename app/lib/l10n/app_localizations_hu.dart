@@ -756,6 +756,37 @@ class AppLocalizationsHu extends AppLocalizations {
   String get browserSignInFallback => 'Bejelentkezés e-maillel és jelszóval';
 
   @override
+  String get backupExport => 'Biztonsági mentés készítése';
+
+  @override
+  String get backupImport => 'Biztonsági mentés importálása';
+
+  @override
+  String backupSaved(String name) {
+    return 'Mentve: $name';
+  }
+
+  @override
+  String get backupImportTitle => 'Hozzáadja ezeket a fiókokat?';
+
+  @override
+  String get backupAccountExists =>
+      'Már hozzá van adva; a bejelentkezést a fájlból kapja';
+
+  @override
+  String get backupImportAction => 'Hozzáadás';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count fiók hozzáadva',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -787,7 +818,38 @@ class AppLocalizationsHu extends AppLocalizations {
   String get transportH3 => 'HTTP/3 (QUIC)';
 
   @override
+  String get ipVersion => 'IP-verzió';
+
+  @override
+  String get ipVersionAuto => 'Automatikus (előbb IPv4, aztán IPv6)';
+
+  @override
+  String get ipVersionDual => 'Mindkettő egyszerre (dual-stack)';
+
+  @override
+  String get ipVersionV6First => 'Előbb IPv6, aztán IPv4';
+
+  @override
+  String get ipVersionV4 => 'Csak IPv4';
+
+  @override
+  String get ipVersionV6 => 'Csak IPv6';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint =>
+      'A VPN-interfész csomagmérete, 1280 és 9000 között. Üres: automatikus.';
+
+  @override
+  String get tunMtuInvalid => 'Egy szám 1280 és 9000 között, vagy üres';
+
+  @override
   String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
 
   @override
   String get directRules => 'Közvetlen';

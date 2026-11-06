@@ -35,6 +35,7 @@ type tunHost interface {
 	SetTunStatus(service.TunStatus)
 	ReconnectUpstream()
 	TunPrograms() []config.TunProgram
+	TunMTU() int
 	VPNUDPPorts() []proxy.PortRange
 	NoteRefusedUDP(program, path string)
 }
@@ -227,7 +228,8 @@ func (t *tunSync) start(ctx context.Context) {
 	for _, r := range t.host.VPNUDPPorts() {
 		udpPorts = append(udpPorts, tunapi.PortRange{From: r.From, To: r.To})
 	}
-	reply, err := t.ask(conn, tunapi.Message{Type: tunapi.TypeOpen, Proxy: addr, Username: user, Password: password, Programs: programs, UDPPorts: udpPorts})
+	// tun.mtu; a service of an older protocol keeps its own.
+	reply, err := t.ask(conn, tunapi.Message{Type: tunapi.TypeOpen, Proxy: addr, Username: user, Password: password, Programs: programs, UDPPorts: udpPorts, MTU: t.host.TunMTU()})
 	if err == nil && (reply.Type != tunapi.TypeOpened || reply.Interface == nil) {
 		err = fmt.Errorf("unexpected reply %q", reply.Type)
 	}

@@ -283,10 +283,12 @@ class CoreService : VpnService() {
             return false
         }
         return try {
-            val config = mobile.Mobile.tunConfig(MTU)
+            // tun.mtu when the user set one, else the app's own.
+            val mtu = mobile.Mobile.tunMTU().takeIf { it > 0 } ?: MTU
+            val config = mobile.Mobile.tunConfig(mtu)
             val builder = Builder()
                 .setSession(getString(R.string.app_name))
-                .setMtu(MTU)
+                .setMtu(mtu)
                 .addAddress("172.19.0.1", 30)
                 .addRoute("0.0.0.0", 0)
                 // The tunnel answers DNS sent here (core/mobile), with

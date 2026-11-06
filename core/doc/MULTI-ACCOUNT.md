@@ -49,7 +49,8 @@ Files are written atomically with owner-only permissions on POSIX systems. On Wi
 | `proxy.username`, `proxy.password` | empty | When set (both), SOCKS5 clients must log in with them (RFC 1929); set them whenever the proxy listens on the network |
 | `proxy.country` | empty | Country code or name; empty is Auto (recommended, the `REC` location); `fastest` is Auto (fastest), the lowest real delay at each start |
 | `proxy.server` | empty | Exact upstream `host:port`; mutually exclusive with `country` |
-| `proxy.transport` | `h2` | `h2` (HTTP/2 over TCP) or `h3` (HTTP/3 over QUIC) |
+| `proxy.transport` | `h2` | `h2` (HTTP/2 over TCP), `h3` (HTTP/3 over QUIC), or `h1` (HTTP/1.1 over TLS: a TLS connection to Mozilla per tunnel carrying one CONNECT, with one spare kept ready; for networks that slow or cut long connections; UDP keeps its own HTTP/2 connection) |
+| `proxy.ip_version` | `auto` | The IP version of the connections to Mozilla's servers alone (the sign-in, the DNS, and the API keep their own): `auto` tries IPv4 first and IPv6 when IPv4 does not connect (IPv6 addresses are looked up only then); `dual` both at once, interleaved, the first to connect taken; `ipv6_first` IPv6 first, then IPv4; `ipv4` and `ipv6` keep to one. A step that another follows gets half the time left. Through `network.upstream_proxy` the proxy picks |
 | `proxy.upstream_connections` | `1` | Upstream sessions; client-IP affinity above 1 |
 | `proxy.max_connections` | `256` | Concurrent SOCKS clients; `0` disables the limit |
 | (fixed) `config.ConnectTimeout` | `20s` | Upstream dial/handshake and CONNECT opening budget; not in `config.json` |

@@ -751,6 +751,36 @@ class AppLocalizationsTr extends AppLocalizations {
   String get browserSignInFallback => 'E-posta ve parola ile giriş';
 
   @override
+  String get backupExport => 'Yedeği kaydet';
+
+  @override
+  String get backupImport => 'Yedeği içe aktar';
+
+  @override
+  String backupSaved(String name) {
+    return 'Kaydedildi: $name';
+  }
+
+  @override
+  String get backupImportTitle => 'Bu hesaplar eklensin mi?';
+
+  @override
+  String get backupAccountExists => 'Zaten ekli; oturumu dosyadan alınacak';
+
+  @override
+  String get backupImportAction => 'Ekle';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hesap eklendi',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -782,7 +812,38 @@ class AppLocalizationsTr extends AppLocalizations {
   String get transportH3 => 'HTTP/3 (QUIC)';
 
   @override
+  String get ipVersion => 'IP sürümü';
+
+  @override
+  String get ipVersionAuto => 'Otomatik (önce IPv4, sonra IPv6)';
+
+  @override
+  String get ipVersionDual => 'İkisi birden (dual-stack)';
+
+  @override
+  String get ipVersionV6First => 'Önce IPv6, sonra IPv4';
+
+  @override
+  String get ipVersionV4 => 'Yalnızca IPv4';
+
+  @override
+  String get ipVersionV6 => 'Yalnızca IPv6';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint =>
+      'VPN arayüzünün paket boyutu, 1280 ile 9000 arası. Boş: otomatik.';
+
+  @override
+  String get tunMtuInvalid => '1280 ile 9000 arası bir sayı ya da boş';
+
+  @override
   String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
 
   @override
   String get directRules => 'Doğrudan';

@@ -175,6 +175,25 @@ class AndroidCore {
       }) ??
       false;
 
+  /// Saves [bytes] as a file where the user picks, with the system's
+  /// dialog; the file's name, or null when the user backed out.
+  static Future<String?> saveFile(
+    String name,
+    Uint8List bytes, {
+    String mime = 'application/zip',
+  }) => _channel.invokeMethod<String>('saveFile', {
+    'name': name,
+    'bytes': bytes,
+    'mime': mime,
+  });
+
+  /// The bytes of a file the user picks with the system's dialog, or null
+  /// when the user backed out. Read to the end: a provider's reported size
+  /// can be wrong.
+  static Future<Uint8List?> openFile({
+    List<String> mimes = const ['application/zip', 'application/octet-stream'],
+  }) => _channel.invokeMethod<Uint8List>('openFile', {'mimes': mimes});
+
   /// The installed apps but this one, the system's too.
   static Future<List<InstalledApp>> installedApps() async {
     final list = await _channel.invokeListMethod<Map<Object?, Object?>>(

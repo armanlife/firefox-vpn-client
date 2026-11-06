@@ -23,7 +23,7 @@
 
 ## What is Arman VPN?
 
-**Arman VPN** is a free, open-source VPN that works with a Firefox Account. It carries your internet traffic through Mozilla's servers, on **Fastly**'s infrastructure, over secure **HTTP/2 and HTTP/3** tunnels.
+**Arman VPN** is a free, open-source VPN that works with a Firefox Account. It carries your internet traffic through Mozilla's servers, on **Fastly**'s infrastructure, over secure **HTTP/1.1, HTTP/2, and HTTP/3** tunnels.
 
 For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 
@@ -41,11 +41,17 @@ For **Android, Windows, macOS, and Linux**; completely free, with no ads.
 
 🌐 Mozilla's servers: choose a country with a ping test, or let the app pick the best server
 
-⚡ Fast, stable connections over HTTP/2 and HTTP/3
+⚡ Fast, stable connections over HTTP/1.1, HTTP/2, and HTTP/3
+
+🦊 Looks like Firefox: connections to Mozilla start with Firefox's own TLS fingerprint (uTLS)
 
 🔀 Smart routing (split tunneling): choose the sites and apps that skip the VPN
 
 🧱 If your network blocks the connection: TLS fragmentation, upstream SOCKS5 proxy, and a relay server
+
+💾 Backup and import: your accounts and settings in one file, for another device or a server
+
+⚙️ Advanced connection options: IPv4, IPv6, or dual-stack, and a custom MTU
 
 🔒 Encrypted DNS (DNS over HTTPS)
 

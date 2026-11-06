@@ -27,6 +27,8 @@ type fakeHost struct {
 	refused  []string
 }
 
+func (h *fakeHost) TunMTU() int { return 0 }
+
 func (h *fakeHost) TunPrograms() []config.TunProgram {
 	h.mu.Lock()
 	defer h.mu.Unlock()

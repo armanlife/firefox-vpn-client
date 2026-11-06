@@ -105,6 +105,16 @@ class DesktopBridge {
         'command': command,
       });
 
+  /// Sends the app's web views through the proxy at [address]
+  /// ("127.0.0.1:port"), or straight out again when it is null. macOS only
+  /// (WKWebsiteDataStore.proxyConfigurations, macOS 14 and later); false
+  /// when the system cannot, and the views then connect by themselves.
+  static Future<bool> setWebViewProxy(String? address) async =>
+      await _channel.invokeMethod<bool>('setWebViewProxy', {
+        'address': address,
+      }) ??
+      false;
+
   /// Opens an http or https [url] in the default browser through the
   /// shell (Windows only; the runner refuses other schemes).
   static Future<void> openUrl(String url) =>

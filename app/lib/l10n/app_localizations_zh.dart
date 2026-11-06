@@ -730,6 +730,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get browserSignInFallback => '使用邮箱和密码登录';
 
   @override
+  String get backupExport => '保存备份';
+
+  @override
+  String get backupImport => '导入备份';
+
+  @override
+  String backupSaved(String name) {
+    return '已保存：$name';
+  }
+
+  @override
+  String get backupImportTitle => '添加这些账户？';
+
+  @override
+  String get backupAccountExists => '已添加；将使用文件中的登录信息';
+
+  @override
+  String get backupImportAction => '添加';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已添加 $count 个账户',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -760,7 +790,37 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transportH3 => 'HTTP/3 (QUIC)';
 
   @override
+  String get ipVersion => 'IP 版本';
+
+  @override
+  String get ipVersionAuto => '自动（先 IPv4，再 IPv6）';
+
+  @override
+  String get ipVersionDual => '同时使用两者（双栈）';
+
+  @override
+  String get ipVersionV6First => '先 IPv6，再 IPv4';
+
+  @override
+  String get ipVersionV4 => '仅 IPv4';
+
+  @override
+  String get ipVersionV6 => '仅 IPv6';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint => 'VPN 接口的数据包大小，1280 到 9000。留空：自动。';
+
+  @override
+  String get tunMtuInvalid => '1280 到 9000 之间的数字，或留空';
+
+  @override
   String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
 
   @override
   String get directRules => '直连';
@@ -2245,6 +2305,36 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get browserSignInFallback => '使用電子郵件和密碼登入';
 
   @override
+  String get backupExport => '儲存備份';
+
+  @override
+  String get backupImport => '匯入備份';
+
+  @override
+  String backupSaved(String name) {
+    return '已儲存：$name';
+  }
+
+  @override
+  String get backupImportTitle => '新增這些帳號？';
+
+  @override
+  String get backupAccountExists => '已新增；將使用檔案中的登入資訊';
+
+  @override
+  String get backupImportAction => '新增';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '已新增 $count 個帳號',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -2275,7 +2365,37 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
   String get transportH3 => 'HTTP/3 (QUIC)';
 
   @override
+  String get ipVersion => 'IP 版本';
+
+  @override
+  String get ipVersionAuto => '自動（先 IPv4，再 IPv6）';
+
+  @override
+  String get ipVersionDual => '同時使用兩者（雙堆疊）';
+
+  @override
+  String get ipVersionV6First => '先 IPv6，再 IPv4';
+
+  @override
+  String get ipVersionV4 => '僅 IPv4';
+
+  @override
+  String get ipVersionV6 => '僅 IPv6';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint => 'VPN 介面的封包大小，1280 到 9000。留空：自動。';
+
+  @override
+  String get tunMtuInvalid => '1280 到 9000 之間的數字，或留空';
+
+  @override
   String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
 
   @override
   String get directRules => '直接連線';

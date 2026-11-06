@@ -119,6 +119,8 @@ type Message struct {
 	// UDPPorts (open) are the UDP destination ports the service sends to the
 	// core, on the SOCKS5 server's UDP ASSOCIATE; it refuses UDP to others.
 	UDPPorts []PortRange `json:"udp_ports,omitempty"`
+	// MTU (open) is the adapter's MTU (tun.mtu); 0 keeps the service's own.
+	MTU int `json:"mtu,omitempty"`
 	// Code and Message (error, failed) say why.
 	Code    string `json:"code,omitempty"`
 	Message string `json:"message,omitempty"`

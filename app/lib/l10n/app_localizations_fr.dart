@@ -758,6 +758,38 @@ class AppLocalizationsFr extends AppLocalizations {
   String get browserSignInFallback => 'Connexion avec e-mail et mot de passe';
 
   @override
+  String get backupExport => 'Enregistrer une sauvegarde';
+
+  @override
+  String get backupImport => 'Importer une sauvegarde';
+
+  @override
+  String backupSaved(String name) {
+    return 'Enregistré : $name';
+  }
+
+  @override
+  String get backupImportTitle => 'Ajouter ces comptes ?';
+
+  @override
+  String get backupAccountExists =>
+      'Déjà ajouté ; sa connexion sera reprise du fichier';
+
+  @override
+  String get backupImportAction => 'Ajouter';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count comptes ajoutés',
+      one: '1 compte ajouté',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -789,7 +821,38 @@ class AppLocalizationsFr extends AppLocalizations {
   String get transportH3 => 'HTTP/3 (QUIC)';
 
   @override
+  String get ipVersion => 'Version IP';
+
+  @override
+  String get ipVersionAuto => 'Automatique (IPv4 d\'abord, puis IPv6)';
+
+  @override
+  String get ipVersionDual => 'Les deux à la fois (dual-stack)';
+
+  @override
+  String get ipVersionV6First => 'IPv6 d\'abord, puis IPv4';
+
+  @override
+  String get ipVersionV4 => 'IPv4 uniquement';
+
+  @override
+  String get ipVersionV6 => 'IPv6 uniquement';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint =>
+      'Taille des paquets de l\'interface VPN, de 1280 à 9000. Vide : automatique.';
+
+  @override
+  String get tunMtuInvalid => 'Un nombre de 1280 à 9000, ou vide';
+
+  @override
   String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
 
   @override
   String get directRules => 'Direct';

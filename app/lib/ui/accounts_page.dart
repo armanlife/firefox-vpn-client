@@ -6,6 +6,7 @@ import '../core/core_api.dart';
 import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
+import 'backup.dart';
 import 'browser_signin.dart';
 import 'format.dart';
 import 'signin_dialog.dart';
@@ -34,6 +35,8 @@ class AccountsPage extends StatelessWidget {
               icon: const Icon(Icons.add_rounded),
               label: Text(l.addAccount),
             ),
+            const SizedBox(width: 4),
+            BackupMenuButton(core: core),
           ],
         ),
         const SizedBox(height: 20),

@@ -676,3 +676,40 @@ class SignInState {
       step == SignInStep.needUnblockCode ||
       step == SignInStep.needCaptcha;
 }
+
+/// An account in a backup file (POST /api/backup/inspect).
+class BackupAccount {
+  BackupAccount.fromJson(Map<String, Object?> j)
+    : email = _str(j['email']),
+      hasPassword = _bool(j['has_password']),
+      exists = _bool(j['exists']);
+
+  final String email;
+  final bool hasPassword;
+
+  /// This device has the account already: taking the file in gives it the
+  /// file's sign-in.
+  final bool exists;
+}
+
+/// What a backup file holds (POST /api/backup/inspect).
+class BackupContents {
+  BackupContents.fromJson(Map<String, Object?> j)
+    : accounts = [
+        for (final a in (j['accounts'] as List<Object?>? ?? const []))
+          if (a is Map<String, Object?>) BackupAccount.fromJson(a),
+      ];
+
+  final List<BackupAccount> accounts;
+}
+
+/// A backup file taken in (POST /api/backup/import): new accounts, and
+/// ones this device had, now signed in from the file.
+class BackupImported {
+  BackupImported.fromJson(Map<String, Object?> j)
+    : added = _int(j['added']),
+      updated = _int(j['updated']);
+
+  final int added;
+  final int updated;
+}

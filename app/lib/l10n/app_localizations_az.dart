@@ -751,6 +751,37 @@ class AppLocalizationsAz extends AppLocalizations {
   String get browserSignInFallback => 'E-poçt və şifrə ilə giriş';
 
   @override
+  String get backupExport => 'Ehtiyat nüsxəni saxla';
+
+  @override
+  String get backupImport => 'Ehtiyat nüsxəni idxal et';
+
+  @override
+  String backupSaved(String name) {
+    return 'Saxlanıldı: $name';
+  }
+
+  @override
+  String get backupImportTitle => 'Bu hesablar əlavə edilsin?';
+
+  @override
+  String get backupAccountExists =>
+      'Artıq əlavə edilib; girişi fayldan alınacaq';
+
+  @override
+  String get backupImportAction => 'Əlavə et';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hesab əlavə edildi',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -782,7 +813,38 @@ class AppLocalizationsAz extends AppLocalizations {
   String get transportH3 => 'HTTP/3 (QUIC)';
 
   @override
+  String get ipVersion => 'IP versiyası';
+
+  @override
+  String get ipVersionAuto => 'Avtomatik (əvvəl IPv4, sonra IPv6)';
+
+  @override
+  String get ipVersionDual => 'Hər ikisi birlikdə (dual-stack)';
+
+  @override
+  String get ipVersionV6First => 'Əvvəl IPv6, sonra IPv4';
+
+  @override
+  String get ipVersionV4 => 'Yalnız IPv4';
+
+  @override
+  String get ipVersionV6 => 'Yalnız IPv6';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint =>
+      'VPN interfeysinin paket ölçüsü, 1280-dən 9000-ə qədər. Boş: avtomatik.';
+
+  @override
+  String get tunMtuInvalid => '1280-dən 9000-ə qədər rəqəm və ya boş';
+
+  @override
   String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
 
   @override
   String get directRules => 'Birbaşa';

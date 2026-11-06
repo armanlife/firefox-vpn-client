@@ -92,6 +92,7 @@ func (d *Daemon) startEngine() (*proxyEngine, error) {
 			Guardian:   cfg.Network.GuardianEndpoint,
 			Timeout:    connectTimeout,
 			UseH3:      engineTransport(cfg) == "h3",
+			UseH1:      engineTransport(cfg) == "h1",
 			Sessions:   cfg.Proxy.UpstreamConnections,
 			StatusFile: d.paths.Status,
 			Accounts:   d.pool,
@@ -532,10 +533,10 @@ func (d *Daemon) firefoxVersion() string {
 	return version
 }
 
-// engineTransport is proxy.transport, or "h2" through an upstream proxy: a
-// SOCKS5 connection is TCP, and QUIC is not.
+// engineTransport is proxy.transport, or "h2" for HTTP/3 through an
+// upstream proxy: a SOCKS5 connection is TCP, and QUIC is not.
 func engineTransport(cfg config.Config) string {
-	if cfg.Network.UpstreamProxyInUse() != "" {
+	if cfg.Network.UpstreamProxyInUse() != "" && cfg.Proxy.Transport == "h3" {
 		return "h2"
 	}
 	return cfg.Proxy.Transport

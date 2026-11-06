@@ -750,6 +750,37 @@ class AppLocalizationsId extends AppLocalizations {
   String get browserSignInFallback => 'Masuk dengan email dan kata sandi';
 
   @override
+  String get backupExport => 'Simpan cadangan';
+
+  @override
+  String get backupImport => 'Impor cadangan';
+
+  @override
+  String backupSaved(String name) {
+    return 'Tersimpan: $name';
+  }
+
+  @override
+  String get backupImportTitle => 'Tambahkan akun-akun ini?';
+
+  @override
+  String get backupAccountExists =>
+      'Sudah ada; info masuknya diambil dari file';
+
+  @override
+  String get backupImportAction => 'Tambah';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count akun ditambahkan',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -781,7 +812,38 @@ class AppLocalizationsId extends AppLocalizations {
   String get transportH3 => 'HTTP/3 (QUIC)';
 
   @override
+  String get ipVersion => 'Versi IP';
+
+  @override
+  String get ipVersionAuto => 'Otomatis (IPv4 dulu, lalu IPv6)';
+
+  @override
+  String get ipVersionDual => 'Keduanya sekaligus (dual-stack)';
+
+  @override
+  String get ipVersionV6First => 'IPv6 dulu, lalu IPv4';
+
+  @override
+  String get ipVersionV4 => 'Hanya IPv4';
+
+  @override
+  String get ipVersionV6 => 'Hanya IPv6';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint =>
+      'Ukuran paket antarmuka VPN, 1280 hingga 9000. Kosong: otomatis.';
+
+  @override
+  String get tunMtuInvalid => 'Angka dari 1280 hingga 9000, atau kosong';
+
+  @override
   String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
 
   @override
   String get directRules => 'Langsung';

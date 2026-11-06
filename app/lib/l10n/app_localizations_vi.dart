@@ -752,6 +752,37 @@ class AppLocalizationsVi extends AppLocalizations {
   String get browserSignInFallback => 'Đăng nhập bằng email và mật khẩu';
 
   @override
+  String get backupExport => 'Lưu bản sao lưu';
+
+  @override
+  String get backupImport => 'Nhập bản sao lưu';
+
+  @override
+  String backupSaved(String name) {
+    return 'Đã lưu: $name';
+  }
+
+  @override
+  String get backupImportTitle => 'Thêm các tài khoản này?';
+
+  @override
+  String get backupAccountExists =>
+      'Đã có sẵn; thông tin đăng nhập sẽ lấy từ tệp';
+
+  @override
+  String get backupImportAction => 'Thêm';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã thêm $count tài khoản',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -783,7 +814,38 @@ class AppLocalizationsVi extends AppLocalizations {
   String get transportH3 => 'HTTP/3 (QUIC)';
 
   @override
+  String get ipVersion => 'Phiên bản IP';
+
+  @override
+  String get ipVersionAuto => 'Tự động (IPv4 trước, rồi IPv6)';
+
+  @override
+  String get ipVersionDual => 'Cả hai cùng lúc (dual-stack)';
+
+  @override
+  String get ipVersionV6First => 'IPv6 trước, rồi IPv4';
+
+  @override
+  String get ipVersionV4 => 'Chỉ IPv4';
+
+  @override
+  String get ipVersionV6 => 'Chỉ IPv6';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint =>
+      'Kích thước gói của giao diện VPN, từ 1280 đến 9000. Để trống: tự động.';
+
+  @override
+  String get tunMtuInvalid => 'Một số từ 1280 đến 9000, hoặc để trống';
+
+  @override
   String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
 
   @override
   String get directRules => 'Trực tiếp';

@@ -516,7 +516,7 @@ function renderStatus() {
     chips.append(...[
       el("span", { class: "chip copy", title: "Copy the proxy address (SOCKS5 and HTTP)", onclick: () => copyText(s.proxy.listen) }, icon("copy"), "Proxy " + s.proxy.listen),
       s.proxy.login_required ? el("span", { class: "chip ok", title: "Clients need the SOCKS5 username and password" }, icon("lock"), "Login required") : null,
-      el("span", { class: "chip accent", text: s.proxy.transport === "h3" ? "HTTP/3 · QUIC" : "HTTP/2 · TLS" }),
+      el("span", { class: "chip accent", text: { h3: "HTTP/3 · QUIC", h1: "HTTP/1.1 · TLS" }[s.proxy.transport] || "HTTP/2 · TLS" }),
       s.exit ? ipChip(s.exit) : null,
     ].filter(Boolean));
   }
@@ -1337,6 +1337,74 @@ async function pollSignIn(id) {
 }
 
 $("#add-account").addEventListener("click", () => openSignIn());
+
+// The backup: the data folder as a zip file in the same layout (GET
+// /api/backup), and adding the accounts of one (POST /api/backup/inspect,
+// then /api/backup/import). The settings in a file taken in stay as they
+// are here.
+async function saveBackup() {
+  $("#backup-menu").open = false;
+  try {
+    const response = await fetch("/api/backup", { credentials: "same-origin" });
+    if (response.status === 401) {
+      showLogin();
+      return;
+    }
+    if (!response.ok) {
+      let data = null;
+      try { data = await response.json(); } catch { /* empty body */ }
+      throw new ApiError(response.status, (data && data.error) || response.statusText);
+    }
+    const name = /filename="([^"]+)"/.exec(response.headers.get("Content-Disposition") || "")?.[1] || "Arman-VPN-backup.zip";
+    const url = URL.createObjectURL(await response.blob());
+    const link = el("a", { href: url, download: name });
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    toast(`Saved ${name}`);
+  } catch (error) {
+    toast(error.message, true);
+  }
+}
+
+function base64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let text = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) text += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(text);
+}
+
+async function importBackup(file) {
+  try {
+    const data = base64(await file.arrayBuffer());
+    const contents = await api("POST", "/api/backup/inspect", { data });
+    const lines = contents.accounts.map((a) => `• ${a.email}${a.exists ? " (already added: it takes the file's sign-in)" : ""}`);
+    if (!confirm(`Add these accounts?\n\n${lines.join("\n")}`)) return;
+    const done = await api("POST", "/api/backup/import", { data });
+    const count = done.added + done.updated;
+    toast(count === 1 ? "1 account added" : `${count} accounts added`);
+    await loadAccounts();
+  } catch (error) {
+    toast(error.message, true);
+  }
+}
+
+$("#backup-save").addEventListener("click", saveBackup);
+$("#backup-import").addEventListener("click", () => {
+  $("#backup-menu").open = false;
+  $("#backup-file").click();
+});
+$("#backup-file").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  event.target.value = "";
+  if (file) importBackup(file);
+});
+// A click anywhere else closes the menu.
+document.addEventListener("click", (event) => {
+  const menu = $("#backup-menu");
+  if (menu.open && !menu.contains(event.target)) menu.open = false;
+});
 
 $("#signin-form").addEventListener("submit", async (event) => {
   event.preventDefault();

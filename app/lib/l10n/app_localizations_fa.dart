@@ -748,6 +748,36 @@ class AppLocalizationsFa extends AppLocalizations {
   String get browserSignInFallback => 'ورود با ایمیل و رمز عبور';
 
   @override
+  String get backupExport => 'گرفتن بک‌آپ';
+
+  @override
+  String get backupImport => 'ایمپورت بک‌آپ';
+
+  @override
+  String backupSaved(String name) {
+    return 'بک‌آپ ذخیره شد: $name';
+  }
+
+  @override
+  String get backupImportTitle => 'این حساب‌ها اضافه شوند؟';
+
+  @override
+  String get backupAccountExists => 'از قبل هست؛ ورودش از بک‌آپ گرفته می‌شود';
+
+  @override
+  String get backupImportAction => 'افزودن';
+
+  @override
+  String backupImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حساب اضافه شد',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -779,7 +809,38 @@ class AppLocalizationsFa extends AppLocalizations {
   String get transportH3 => 'HTTP/3 (QUIC)';
 
   @override
+  String get ipVersion => 'نسخه IP';
+
+  @override
+  String get ipVersionAuto => 'خودکار (اول IPv4، بعد IPv6)';
+
+  @override
+  String get ipVersionDual => 'هر دو هم‌زمان (Dual-Stack)';
+
+  @override
+  String get ipVersionV6First => 'اول IPv6، بعد IPv4';
+
+  @override
+  String get ipVersionV4 => 'فقط IPv4';
+
+  @override
+  String get ipVersionV6 => 'فقط IPv6';
+
+  @override
+  String get tunMtu => 'MTU';
+
+  @override
+  String get tunMtuHint =>
+      'اندازه بسته‌های رابط VPN، از ۱۲۸۰ تا ۹۰۰۰. خالی: خودکار.';
+
+  @override
+  String get tunMtuInvalid => 'عددی از ۱۲۸۰ تا ۹۰۰۰، یا خالی';
+
+  @override
   String get transportH2 => 'HTTP/2 (TCP)';
+
+  @override
+  String get transportH1 => 'HTTP/1.1 (TLS)';
 
   @override
   String get directRules => 'مستقیم';

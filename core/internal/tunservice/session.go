@@ -109,7 +109,7 @@ func newSession(s *Server, owner *tunapi.Conn, client string, protocol int, m tu
 		Name:  AdapterName,
 		Inet4: adapterV4,
 		Inet6: adapterV6,
-		MTU:   adapterMTU,
+		MTU:   uint32(sessionMTU(m.MTU)),
 		Handler: tunstack.Handler{
 			DNS:     sess.dns.Answer,
 			TCP:     func(f *tunstack.Flow) { sess.forward(f.Source, f.Destination, f.Accept, f.Refuse) },

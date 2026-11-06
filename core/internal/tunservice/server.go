@@ -23,6 +23,15 @@ import (
 // adapterMTU is the TUN adapter's MTU; AdapterName (adapter_*.go) its name.
 const adapterMTU = 9000
 
+// sessionMTU is the MTU a core asks for (tun.mtu), within bounds, or
+// adapterMTU.
+func sessionMTU(asked int) int {
+	if asked < 1280 || asked > adapterMTU {
+		return adapterMTU
+	}
+	return asked
+}
+
 var (
 	// adapterV4 is the adapter's address in tun.DesktopNet; Windows sends
 	// DNS to the next one, which the stack answers like any DNS.

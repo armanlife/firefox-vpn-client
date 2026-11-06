@@ -1401,6 +1401,48 @@ abstract class AppLocalizations {
   /// **'Sign in with email and password'**
   String get browserSignInFallback;
 
+  /// No description provided for @backupExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a backup'**
+  String get backupExport;
+
+  /// No description provided for @backupImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a backup'**
+  String get backupImport;
+
+  /// No description provided for @backupSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved: {name}'**
+  String backupSaved(String name);
+
+  /// No description provided for @backupImportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add these accounts?'**
+  String get backupImportTitle;
+
+  /// No description provided for @backupAccountExists.
+  ///
+  /// In en, this message translates to:
+  /// **'Already added; it signs in from the file'**
+  String get backupAccountExists;
+
+  /// No description provided for @backupImportAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get backupImportAction;
+
+  /// No description provided for @backupImported.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 account added} other{{count} accounts added}}'**
+  String backupImported(int count);
+
   /// No description provided for @sectionDns.
   ///
   /// In en, this message translates to:
@@ -1461,11 +1503,71 @@ abstract class AppLocalizations {
   /// **'HTTP/3 (QUIC)'**
   String get transportH3;
 
+  /// No description provided for @ipVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'IP version'**
+  String get ipVersion;
+
+  /// No description provided for @ipVersionAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto (IPv4, then IPv6)'**
+  String get ipVersionAuto;
+
+  /// No description provided for @ipVersionDual.
+  ///
+  /// In en, this message translates to:
+  /// **'Both at once (dual-stack)'**
+  String get ipVersionDual;
+
+  /// No description provided for @ipVersionV6First.
+  ///
+  /// In en, this message translates to:
+  /// **'IPv6 first, then IPv4'**
+  String get ipVersionV6First;
+
+  /// No description provided for @ipVersionV4.
+  ///
+  /// In en, this message translates to:
+  /// **'IPv4 only'**
+  String get ipVersionV4;
+
+  /// No description provided for @ipVersionV6.
+  ///
+  /// In en, this message translates to:
+  /// **'IPv6 only'**
+  String get ipVersionV6;
+
+  /// No description provided for @tunMtu.
+  ///
+  /// In en, this message translates to:
+  /// **'MTU'**
+  String get tunMtu;
+
+  /// No description provided for @tunMtuHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The VPN interface\'s packet size, 1280 to 9000. Empty: automatic.'**
+  String get tunMtuHint;
+
+  /// No description provided for @tunMtuInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'A number from 1280 to 9000, or empty'**
+  String get tunMtuInvalid;
+
   /// No description provided for @transportH2.
   ///
   /// In en, this message translates to:
   /// **'HTTP/2 (TCP)'**
   String get transportH2;
+
+  /// No description provided for @transportH1.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP/1.1 (TLS)'**
+  String get transportH1;
 
   /// No description provided for @directRules.
   ///

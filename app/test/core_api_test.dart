@@ -15,6 +15,18 @@ void main() {
       // A local fixture: unknown requests fail and nothing leaves loopback.
       server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       server.listen((req) async {
+        if (req.method == 'GET' && req.uri.path == '/api/backup') {
+          seen['token'] = req.headers.value('X-Local-Token');
+          req.response
+            ..headers.contentType = ContentType('application', 'zip')
+            ..headers.set(
+              'Content-Disposition',
+              'attachment; filename="Arman-VPN-backup-2026-11-06.zip"',
+            )
+            ..add([0x50, 0x4b, 0x03, 0x04]);
+          await req.response.close();
+          return;
+        }
         final body = await utf8.decoder.bind(req).join();
         seen['token'] = req.headers.value('X-Local-Token');
         seen['type'] = req.headers.contentType?.mimeType;
@@ -42,6 +54,16 @@ void main() {
             {'address': '127.0.0.1:41234'},
           ),
           ('DELETE', '/api/signin/browser/proxy') => (200, {'closed': true}),
+          ('POST', '/api/backup/inspect') => (
+            200,
+            {
+              'accounts': [
+                {'email': 'a@example.com', 'has_password': true},
+                {'email': 'b@example.com', 'exists': true},
+              ],
+            },
+          ),
+          ('POST', '/api/backup/import') => (200, {'added': 1, 'updated': 1}),
           ('POST', '/api/test') => (409, {'error': 'the proxy is not running'}),
           _ => (404, {'error': 'not found'}),
         };
@@ -77,6 +99,28 @@ void main() {
       expect(seen['type'], 'application/json');
       await api.cancelSignIn('s');
       expect(seen['type'], 'application/json');
+    });
+
+    test('saves and takes in a backup', () async {
+      final file = await api.exportBackup();
+      expect(seen['token'], 'secret-token');
+      expect(file.name, 'Arman-VPN-backup-2026-11-06.zip');
+      expect(file.bytes, [0x50, 0x4b, 0x03, 0x04]);
+
+      final contents = await api.inspectBackup(file.bytes);
+      expect(jsonDecode(seen['body'] as String), {
+        'data': base64Encode(file.bytes),
+      });
+      expect(contents.accounts.map((a) => a.email), [
+        'a@example.com',
+        'b@example.com',
+      ]);
+      expect(contents.accounts.first.hasPassword, isTrue);
+      expect(contents.accounts.last.exists, isTrue);
+
+      final done = await api.importBackup(file.bytes);
+      expect(seen['type'], 'application/json');
+      expect(done.added + done.updated, 2);
     });
 
     test('opens and closes the sign-in proxy', () async {

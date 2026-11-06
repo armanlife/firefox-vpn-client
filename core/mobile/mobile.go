@@ -279,6 +279,18 @@ func Running() bool {
 	return running != nil
 }
 
+// TunMTU is tun.mtu, the VPN interface's MTU the user chose, or 0 for the
+// app's own; the app sets its VPN to it (CoreService.kt), and TunConfig
+// uses it too.
+func TunMTU() int32 {
+	mu.Lock()
+	defer mu.Unlock()
+	if running == nil {
+		return 0
+	}
+	return int32(running.TunMTU())
+}
+
 // TunConfig makes the VPN's way into the core, for a device of the given MTU:
 // it opens the core's TUN listener, which the proxy's rules for the VPN apply
 // to, and writes the configuration of hev-socks5-tunnel, the C library that
@@ -286,6 +298,9 @@ func Running() bool {
 // the app runs the library with it (Tun2Socks.kt). The app must exclude itself
 // from the VPN, so the core's own connections do not loop back into it.
 func TunConfig(mtu int32) (string, error) {
+	if m := TunMTU(); m > 0 {
+		mtu = m
+	}
 	mu.Lock()
 	defer mu.Unlock()
 	d := running

@@ -530,16 +530,78 @@ class _SettingsPageState extends State<SettingsPage> {
               _Choice<String>(
                 icon: Icons.http_rounded,
                 title: l.transport,
-                value: _str(['proxy', 'transport']) == 'h2' ? 'h2' : 'h3',
+                value: switch (_str(['proxy', 'transport'])) {
+                  'h3' => 'h3',
+                  'h1' => 'h1',
+                  _ => 'h2',
+                },
                 onChanged: _saving
                     ? null
                     : (v) => _save({
                         ['proxy', 'transport']: v,
                       }),
+                // In the order of the protocols; HTTP/2 stays the default.
                 options: [
+                  // A TLS connection per site connection: for networks
+                  // that slow or cut long connections.
+                  ('h1', l.transportH1, null),
                   ('h2', l.transportH2, null),
                   ('h3', l.transportH3, null),
                 ],
+              ),
+              // The connection to Mozilla's servers alone: the sign-in and
+              // the DNS keep their own way.
+              _Choice<String>(
+                icon: Icons.lan_outlined,
+                title: l.ipVersion,
+                value: switch (_str(['proxy', 'ip_version'])) {
+                  final v
+                      when const [
+                        'dual',
+                        'ipv6_first',
+                        'ipv4',
+                        'ipv6',
+                      ].contains(v) =>
+                    v,
+                  _ => 'auto',
+                },
+                onChanged: _saving
+                    ? null
+                    : (v) => _save({
+                        ['proxy', 'ip_version']: v,
+                      }),
+                options: [
+                  ('auto', l.ipVersionAuto, null),
+                  ('dual', l.ipVersionDual, null),
+                  ('ipv6_first', l.ipVersionV6First, null),
+                  ('ipv4', l.ipVersionV4, null),
+                  ('ipv6', l.ipVersionV6, null),
+                ],
+              ),
+              // tun.mtu: the VPN interface's MTU (the phone's VPN, the
+              // computer's TUN); empty keeps each one's own.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                child: _TextSetting(
+                  label: l.tunMtu,
+                  hint: l.tunMtuHint,
+                  // Unset, the field shows this device's own MTU: the
+                  // phone's VPN 1500, the computer's TUN 9000.
+                  value: switch (_get(['tun', 'mtu'])) {
+                    final num n when n > 0 => '${n.toInt()}',
+                    _ => Platform.isAndroid ? '1500' : '9000',
+                  },
+                  validator: (v) {
+                    final n = int.tryParse(v.trim());
+                    return v.trim().isEmpty ||
+                            (n != null && n >= 1280 && n <= 9000)
+                        ? null
+                        : l.tunMtuInvalid;
+                  },
+                  onSave: (v) => _save({
+                    ['tun', 'mtu']: int.tryParse(v.trim()) ?? 0,
+                  }),
+                ),
               ),
               // The phone never sleeps (the core turns it off there).
               if (!Platform.isAndroid) _sleepChoice(l),
@@ -645,11 +707,14 @@ class _SettingsPageState extends State<SettingsPage> {
     trailing: Semantics(
       label: l.apiRelayUse,
       child: Switch(
-        value: _bool(['network', 'api_relay_enabled']) &&
+        value:
+            _bool(['network', 'api_relay_enabled']) &&
             _str(['network', 'api_relay']).isNotEmpty,
         onChanged: _saving || _str(['network', 'api_relay']).isEmpty
             ? null
-            : (on) => _save({['network', 'api_relay_enabled']: on}),
+            : (on) => _save({
+                ['network', 'api_relay_enabled']: on,
+              }),
       ),
     ),
     child: _TextSetting(
@@ -1777,8 +1842,11 @@ class _TextSettingState extends State<_TextSetting> {
   @override
   void didUpdateWidget(_TextSetting old) {
     super.didUpdateWidget(old);
-    // A saved value comes back from the core; keep unsaved typing.
-    if (old.value != widget.value && _controller.text == old.value) {
+    // A saved value comes back from the core; keep unsaved typing. A field
+    // emptied and saved shows what the empty value stands for (MTU: this
+    // device's own).
+    if (old.value != widget.value &&
+        (_controller.text == old.value || _controller.text.trim().isEmpty)) {
       _controller.text = widget.value;
     }
   }
