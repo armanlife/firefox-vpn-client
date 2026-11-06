@@ -275,6 +275,39 @@ class CoreApi {
         }),
       );
 
+  /// Adds an account from a browser sign-in: the webview took the person
+  /// through accounts.firefox.com and captured the session token; the core
+  /// exchanges it for the account's tokens. Polled like any sign-in.
+  Future<SignInState> startBrowserSignIn(
+    String email,
+    String sessionToken,
+  ) async => SignInState.fromJson(
+    await _json('POST', '/api/signin/browser', {
+      'email': email,
+      'session_token': sessionToken,
+    }),
+  );
+
+  /// Opens the core's proxy for the browser sign-in and gives its address
+  /// ("127.0.0.1:port"): it reaches Mozilla's sign-in pages the way the
+  /// core's own account requests do, with no account and the VPN off.
+  /// [port] is the port the browser view was started with, which the core
+  /// takes again when it can.
+  Future<String> openSignInProxy({int port = 0}) async {
+    final reply = await _json('POST', '/api/signin/browser/proxy', {
+      'port': port,
+    });
+    final address = reply['address'];
+    if (address is! String || address.isEmpty) {
+      throw const CoreApiException(0, 'no sign-in proxy address');
+    }
+    return address;
+  }
+
+  /// The sign-in page closed: the proxy stops serving.
+  Future<void> closeSignInProxy() =>
+      _json('DELETE', '/api/signin/browser/proxy');
+
   /// Signs an account in again with its stored password; 409 when the core
   /// has none, and the user must type it.
   Future<SignInState> startSignInAgain(String accountId) async =>

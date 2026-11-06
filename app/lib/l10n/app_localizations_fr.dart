@@ -742,6 +742,22 @@ class AppLocalizationsFr extends AppLocalizations {
       'Le compte suivant prend le relais lorsque ce pourcentage des données est consommé.';
 
   @override
+  String get signInMethod => 'Méthode de connexion';
+
+  @override
+  String get signInMethodBrowser => 'Connexion par le navigateur';
+
+  @override
+  String get signInMethodApi => 'Connexion directe';
+
+  @override
+  String get browserSignInBroken =>
+      'La page de connexion n\'a pas pu être ouverte.';
+
+  @override
+  String get browserSignInFallback => 'Connexion avec e-mail et mot de passe';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

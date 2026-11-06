@@ -26,6 +26,15 @@ func Errno(err error) int {
 	return 0
 }
 
+// HTTPStatus returns the status carried by an FxA API error, or 0.
+func HTTPStatus(err error) int {
+	var apiErr *fxaAPIError
+	if errors.As(err, &apiErr) {
+		return apiErr.Status
+	}
+	return 0
+}
+
 // Message returns the human-readable FxA error message carried by err,
 // falling back to the error text.
 func Message(err error) string {
@@ -89,6 +98,9 @@ func SendUnblockCode(ctx context.Context, email string) error {
 	return nil
 }
 
+// ErrTOTPRejected reports an explicit rejection of the authenticator code.
+var ErrTOTPRejected = errors.New("the authenticator code was not accepted")
+
 // VerifyTOTP verifies an unverified session with a code from the account's
 // authenticator app (verification method "totp-2fa").
 func VerifyTOTP(ctx context.Context, sessionToken, code string) error {
@@ -116,18 +128,24 @@ func VerifyTOTP(ctx context.Context, sessionToken, code string) error {
 		return fmt.Errorf("TOTP verification request: %w", err)
 	}
 	defer resp.Body.Close()
-	data, _ := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
 	if resp.StatusCode != http.StatusOK {
 		return newFxaAPIError(resp.StatusCode, data)
 	}
+	if err != nil {
+		return fmt.Errorf("reading TOTP verification response: %w", err)
+	}
 	var result struct {
-		Success bool `json:"success"`
+		Success *bool `json:"success"`
 	}
 	if err := json.Unmarshal(data, &result); err != nil {
 		return fmt.Errorf("parsing TOTP verification response: %w", err)
 	}
-	if !result.Success {
-		return errors.New("the authenticator code was not accepted")
+	if result.Success == nil {
+		return errors.New("TOTP verification response is missing success")
+	}
+	if !*result.Success {
+		return ErrTOTPRejected
 	}
 	return nil
 }

@@ -20,19 +20,19 @@ import (
 )
 
 const (
-	fxaAuthServer   = "https://api.accounts.firefox.com/v1"
-	firefoxClientID = "5882386c6d801776"
-	oauthScope      = "profile https://identity.mozilla.com/apps/vpn"
+	fxaAuthServer    = "https://api.accounts.firefox.com/v1"
+	fxaOAuthTokenURL = "https://oauth.accounts.firefox.com/v1/token"
+	firefoxClientID  = "5882386c6d801776"
+	oauthScope       = "profile https://identity.mozilla.com/apps/vpn"
 
 	// maxChallengeAttempts bounds how many times an FxA call re-solves the
 	// Fastly anti-bot challenge; with rotating-exit proxies a solved cookie
 	// can be rejected when the API request leaves through another IP.
 	maxChallengeAttempts = 5
 
-	// fxaCallMinBudget is the minimum wall-clock budget an FxA call gets:
-	// the caller's per-request timeout is often shorter than a full
-	// challenge-solving round trip.
-	fxaCallMinBudget = 90 * time.Second
+	// fxaChallengeBudget bounds recovery after the first 406, including
+	// the fallback, solving, and the final retry.
+	fxaChallengeBudget = 90 * time.Second
 
 	// verificationMethodEmail2FA tells FxA to deliver the sign-in
 	// confirmation as a code emailed to the account instead of the
@@ -45,6 +45,7 @@ const (
 	// deployment that does not accept verificationMethod in the login
 	// body answers with it, so we fall back to a plain login.
 	fxaErrnoInvalidParameter = 107
+	fxaErrnoInvalidToken     = 108
 
 	// fxaErrnoIncorrectEmailCase is FxA's "Incorrect email case" errno: the
 	// email was typed in another letter case than the account's, which the
@@ -135,18 +136,67 @@ func (e *emailCaseError) Unwrap() error { return e.err }
 // the Fastly anti-bot client challenge when the edge answers HTTP 406 (empty
 // body, no FxA error payload). The request factory is invoked again after
 // each successful solve because request bodies are single-use readers.
-func fxaDo(ctx context.Context, newRequest func() (*http.Request, error)) (*http.Response, error) {
-	ctx, cancel := contextWithMinDeadline(ctx, fxaCallMinBudget)
-	defer cancel()
+// ErrChallengeBlocked marks a call Fastly's bot check refused for good:
+// its challenge could not be solved, or HTTP 406 kept coming back.
+// Surfaces suggest the app's browser sign-in when they see it.
+var ErrChallengeBlocked = errors.New("Mozilla's security check refused this sign-in from this program")
 
-	for attempt := 1; attempt <= maxChallengeAttempts; attempt++ {
+func fxaDo(ctx context.Context, newRequest func() (*http.Request, error)) (*http.Response, error) {
+	return fxaDoWith406Fallback(ctx, newRequest, nil)
+}
+
+type requestTimeoutKey struct{}
+
+// WithRequestTimeout limits the first HTTP attempt of each FxA call.
+// The caller's context still governs the whole operation, including recovery.
+func WithRequestTimeout(ctx context.Context, timeout time.Duration) context.Context {
+	return context.WithValue(ctx, requestTimeoutKey{}, timeout)
+}
+
+type fxaResponseBody struct {
+	io.ReadCloser
+	cancel context.CancelFunc
+}
+
+func (b *fxaResponseBody) Close() error {
+	defer b.cancel()
+	return b.ReadCloser.Close()
+}
+
+// on406 may handle the first 406 before the challenge solver runs. A nil
+// response and error leave the original challenge path available.
+func fxaDoWith406Fallback(ctx context.Context, newRequest func() (*http.Request, error), on406 func(context.Context) (*http.Response, error)) (response *http.Response, err error) {
+	requestCtx := ctx
+	var cancel context.CancelFunc
+	if timeout, ok := ctx.Value(requestTimeoutKey{}).(time.Duration); ok {
+		requestCtx, cancel = context.WithTimeout(ctx, timeout)
+	}
+	defer func() {
+		if cancel == nil {
+			return
+		}
+		if response == nil {
+			cancel()
+			return
+		}
+		// The caller still needs the request context to read the body.
+		response.Body = &fxaResponseBody{ReadCloser: response.Body, cancel: cancel}
+	}()
+
+	for solved := 0; ; solved++ {
 		req, err := newRequest()
 		if err != nil {
 			return nil, err
 		}
-		resp, err := controlplane.Do(req)
+		resp, err := controlplane.Do(req.WithContext(requestCtx))
 		if err != nil {
+			if solved > 0 {
+				logx.Warn("FxA API retry ended without an HTTP response method=%s host=%s path=%s solves=%d", req.Method, req.URL.Hostname(), req.URL.Path, solved)
+			}
 			return nil, err
+		}
+		if solved > 0 {
+			logx.Info("FxA API retry returned HTTP %d method=%s host=%s path=%s solves=%d", resp.StatusCode, req.Method, req.URL.Hostname(), req.URL.Path, solved)
 		}
 		if resp.StatusCode != http.StatusNotAcceptable {
 			return resp, nil
@@ -154,13 +204,31 @@ func fxaDo(ctx context.Context, newRequest func() (*http.Request, error)) (*http
 		io.Copy(io.Discard, io.LimitReader(resp.Body, 4096))
 		resp.Body.Close()
 
-		logx.Info("the account server answered HTTP 406 (Fastly's bot check); solving its challenge attempt=%d", attempt)
-		if err := solveFastlyChallenge(ctx); err != nil {
-			logx.Warn("Fastly challenge failed attempt=%d err=%s", attempt, logx.Err(err))
-			return nil, fmt.Errorf("Fastly anti-bot challenge: %w", err)
+		if solved == maxChallengeAttempts {
+			return nil, fmt.Errorf("%w: still HTTP 406 after %d solved challenges", ErrChallengeBlocked, solved)
+		}
+		if solved == 0 {
+			if cancel != nil {
+				cancel()
+			}
+			recoveryCtx, finishRecovery := context.WithTimeout(ctx, fxaChallengeBudget)
+			requestCtx, cancel = recoveryCtx, finishRecovery
+			if on406 != nil {
+				if alternate, err := on406(requestCtx); alternate != nil || err != nil {
+					return alternate, err
+				}
+			}
+		}
+
+		logx.Info("the account server answered HTTP 406 (Fastly's bot check); solving its challenge attempt=%d", solved+1)
+		if err := solveFastlyChallenge(requestCtx); err != nil {
+			if requestCtx.Err() != nil {
+				return nil, requestCtx.Err()
+			}
+			logx.Warn("Fastly challenge failed attempt=%d err=%s", solved+1, logx.Err(err))
+			return nil, fmt.Errorf("%w: its challenge failed: %w", ErrChallengeBlocked, err)
 		}
 	}
-	return nil, fmt.Errorf("Fastly anti-bot challenge still failing after %d attempts (HTTP 406)", maxChallengeAttempts)
 }
 
 // fxaLogin signs in. An email typed in another letter case than the
@@ -282,6 +350,47 @@ func fxaVerifySession(ctx context.Context, sessionToken, code string) error {
 	return nil
 }
 
+// SessionVerified reports whether the session is confirmed: the account's
+// email is verified and so is this sign-in (any code it asked for, by
+// email or from an authenticator, was entered). It asks
+// /recovery_email/status, as Firefox does while a sign-in it was handed
+// waits for its code.
+func SessionVerified(ctx context.Context, sessionToken string) (bool, error) {
+	hawkID, hawkKey, err := deriveHawkCredentials(sessionToken, "sessionToken")
+	if err != nil {
+		return false, fmt.Errorf("deriving hawk credentials: %w", err)
+	}
+	statusURL := fxaAuthServer + "/recovery_email/status"
+	resp, err := fxaDo(ctx, func() (*http.Request, error) {
+		authHeader, err := hawkHeader(http.MethodGet, statusURL, hawkID, hawkKey, "")
+		if err != nil {
+			return nil, fmt.Errorf("generating hawk header: %w", err)
+		}
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, statusURL, nil)
+		if err != nil {
+			return nil, fmt.Errorf("creating session status request: %w", err)
+		}
+		req.Header.Set("Authorization", authHeader)
+		controlplane.ApplyFirefoxHeaders(req)
+		return req, nil
+	})
+	if err != nil {
+		return false, fmt.Errorf("session status request: %w", err)
+	}
+	defer resp.Body.Close()
+	data, _ := io.ReadAll(io.LimitReader(resp.Body, 16<<10))
+	if resp.StatusCode != http.StatusOK {
+		return false, newFxaAPIError(resp.StatusCode, data)
+	}
+	var status struct {
+		Verified *bool `json:"verified"`
+	}
+	if err := json.Unmarshal(data, &status); err != nil || status.Verified == nil {
+		return false, errors.New("unexpected session status response")
+	}
+	return *status.Verified, nil
+}
+
 // DestroySession ends a session token once its OAuth tokens are issued.
 // Left alive, it stays in the account's connected services as an
 // "unknown" session next to the device record; the program needs only the
@@ -335,19 +444,19 @@ func fxaOAuthToken(ctx context.Context, sessionToken string) (*TokenResponse, er
 
 	tokenURL := fxaAuthServer + "/oauth/token"
 
-	resp, err := fxaDo(ctx, func() (*http.Request, error) {
+	resp, err := fxaDoWith406Fallback(ctx, func() (*http.Request, error) {
 		authHeader, err := hawkHeader("POST", tokenURL, hawkID, hawkKey, string(bodyJSON))
 		if err != nil {
 			return nil, fmt.Errorf("generating hawk header: %w", err)
 		}
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(string(bodyJSON)))
+		req, err := newOAuthJSONRequest(ctx, tokenURL, bodyJSON)
 		if err != nil {
 			return nil, fmt.Errorf("creating oauth token request: %w", err)
 		}
-		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", authHeader)
-		controlplane.ApplyFirefoxHeaders(req)
 		return req, nil
+	}, func(ctx context.Context) (*http.Response, error) {
+		return exchangeSessionWithOAuthCode(ctx, hawkID, hawkKey)
 	})
 	if err != nil {
 		return nil, fmt.Errorf("oauth token request: %w", err)
@@ -366,6 +475,9 @@ func fxaOAuthToken(ctx context.Context, sessionToken string) (*TokenResponse, er
 	if err := json.Unmarshal(data, &tok); err != nil {
 		return nil, fmt.Errorf("parsing token response: %w", err)
 	}
+	if tok.AccessToken == "" || tok.RefreshToken == "" {
+		return nil, errors.New("OAuth sign-in response is missing account tokens")
+	}
 	return &tok, nil
 }
 
@@ -378,9 +490,7 @@ func fxaRefreshToken(ctx context.Context, refreshToken string) (*TokenResponse, 
 	}
 	bodyJSON, _ := json.Marshal(body)
 
-	tokenURL := fxaAuthServer + "/oauth/token"
-
-	resp, err := fxaDo(ctx, func() (*http.Request, error) {
+	newRequest := func(tokenURL string) (*http.Request, error) {
 		req, err := http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, strings.NewReader(string(bodyJSON)))
 		if err != nil {
 			return nil, fmt.Errorf("creating refresh request: %w", err)
@@ -388,6 +498,15 @@ func fxaRefreshToken(ctx context.Context, refreshToken string) (*TokenResponse, 
 		req.Header.Set("Content-Type", "application/json")
 		controlplane.ApplyFirefoxHeaders(req)
 		return req, nil
+	}
+	resp, err := fxaDoWith406Fallback(ctx, func() (*http.Request, error) {
+		return newRequest(fxaAuthServer + "/oauth/token")
+	}, func(ctx context.Context) (*http.Response, error) {
+		req, err := newRequest(fxaOAuthTokenURL)
+		if err != nil {
+			return nil, err
+		}
+		return refreshAtOAuthEndpoint(req.WithContext(ctx))
 	})
 	if err != nil {
 		return nil, fmt.Errorf("refresh request: %w", err)
@@ -411,6 +530,31 @@ func fxaRefreshToken(ctx context.Context, refreshToken string) (*TokenResponse, 
 		tok.RefreshToken = refreshToken
 	}
 	return &tok, nil
+}
+
+// Both Mozilla token endpoints use the same refresh-token store. The
+// OAuth endpoint cannot exchange the Hawk session credential used at sign-in.
+func refreshAtOAuthEndpoint(req *http.Request) (*http.Response, error) {
+	resp, err := controlplane.Do(req)
+	if err != nil {
+		return nil, nil
+	}
+	if resp.StatusCode == http.StatusOK {
+		logx.Info("OAuth refresh accepted by Mozilla's OAuth endpoint after HTTP 406")
+		return resp, nil
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case http.StatusNotAcceptable:
+		return nil, nil
+	case http.StatusBadRequest:
+		apiErr := newFxaAPIError(resp.StatusCode, []byte(controlplane.ReadErrorBody(resp.Body)))
+		if apiErr.Errno == fxaErrnoInvalidToken {
+			apiErr.Body = "invalid refresh token"
+			return nil, apiErr
+		}
+	}
+	return nil, fmt.Errorf("Mozilla's OAuth endpoint returned HTTP %d", resp.StatusCode)
 }
 
 func Login(ctx context.Context, email, password string) (*LoginResponse, error) {

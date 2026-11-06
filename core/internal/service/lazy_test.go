@@ -43,7 +43,9 @@ type lazyFixture struct {
 	// deadServer, when set, is listed before the fixture upstream in the
 	// same city: an address where nothing listens.
 	deadServer atomic.Pointer[string]
-	upstream   string
+	// recommendedServer adds a separate recommended location to the list.
+	recommendedServer atomic.Pointer[string]
+	upstream          string
 	// controlPlane is the installed control-plane transport.
 	controlPlane *lazyControlPlane
 }
@@ -117,7 +119,12 @@ func newLazyFixture(t *testing.T) *lazyFixture {
 				deadHost, deadPort, _ := net.SplitHostPort(*dead)
 				servers = fmt.Sprintf(`{"hostname":%q,"port":%s},`, deadHost, deadPort) + servers
 			}
-			serverList := `{"data":[{"name":"Netherlands","code":"NL","cities":[{"name":"Amsterdam","code":"ams","servers":[` + servers + `]}]}]}`
+			recommended := ""
+			if rec := f.recommendedServer.Load(); rec != nil {
+				recHost, recPort, _ := net.SplitHostPort(*rec)
+				recommended = fmt.Sprintf(`,{"name":"Recommended","code":"REC","cities":[{"name":"Recommended","code":"REC","servers":[{"hostname":%q,"port":%s}]}]}`, recHost, recPort)
+			}
+			serverList := `{"data":[{"name":"Netherlands","code":"NL","cities":[{"name":"Amsterdam","code":"ams","servers":[` + servers + `]}]}` + recommended + `]}`
 			return coreResponse(r, http.StatusOK, serverList, nil), nil
 		case r.Method == http.MethodGet && strings.HasSuffix(r.URL.Path, "/api/v1/fpn/token"):
 			f.passes.Add(1)
@@ -474,5 +481,39 @@ func TestWakeMovesToAnotherServerOfTheLocation(t *testing.T) {
 	}
 	if view, _ = d.StatusView(); view.Proxy == nil || view.Proxy.Upstream != f.upstream || view.Proxy.CountryCode != "NL" {
 		t.Fatalf("connected: %+v", view.Proxy)
+	}
+}
+
+func TestFirstWakeTriesStandInWhenRecommendedServerTimesOut(t *testing.T) {
+	// This socket accepts the TCP handshake but never answers TLS, so the
+	// preferred server times out without relying on a real network.
+	stalled, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = stalled.Close() })
+	oldConnect := connectTimeout
+	connectTimeout = 2 * time.Second
+	t.Cleanup(func() { connectTimeout = oldConnect })
+	d, f := runLazyDaemon(t)
+	rec := stalled.Addr().String()
+	f.recommendedServer.Store(&rec)
+	if err := proxy.SaveSelection(d.paths.Selection, proxy.Candidate{Addr: rec, CountryCode: "REC", CountryName: "Recommended"}); err != nil {
+		t.Fatal(err)
+	}
+
+	view, _ := d.StatusView()
+	if err := lazyEcho(t, view.Proxy.Listen, "first connection through stand-in"); err != nil {
+		t.Fatalf("first wake should try the stand-in itself: %v", err)
+	}
+	if got := f.passes.Load(); got != 1 {
+		t.Fatalf("wake asked for %d passes, want one for both servers", got)
+	}
+	view, _ = d.StatusView()
+	if view.Proxy.Upstream != f.upstream || view.Proxy.CountryCode != "NL" || !d.failover.Avoided(rec) {
+		t.Fatalf("expected the stand-in and temporary avoidance of the recommended server: %+v", view.Proxy)
+	}
+	if persisted, ok := proxy.PersistedSelection(d.paths.Selection, ""); !ok || persisted.Addr != rec {
+		t.Fatalf("stand-in replaced the persisted choice: %+v", persisted)
 	}
 }

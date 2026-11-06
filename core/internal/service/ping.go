@@ -115,10 +115,10 @@ func (d *Daemon) lastPings() ([]proxy.LocationPing, time.Time) {
 // proxy.country = "fastest": from a recent measurement, or measured now
 // with token. It returns "" (the recommended location) when nothing could
 // be measured.
-func (d *Daemon) resolveFastestCountry(token string) string {
+func (d *Daemon) resolveFastestCountry(ctx context.Context, token string) string {
 	results, at := d.lastPings()
 	if time.Since(at) > pingReuseAge {
-		results, _ = d.measureLocations(context.Background(), token, nil)
+		results, _ = d.measureLocations(ctx, token, nil)
 	}
 	best, ok := proxy.FastestLocation(results)
 	if !ok {

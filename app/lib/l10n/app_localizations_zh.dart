@@ -715,6 +715,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get switchThresholdHint => '流量用到此比例时，自动切换到下一个账户。';
 
   @override
+  String get signInMethod => '登录方式';
+
+  @override
+  String get signInMethodBrowser => '通过浏览器登录';
+
+  @override
+  String get signInMethodApi => '直接登录';
+
+  @override
+  String get browserSignInBroken => '无法打开登录页面。';
+
+  @override
+  String get browserSignInFallback => '使用邮箱和密码登录';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override
@@ -2213,6 +2228,21 @@ class AppLocalizationsZhHant extends AppLocalizationsZh {
 
   @override
   String get switchThresholdHint => '流量用到此比例時，自動換下一個帳號。';
+
+  @override
+  String get signInMethod => '登入方式';
+
+  @override
+  String get signInMethodBrowser => '透過瀏覽器登入';
+
+  @override
+  String get signInMethodApi => '直接登入';
+
+  @override
+  String get browserSignInBroken => '無法開啟登入頁面。';
+
+  @override
+  String get browserSignInFallback => '使用電子郵件和密碼登入';
 
   @override
   String get sectionDns => 'DNS';

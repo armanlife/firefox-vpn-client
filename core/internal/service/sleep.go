@@ -143,7 +143,13 @@ func (d *Daemon) useController(e *proxyEngine, why wakeReason) (c *proxy.Control
 	if c := e.reserve(); c != nil { // woken by another connection meanwhile
 		return c, e.releaseFunc(), nil
 	}
-	if err, wait := e.wakeWait(why, time.Now()); err != nil {
+	waitReason := why
+	d.mu.Lock()
+	if d.connectAttempt != nil {
+		waitReason = wakeForClient
+	}
+	d.mu.Unlock()
+	if err, wait := e.wakeWait(waitReason, time.Now()); err != nil {
 		at, _, _ := e.wakeFailure()
 		return nil, nil, fmt.Errorf("connecting to Mozilla failed %s ago; trying again in %s: %w", time.Since(at).Round(time.Second), wait.Round(time.Second), err)
 	}
@@ -186,8 +192,15 @@ func (e *proxyEngine) releaseFunc() func() {
 // the server (connectEngine), later it reuses it (reconnectEngine).
 // idle.wakeMu is held.
 func (d *Daemon) wake(e *proxyEngine, why wakeReason) error {
-	if d.currentEngine() != e {
+	d.mu.Lock()
+	current, attempt := d.engine == e && !d.off, d.connectAttempt
+	d.mu.Unlock()
+	if !current {
 		return errProxyNotRunning
+	}
+	ctx := context.Background()
+	if attempt != nil {
+		ctx = attempt.ctx
 	}
 	started := time.Now()
 	first := !e.connected
@@ -195,25 +208,36 @@ func (d *Daemon) wake(e *proxyEngine, why wakeReason) error {
 	var controller *proxy.Controller
 	var err error
 	if first {
-		controller, err = d.connectEngine(e)
+		controller, err = d.connectEngine(ctx, e)
 	} else {
-		controller, err = d.reconnectEngine(e)
+		controller, err = d.reconnectEngine(ctx, e)
+	}
+	if ctx.Err() != nil {
+		if controller != nil {
+			_ = controller.Close()
+		}
+		return ctx.Err()
 	}
 	if err != nil {
 		code := failureCode(err)
 		now := time.Now()
 		e.idle.mu.Lock()
 		e.idle.wakeFailures++
+		lasting := proxy.LastingWakeFailure(err, now)
 		wait := proxy.WakeRetryDelay(err, e.idle.wakeFailures, now)
+		if attempt != nil && !lasting {
+			wait = min(wait, connectRetryDelay)
+		}
 		if e.selected.Addr != server.Addr {
 			// The failover moved to another server of the location (only
 			// the server's own failures do): the next wake tries it at once.
 			e.idle.wakeFailures, wait = 0, 0
 		}
 		e.idle.wakeErr, e.idle.wakeCode, e.idle.wakeFailedAt = err, code, now
-		e.idle.wakeRetryAt, e.idle.wakeLasting = now.Add(wait), proxy.LastingWakeFailure(err, now)
+		e.idle.wakeRetryAt, e.idle.wakeLasting = now.Add(wait), lasting
 		e.idle.mu.Unlock()
 		logx.Warn("connecting to Mozilla failed; the proxy stays idle and connections wait before trying again retry_in=%s err=%s", wait, logx.Err(err))
+		d.noteConnectFailure(e, attempt, code, lasting)
 		if errors.Is(err, accounts.ErrNoUsableAccount) {
 			// The restarted engine reports the wait for an account.
 			d.RequestRestart()
@@ -223,7 +247,7 @@ func (d *Daemon) wake(e *proxyEngine, why wakeReason) error {
 	if !d.runController(e, controller) {
 		return errProxyNotRunning
 	}
-	d.markConnected()
+	d.markConnected(e, attempt)
 	if !first {
 		logx.Info("proxy woke up for a connection account=%s took=%s", logx.Email(d.pool.ActiveName()), time.Since(started).Round(time.Millisecond))
 		return nil

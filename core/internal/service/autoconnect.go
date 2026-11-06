@@ -52,6 +52,7 @@ func (d *Daemon) AutoConnect() {
 	holds := (cfg.SystemProxy.Mode == config.SystemProxySet && d.systemProxyApplies()) ||
 		(cfg.SystemProxy.Mode == config.SystemProxyTun && d.TunSupported)
 	d.mu.Lock()
+	d.endConnectLocked()
 	d.autoConnect = nil
 	var attempt chan struct{}
 	if holds {

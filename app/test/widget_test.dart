@@ -56,6 +56,8 @@ class FakeApi implements CoreApi {
   /// The failure code of a failed connection test.
   String testErrorCode = '';
 
+  bool connectPending = false;
+
   /// Why the last connect was given up (`connect_failure`).
   String connectFailure = '';
 
@@ -86,8 +88,14 @@ class FakeApi implements CoreApi {
     'total_ms': 280,
   };
 
+  int tests = 0;
+
   @override
-  Future<ConnectionTest> test() async => ConnectionTest.fromJson(_lastTest);
+  Future<ConnectionTest> test() async {
+    tests++;
+    return ConnectionTest.fromJson(_lastTest);
+  }
+
   bool portTaken = false;
   String location = '';
   Map<String, Object?> config = {
@@ -120,6 +128,7 @@ class FakeApi implements CoreApi {
     'system_proxy': systemProxySupported || tunSupported ? mode : 'clear',
     'system_proxy_supported': systemProxySupported,
     'selection': location,
+    if (connectPending) 'connect_pending': true,
     if (connectFailure.isNotEmpty) 'connect_failure': connectFailure,
     if (exitMismatch != null) 'exit_mismatch': exitMismatch,
     if (systemProxyTakenBy != null)
@@ -2063,6 +2072,69 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     core.dispose();
   });
+
+  for (final desktop in [false, true]) {
+    final layout = desktop ? 'desktop' : 'phone';
+    testWidgets('the $layout home waits for the final connect result', (
+      tester,
+    ) async {
+      stillMotion(tester);
+      tester.view.physicalSize = desktop
+          ? const Size(1200, 900)
+          : const Size(400, 860);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      final l = await AppLocalizations.delegate.load(const Locale('en'));
+      final api = FakeApi()
+        ..systemProxySupported = desktop
+        ..on = false
+        ..online = false
+        ..testErrorCode = Failure.unreachable;
+      final core = CoreController(
+        () async => api,
+        pollInterval: const Duration(hours: 1),
+        turnOn: (on) async => api.connectPending = on,
+      );
+      await tester.pumpWidget(VpnApp(core: core, settings: AppSettings()));
+      core.start();
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byTooltip(desktop ? l.tapToConnect : l.tapToConnectPhone),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(l.stateConnecting), findsOneWidget);
+      expect(api.on, isFalse, reason: 'the engine has not started yet');
+
+      api.on = true;
+      await core.refresh();
+      await tester.pumpAndSettle();
+      expect(find.text(l.stateConnecting), findsOneWidget);
+      expect(find.text(l.failUnreachable), findsNothing);
+      expect(api.tests, 0, reason: 'the core owns the pending attempt');
+
+      api.noNetwork = true;
+      await core.refresh();
+      await tester.pumpAndSettle();
+      expect(find.text(l.stateConnecting), findsOneWidget);
+      expect(find.text(l.noNetwork), findsNothing);
+
+      // A different final reason wins even before the engine stops.
+      api
+        ..connectPending = false
+        ..connectFailure = Failure.noNetwork;
+      await core.refresh();
+      await tester.pumpAndSettle();
+      expect(find.text(l.stateOff), findsOneWidget);
+      expect(find.text(l.failNoInternet), findsOneWidget);
+      expect(find.text(l.failUnreachable), findsNothing);
+      expect(api.tests, 0);
+
+      await tester.pumpWidget(const SizedBox());
+      core.dispose();
+    }, variant: TargetPlatformVariant.only(TargetPlatform.windows));
+  }
 
   testWidgets('a nearly used account suggests another one, for a minute', (
     tester,

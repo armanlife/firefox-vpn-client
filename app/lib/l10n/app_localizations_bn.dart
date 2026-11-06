@@ -736,6 +736,21 @@ class AppLocalizationsBn extends AppLocalizations {
       'ডেটার এই অংশ খরচ হলে পরের অ্যাকাউন্টে চলে যায়।';
 
   @override
+  String get signInMethod => 'সাইন-ইন পদ্ধতি';
+
+  @override
+  String get signInMethodBrowser => 'ব্রাউজার দিয়ে সাইন ইন';
+
+  @override
+  String get signInMethodApi => 'সরাসরি সাইন ইন';
+
+  @override
+  String get browserSignInBroken => 'সাইন-ইন পৃষ্ঠা খোলা যায়নি।';
+
+  @override
+  String get browserSignInFallback => 'ইমেল ও পাসওয়ার্ড দিয়ে সাইন ইন';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

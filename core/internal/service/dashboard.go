@@ -222,6 +222,11 @@ func (s *dashboardServer) handler() http.Handler {
 	mux.HandleFunc("DELETE /api/accounts/{id}", s.handleAccountRemove)
 
 	mux.HandleFunc("POST /api/signin", s.handleSignInStart)
+	// The literal path wins over the {id} patterns below; ids are 24 hex
+	// characters, never "browser".
+	mux.HandleFunc("POST /api/signin/browser", s.handleSignInBrowser)
+	mux.HandleFunc("POST /api/signin/browser/proxy", s.handleSignInProxyOpen)
+	mux.HandleFunc("DELETE /api/signin/browser/proxy", s.handleSignInProxyClose)
 	mux.HandleFunc("GET /api/signin/{id}", s.handleSignInGet)
 	mux.HandleFunc("POST /api/signin/{id}", s.handleSignInAnswer)
 	mux.HandleFunc("DELETE /api/signin/{id}", s.handleSignInCancel)

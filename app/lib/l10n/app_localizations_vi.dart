@@ -737,6 +737,21 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khi dung lượng đã dùng đạt mức này, ứng dụng chuyển sang tài khoản tiếp theo.';
 
   @override
+  String get signInMethod => 'Phương thức đăng nhập';
+
+  @override
+  String get signInMethodBrowser => 'Đăng nhập qua trình duyệt';
+
+  @override
+  String get signInMethodApi => 'Đăng nhập trực tiếp';
+
+  @override
+  String get browserSignInBroken => 'Không thể mở trang đăng nhập.';
+
+  @override
+  String get browserSignInFallback => 'Đăng nhập bằng email và mật khẩu';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

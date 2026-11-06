@@ -735,6 +735,21 @@ class AppLocalizationsId extends AppLocalizations {
       'Pindah ke akun berikutnya saat kuota sudah terpakai sebanyak ini.';
 
   @override
+  String get signInMethod => 'Metode masuk';
+
+  @override
+  String get signInMethodBrowser => 'Masuk lewat peramban';
+
+  @override
+  String get signInMethodApi => 'Masuk langsung';
+
+  @override
+  String get browserSignInBroken => 'Halaman masuk tidak dapat dibuka.';
+
+  @override
+  String get browserSignInFallback => 'Masuk dengan email dan kata sandi';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

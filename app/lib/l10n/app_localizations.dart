@@ -1371,6 +1371,36 @@ abstract class AppLocalizations {
   /// **'The next account takes over when this share of the quota is used.'**
   String get switchThresholdHint;
 
+  /// No description provided for @signInMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in method'**
+  String get signInMethod;
+
+  /// No description provided for @signInMethodBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with the browser'**
+  String get signInMethodBrowser;
+
+  /// No description provided for @signInMethodApi.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in directly'**
+  String get signInMethodApi;
+
+  /// No description provided for @browserSignInBroken.
+  ///
+  /// In en, this message translates to:
+  /// **'The sign-in page could not be opened.'**
+  String get browserSignInBroken;
+
+  /// No description provided for @browserSignInFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with email and password'**
+  String get browserSignInFallback;
+
   /// No description provided for @sectionDns.
   ///
   /// In en, this message translates to:

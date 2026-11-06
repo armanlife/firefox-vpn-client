@@ -75,7 +75,10 @@ class _MobileShellState extends State<MobileShell> {
     final settings = widget.settings;
     void openServers() =>
         _push(l.navServers, () => ServersPage(core: core, settings: settings));
-    void openAccounts() => _push(l.navAccounts, () => AccountsPage(core: core));
+    void openAccounts() => _push(
+      l.navAccounts,
+      () => AccountsPage(core: core, settings: settings),
+    );
     void openConnection() => _push(
       l.sectionConnection,
       () => SettingsPage(

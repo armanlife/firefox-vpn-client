@@ -8,7 +8,7 @@ import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
 import 'format.dart';
-import 'signin_dialog.dart';
+import 'browser_signin.dart';
 import 'widgets.dart';
 
 /// The server list, one choice in one list: Recommended and Fastest, which
@@ -165,7 +165,9 @@ class _ServersPageState extends State<ServersPage> {
       children: [
         PageTitle(l.navServers),
         if (noAccounts) ...[
-          NoAccountsPanel(onAdd: () => showSignInDialog(context, _core)),
+          NoAccountsPanel(
+            onAdd: () => startAddAccount(context, _core, widget.settings),
+          ),
           const SizedBox(height: 12),
         ],
         _SectionHeader(title: l.autoSection),

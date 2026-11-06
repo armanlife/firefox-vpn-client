@@ -165,6 +165,16 @@ class AndroidCore {
     }
   }
 
+  /// Sends this app's WebViews through the proxy at [address]
+  /// ("127.0.0.1:port"), or straight out again when it is null. Reports
+  /// false when this phone's WebView cannot take a proxy; the views then
+  /// connect by themselves.
+  static Future<bool> setWebViewProxy(String? address) async =>
+      await _channel.invokeMethod<bool>('setWebViewProxy', {
+        'address': address,
+      }) ??
+      false;
+
   /// The installed apps but this one, the system's too.
   static Future<List<InstalledApp>> installedApps() async {
     final list = await _channel.invokeListMethod<Map<Object?, Object?>>(

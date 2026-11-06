@@ -58,6 +58,12 @@ class PhaseLook {
   final String hint;
 
   static PhaseLook of(AppLocalizations l, CoreStatus s) {
+    if (s.connectPending) {
+      return PhaseLook(l.stateConnecting, StatusColors.busy, '');
+    }
+    if (s.connectFailure.isNotEmpty) {
+      return PhaseLook(l.stateOff, StatusColors.idle, '');
+    }
     final message = stateText(l, s.state);
     return switch (s.state.phase) {
       // Connected in either mode on the computer (Proxy or System proxy).

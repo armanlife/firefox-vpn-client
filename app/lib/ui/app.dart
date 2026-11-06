@@ -235,7 +235,10 @@ class _ShellState extends State<Shell> {
                       core: core,
                       settings: widget.settings,
                     ),
-                    _Page.accounts => AccountsPage(core: core),
+                    _Page.accounts => AccountsPage(
+                      core: core,
+                      settings: widget.settings,
+                    ),
                     _Page.settings => SettingsPage(
                       key: ValueKey(_settingsOpening),
                       core: core,

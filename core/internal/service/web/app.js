@@ -1265,6 +1265,7 @@ function renderSignIn(view) {
   const form = $("#signin-form");
   // What went wrong shows apart from the instruction, in red.
   $("#signin-error").textContent = view.error || "";
+  message.style.display = "";
   captcha.hidden = true;
   label.hidden = true;
   submit.hidden = false;
@@ -1288,7 +1289,24 @@ function renderSignIn(view) {
       break;
     case "failed":
     case "cancelled":
-      message.textContent = view.message;
+      // Fastly's bot check refused the sign-in: the way out is the app's
+      // browser sign-in, moved over by its data folder.
+      if (view.error_code === "blocked") {
+        message.replaceChildren(
+          el("span", { text: "Tip: sign in with the browser in the Arman VPN app, then copy that device's data folder to this machine." }),
+          el("a", {
+            class: "btn primary",
+            style: "margin-top:10px; width:fit-content",
+            href: "https://github.com/armanlife/arman-vpn-client/blob/main/docs/BROWSER-SIGNIN.md",
+            target: "_blank",
+            rel: "noreferrer",
+            text: "How to do it",
+          }),
+        );
+        message.style.display = "grid";
+      } else {
+        message.textContent = view.message;
+      }
       submit.textContent = "Try again";
       break;
     default:

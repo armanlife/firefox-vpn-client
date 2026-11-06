@@ -169,6 +169,8 @@ type StatusView struct {
 	// AutoConnecting: the app's auto-connect tests the connection, and the
 	// system proxy waits for a passed test (autoconnect.go).
 	AutoConnecting bool `json:"auto_connecting,omitempty"`
+	// ConnectPending is an explicit app connection whose wake may still retry.
+	ConnectPending bool `json:"connect_pending,omitempty"`
 	// ConnectFailure is why the user's last connect was given up, a
 	// failure code (connect.go); empty after a connect that worked.
 	ConnectFailure string `json:"connect_failure,omitempty"`
@@ -207,6 +209,7 @@ func (d *Daemon) StatusView() (StatusView, error) {
 	view.OpenFolderRequest = d.folderRequests.Load()
 	view.SystemProxy = cfg.SystemProxy.Mode
 	view.AutoConnecting = d.autoConnect != nil
+	view.ConnectPending = d.connectAttempt != nil
 	view.ConnectFailure = d.connectFailure
 	view.Selection = cfg.Proxy.Country
 	view.NetworkChangedAt = d.networkChangedAt
@@ -393,6 +396,26 @@ func (s *dashboardServer) handleSignInStart(w http.ResponseWriter, r *http.Reque
 		in.Email, in.Password = acc.Email, password
 	}
 	view, err := s.d.signins.start(in.Email, in.Password)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusAccepted, view)
+}
+
+// handleSignInBrowser adds an account from a browser sign-in: the app's
+// webview took the person through accounts.firefox.com and captured the
+// session token (the WebChannel fxaccounts:login message). The rest runs
+// as a normal sign-in session, polled by id.
+func (s *dashboardServer) handleSignInBrowser(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Email        string `json:"email"`
+		SessionToken string `json:"session_token"`
+	}
+	if !readJSON(w, r, &in) {
+		return
+	}
+	view, err := s.d.signins.startBrowser(in.Email, in.SessionToken)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
@@ -688,12 +711,11 @@ func (d *Daemon) runConnectionTest(engine *proxyEngine, controller *proxy.Contro
 	}
 	exit := result.Exit()
 	d.mu.Lock()
-	d.lastTest = &result
-	if result.OK {
-		d.lastConnected = time.Now()
-	}
-	if exit.IP() != "" {
-		d.exit = &exit
+	if d.engine == engine && !d.off {
+		d.lastTest = &result
+		if exit.IP() != "" {
+			d.exit = &exit
+		}
 	}
 	d.mu.Unlock()
 	if !result.OK {

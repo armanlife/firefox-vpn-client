@@ -741,6 +741,21 @@ class AppLocalizationsHu extends AppLocalizations {
       'A következő fiók akkor veszi át, amikor az adatkeret ekkora része elfogyott.';
 
   @override
+  String get signInMethod => 'Bejelentkezési mód';
+
+  @override
+  String get signInMethodBrowser => 'Bejelentkezés böngészővel';
+
+  @override
+  String get signInMethodApi => 'Közvetlen bejelentkezés';
+
+  @override
+  String get browserSignInBroken => 'A bejelentkezési oldal nem nyitható meg.';
+
+  @override
+  String get browserSignInFallback => 'Bejelentkezés e-maillel és jelszóval';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

@@ -737,6 +737,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'The next account takes over when this share of the quota is used.';
 
   @override
+  String get signInMethod => 'Sign-in method';
+
+  @override
+  String get signInMethodBrowser => 'Sign in with the browser';
+
+  @override
+  String get signInMethodApi => 'Sign in directly';
+
+  @override
+  String get browserSignInBroken => 'The sign-in page could not be opened.';
+
+  @override
+  String get browserSignInFallback => 'Sign in with email and password';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

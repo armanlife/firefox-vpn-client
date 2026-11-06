@@ -741,6 +741,22 @@ class AppLocalizationsEs extends AppLocalizations {
       'La siguiente cuenta toma el relevo cuando se consume este porcentaje de los datos.';
 
   @override
+  String get signInMethod => 'Método de inicio de sesión';
+
+  @override
+  String get signInMethodBrowser => 'Iniciar sesión con el navegador';
+
+  @override
+  String get signInMethodApi => 'Iniciar sesión directamente';
+
+  @override
+  String get browserSignInBroken =>
+      'No se pudo abrir la página de inicio de sesión.';
+
+  @override
+  String get browserSignInFallback => 'Iniciar sesión con correo y contraseña';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -81,12 +83,8 @@ func newSignInRegistry(d *Daemon) *signInRegistry {
 	return &signInRegistry{d: d, sessions: make(map[string]*signIn)}
 }
 
-// start begins a sign-in for email and password.
-func (r *signInRegistry) start(email, password string) (signInView, error) {
-	email = fxa.NormalizeEmail(email)
-	if email == "" || password == "" {
-		return signInView{}, errors.New("email and password are required")
-	}
+// begin registers a sign-in for email and starts run in the background.
+func (r *signInRegistry) begin(email string, run func(ctx context.Context, s *signIn)) (signInView, error) {
 	var idBytes [12]byte
 	if _, err := rand.Read(idBytes[:]); err != nil {
 		return signInView{}, err
@@ -101,8 +99,41 @@ func (r *signInRegistry) start(email, password string) (signInView, error) {
 	r.pruneLocked()
 	r.sessions[s.view.ID] = s
 	r.mu.Unlock()
-	go s.run(ctx, r.d, email, password)
+	go func() {
+		defer cancel()
+		run(ctx, s)
+	}()
 	return s.snapshot(), nil
+}
+
+// start begins a sign-in for email and password.
+func (r *signInRegistry) start(email, password string) (signInView, error) {
+	email = fxa.NormalizeEmail(email)
+	if email == "" || password == "" {
+		return signInView{}, errors.New("email and password are required")
+	}
+	return r.begin(email, func(ctx context.Context, s *signIn) { s.run(ctx, r.d, email, password) })
+}
+
+// sessionTokenPattern is an FxA session token as the WebChannel reports
+// it: 32 bytes in lowercase hex.
+var sessionTokenPattern = regexp.MustCompile(`^[0-9a-f]{64}$`)
+
+// startBrowser begins a sign-in from a session token the app's webview
+// captured on accounts.firefox.com (the WebChannel fxaccounts:login
+// message). Nothing is asked of the person here: the webview already
+// took the password and any confirmation; only the token exchange and
+// the account's storage are left.
+func (r *signInRegistry) startBrowser(email, sessionToken string) (signInView, error) {
+	email = fxa.NormalizeEmail(email)
+	if email == "" {
+		return signInView{}, errors.New("email is required")
+	}
+	sessionToken = strings.ToLower(strings.TrimSpace(sessionToken))
+	if !sessionTokenPattern.MatchString(sessionToken) {
+		return signInView{}, errors.New("session_token must be 64 hex characters")
+	}
+	return r.begin(email, func(ctx context.Context, s *signIn) { s.runBrowser(ctx, r.d, email, sessionToken) })
 }
 
 func (r *signInRegistry) get(id string) (*signIn, bool) {
@@ -139,6 +170,7 @@ const (
 	signInTooManyCodes    = "too_many_codes"        // the sign-in gave up after wrong codes
 	signInTimedOut        = "timed_out"             // nobody answered in time
 	signInNetwork         = "network"               // Mozilla could not be reached
+	signInBlocked         = "blocked"               // Fastly's bot check refused the sign-in
 )
 
 var (
@@ -189,6 +221,11 @@ func (s *signIn) ask(ctx context.Context, step, message string, problem signInPr
 func (s *signIn) run(ctx context.Context, d *Daemon, email, password string) {
 	defer s.cancel()
 	accountID, err := s.signIn(ctx, d, email, password)
+	s.finish(email, accountID, err)
+}
+
+// finish publishes a sign-in's outcome.
+func (s *signIn) finish(email, accountID string, err error) {
 	switch {
 	case errors.Is(err, errSignInCancelled):
 		s.set(stepCancelled, "Sign-in cancelled", signInProblem{}, "")
@@ -201,6 +238,106 @@ func (s *signIn) run(ctx context.Context, d *Daemon, email, password string) {
 		s.mu.Unlock()
 		s.set(stepDone, "Account added", signInProblem{}, "")
 	}
+}
+
+// FxA errnos answered for a session whose sign-in is not confirmed yet:
+// unverified account and unverified session.
+const (
+	fxaErrnoUnverifiedAccount = 104
+	fxaErrnoUnverifiedSession = 138
+)
+
+// runBrowser finishes a browser sign-in ([signInRegistry.startBrowser]).
+func (s *signIn) runBrowser(ctx context.Context, d *Daemon, email, sessionToken string) {
+	defer s.cancel()
+	accountID, err := s.browserSignIn(ctx, d, email, sessionToken)
+	s.finish(email, accountID, err)
+}
+
+// browserConfirmPoll is how often a browser sign-in asks FxA whether its
+// session is confirmed yet; tests shorten it.
+var browserConfirmPoll = 3 * time.Second
+
+// waitSessionConfirmed waits until FxA reports the session confirmed. The
+// app hands the session over as soon as the page has one, which is before
+// any code the sign-in asks for (by email, or from an authenticator) is
+// entered there; the page stays open for it meanwhile. A failure to ask is
+// asked again; FxA refusing the session (it ended, or the page started
+// another sign-in) ends the wait, as does the sign-in's own time limit or
+// the app cancelling it (the page closed).
+func (s *signIn) waitSessionConfirmed(ctx context.Context, sessionToken string) error {
+	told := false
+	for {
+		verified, err := fxa.SessionVerified(ctx, sessionToken)
+		switch {
+		case err == nil && verified:
+			return nil
+		case fxa.Errno(err) != 0:
+			return err
+		case err != nil:
+			logx.Debug("asking whether the browser sign-in is confirmed failed; asking again err=%s", logx.Err(err))
+		case !told:
+			told = true
+			s.set(stepWorking, "Waiting for the sign-in to be confirmed in the browser", signInProblem{}, "")
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(browserConfirmPoll):
+		}
+	}
+}
+
+func (s *signIn) browserSignIn(ctx context.Context, d *Daemon, email, sessionToken string) (string, error) {
+	s.set(stepWorking, "Checking the sign-in", signInProblem{}, "")
+	if err := s.waitSessionConfirmed(ctx, sessionToken); err != nil {
+		switch {
+		case errors.Is(err, context.Canceled):
+			return "", errSignInCancelled
+		case errors.Is(err, context.DeadlineExceeded):
+			return "", errSignInTimedOut
+		}
+		return "", err
+	}
+	s.set(stepWorking, "Getting the account token", signInProblem{}, "")
+	var token *fxa.TokenResponse
+	var err error
+	// The token grant can see the confirmation a moment after the status
+	// does: an unverified answer is retried for a while.
+	for attempt := 0; ; attempt++ {
+		token, err = fxa.OAuthToken(ctx, sessionToken)
+		errno := fxa.Errno(err)
+		if err == nil || attempt >= 9 ||
+			(errno != fxaErrnoUnverifiedAccount && errno != fxaErrnoUnverifiedSession) {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+		case <-time.After(3 * time.Second):
+			continue
+		}
+		break
+	}
+	if errors.Is(err, context.Canceled) {
+		return "", errSignInCancelled
+	}
+	if err != nil {
+		return "", err
+	}
+	s.mu.Lock()
+	s.view.PasswordAccepted = true
+	s.mu.Unlock()
+	// The sign-in session is not needed once the tokens exist; left alive
+	// it shows as "unknown" in the account's connected services.
+	if err := fxa.DestroySession(ctx, sessionToken); err != nil {
+		logx.Warn("ending the sign-in session failed email=%s err=%s", logx.Email(email), logx.Err(err))
+	}
+	acc, err := d.addSignedInAccount(email, "", token)
+	if err != nil {
+		return "", err
+	}
+	return acc.ID, nil
 }
 
 func (s *signIn) signIn(ctx context.Context, d *Daemon, email, password string) (string, error) {
@@ -271,30 +408,62 @@ func (s *signIn) verify(ctx context.Context, email string, resp *fxa.LoginRespon
 		step, message, verifyCode = stepTOTP, "Enter the code from your authenticator app.", fxa.VerifyTOTP
 	}
 	var problem signInProblem
-	for attempt := 0; attempt < maxCodeAttempts; attempt++ {
+	for rejected := 0; rejected < maxCodeAttempts; {
 		code, err := s.ask(ctx, step, message, problem, "")
 		if err != nil {
 			return err
 		}
 		err = verifyCode(ctx, resp.SessionToken, strings.TrimSpace(code))
+		switch ctx.Err() {
+		case context.Canceled:
+			return errSignInCancelled
+		case context.DeadlineExceeded:
+			return errSignInTimedOut
+		}
 		if err == nil {
 			return nil
 		}
-		problem = codeProblem(err, step == stepTOTP)
+		if wrong := codeProblem(err, step == stepTOTP); wrong.code != "" {
+			rejected++
+			problem = wrong
+			continue
+		}
+
+		// Keep the same FxA session for another submission after a temporary
+		// failure. The sign-in deadline still applies while waiting for input.
+		failure := signInFailure(err)
+		status := fxa.HTTPStatus(err)
+		switch {
+		case failure.code == signInBlocked:
+			problem = signInProblem{signInBlocked, "Mozilla's security check blocked code verification. Try again."}
+		case failure.code == signInNetwork:
+			problem = failure
+		case failure.code == signInThrottled:
+			return err
+		case status >= 500 && status < 600:
+			problem = signInProblem{"", "Mozilla could not verify the code right now. Try again."}
+		case fxa.Errno(err) == 107: // invalid input format
+			problem = signInProblem{"", "Enter only the digits of the verification code and try again."}
+		default:
+			return err
+		}
 	}
 	return errTooManyCodes
 }
 
-// codeProblem explains a refused verification code.
+// codeProblem identifies a rejected verification code and explains it.
 func codeProblem(err error, totp bool) signInProblem {
-	switch fxa.Errno(err) {
-	case 105, 152, 183: // invalid verification code, invalid TOTP code, invalid or expired confirmation code
-		if totp {
-			return signInProblem{signInWrongTOTP, "Wrong code. Enter the code the authenticator app shows now."}
+	if !errors.Is(err, fxa.ErrTOTPRejected) {
+		switch fxa.Errno(err) {
+		case 105, 152, 183: // invalid verification code, invalid TOTP code, invalid or expired confirmation code
+		default:
+			return signInProblem{}
 		}
-		return signInProblem{signInWrongCode, "Wrong or expired code. Use the code from the latest email from Mozilla; an older code stops working when a new one is sent."}
 	}
-	return signInProblem{"", "The code was not accepted: " + fxa.Message(err) + "."}
+	if totp {
+		return signInProblem{signInWrongTOTP, "Wrong code. Enter the code the authenticator app shows now."}
+	}
+	return signInProblem{signInWrongCode, "Wrong or expired code. Use the code from the latest email from Mozilla; an older code stops working when a new one is sent."}
 }
 
 // signInFailure explains why a sign-in failed.
@@ -316,8 +485,12 @@ func signInFailure(err error) signInProblem {
 		return signInProblem{signInTooManyCodes, "Too many wrong codes. Start the sign-in again."}
 	case errors.Is(err, errSignInTimedOut):
 		return signInProblem{signInTimedOut, "The sign-in took too long. Start it again."}
+	case errors.Is(err, fxa.ErrChallengeBlocked):
+		return signInProblem{signInBlocked, "Mozilla's security check refused this sign-in from here. Sign in with the browser in the Arman VPN app instead."}
+	case fxa.HTTPStatus(err) == http.StatusTooManyRequests:
+		return signInProblem{signInThrottled, "Too many attempts. Wait a while and try again."}
 	}
-	if code := proxy.FailureCode(err); code == proxy.FailureNoNetwork || code == proxy.FailureUnreachable {
+	if code := proxy.FailureCode(err); code == proxy.FailureNoNetwork || code == proxy.FailureUnreachable || fxa.HTTPStatus(err) == http.StatusRequestTimeout {
 		return signInProblem{signInNetwork, fxa.Message(err)}
 	}
 	return signInProblem{"", fxa.Message(err)}

@@ -2,6 +2,8 @@ package fxa
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -29,6 +31,115 @@ func useFxaFixture(t *testing.T, handler func(r *http.Request, body map[string]a
 		status, text := handler(r, body)
 		return &http.Response{StatusCode: status, Header: make(http.Header), Body: io.NopCloser(strings.NewReader(text)), Request: r}, nil
 	}))
+}
+
+func TestOAuthTokenUsesAuthorizationCodeAfter406(t *testing.T) {
+	for _, mismatch := range []bool{false, true} {
+		name := "matching state"
+		if mismatch {
+			name = "mismatched state"
+		}
+		t.Run(name, func(t *testing.T) {
+			var challenge string
+			var calls int
+			useFxaFixture(t, func(r *http.Request, body map[string]any) (int, string) {
+				calls++
+				if r.Method != http.MethodPost || body["client_id"] != firefoxClientID {
+					t.Fatalf("unexpected OAuth request to %s", r.URL)
+				}
+				switch r.URL.String() {
+				case fxaAuthServer + "/oauth/token":
+					if calls != 1 || body["grant_type"] != "fxa-credentials" || !strings.HasPrefix(r.Header.Get("Authorization"), "Hawk ") {
+						t.Fatal("expected the original session exchange first")
+					}
+					return http.StatusNotAcceptable, ""
+				case fxaAuthServer + "/oauth/authorization":
+					state, _ := body["state"].(string)
+					challenge, _ = body["code_challenge"].(string)
+					if calls != 2 || state == "" || len(challenge) != 43 || body["code_challenge_method"] != "S256" ||
+						body["scope"] != oauthScope || body["access_type"] != "offline" || body["response_type"] != "code" ||
+						!strings.HasPrefix(r.Header.Get("Authorization"), "Hawk ") {
+						t.Fatal("expected session-authenticated offline authorization with PKCE")
+					}
+					if mismatch {
+						state += "x"
+					}
+					return http.StatusOK, `{"code":"fixture-code","state":"` + state + `"}`
+				case fxaOAuthTokenURL:
+					verifier, _ := body["code_verifier"].(string)
+					digest := sha256.Sum256([]byte(verifier))
+					if mismatch || calls != 3 || body["grant_type"] != "authorization_code" || body["code"] != "fixture-code" ||
+						r.Header.Get("Authorization") != "" || len(verifier) != 43 || base64.RawURLEncoding.EncodeToString(digest[:]) != challenge {
+						t.Fatal("expected the issued code with its matching verifier and no session credential")
+					}
+					return http.StatusOK, `{"access_token":"fixture-access","refresh_token":"fixture-refresh"}`
+				default:
+					t.Fatalf("unexpected OAuth target %s", r.URL)
+					return 0, ""
+				}
+			})
+			token, err := OAuthToken(context.Background(), strings.Repeat("00", 32))
+			if mismatch {
+				if err == nil || calls != 2 {
+					t.Fatalf("wrong state: got %d requests and error %v", calls, err)
+				}
+			} else if err != nil || token.AccessToken != "fixture-access" || token.RefreshToken != "fixture-refresh" || calls != 3 {
+				t.Fatalf("sign-in via authorization code failed: %v (calls=%d)", err, calls)
+			}
+		})
+	}
+}
+
+func TestRefreshTokenFallsBackToOAuthEndpointOn406(t *testing.T) {
+	const storedRefresh = "synthetic-refresh"
+	for _, tc := range []struct {
+		name            string
+		primaryStatus   int
+		alternateStatus int
+		body            string
+		wantReauth      bool
+	}{
+		{"primary succeeds", 200, 0, `{"access_token":"fresh"}`, false},
+		{"primary rejects token", 400, 0, `{"errno":110}`, true},
+		{"alternate succeeds", 406, 200, `{"access_token":"fresh"}`, false},
+		{"alternate rejects token", 406, 400, `{"errno":108}`, true},
+		{"alternate refuses request", 406, 403, ``, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := 0
+			useFxaFixture(t, func(r *http.Request, body map[string]any) (int, string) {
+				calls++
+				if r.Method != http.MethodPost || r.Header.Get("Authorization") != "" ||
+					body["grant_type"] != "refresh_token" || body["refresh_token"] != storedRefresh ||
+					body["client_id"] != firefoxClientID || body["scope"] != oauthScope {
+					t.Fatalf("unexpected refresh request to %s", r.URL)
+				}
+				switch {
+				case calls == 1 && r.URL.String() == fxaAuthServer+"/oauth/token":
+					if tc.primaryStatus == http.StatusNotAcceptable {
+						return tc.primaryStatus, ""
+					}
+					return tc.primaryStatus, tc.body
+				case calls == 2 && tc.alternateStatus != 0 && r.URL.String() == fxaOAuthTokenURL:
+					return tc.alternateStatus, tc.body
+				default:
+					t.Fatalf("unexpected call %d to %s", calls, r.URL)
+					return 0, ""
+				}
+			})
+			token, err := RefreshToken(context.Background(), storedRefresh)
+			if tc.primaryStatus == http.StatusOK || tc.alternateStatus == http.StatusOK {
+				if err != nil || token.AccessToken != "fresh" || token.RefreshToken != storedRefresh {
+					t.Fatalf("refresh failed or lost the saved token: %v", err)
+				}
+			} else if err == nil || errors.Is(err, ErrReauthRequired) != tc.wantReauth {
+				t.Fatalf("refresh error %v, want reauthentication = %t", err, tc.wantReauth)
+			}
+			if tc.alternateStatus != 0 && calls != 2 {
+				t.Fatalf("got %d requests, want a primary request and one fallback", calls)
+			}
+		})
+	}
 }
 
 func TestErrnoAndMessageReadFxaErrors(t *testing.T) {

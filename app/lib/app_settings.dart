@@ -6,6 +6,10 @@ import 'package:flutter/material.dart';
 /// What the window's close button does.
 enum CloseAction { ask, tray, quit }
 
+/// How a new account signs in: with the email and password form or through
+/// the in-app browser on supported platforms.
+enum SignInMethod { api, browser }
+
 /// The app's own preferences (language, theme, close button), kept in
 /// `app-settings.json` in the data folder beside the core's files. The VPN
 /// settings belong to the core.
@@ -26,6 +30,9 @@ class AppSettings extends ChangeNotifier {
   /// Shows the public IP (the address websites see). Off by default: the
   /// location is shown by its country either way.
   bool showPublicIp = false;
+
+  /// How a new account signs in (the accounts page's row).
+  SignInMethod signInMethod = SignInMethod.api;
 
   /// When the user closed the "account running out" notice; it stays away
   /// for a day after.
@@ -160,6 +167,9 @@ class AppSettings extends ChangeNotifier {
             CloseAction.values.asNameMap()[j['close']] ?? CloseAction.ask;
         s.firstRun = j['welcome_done'] != true;
         s.showPublicIp = j['show_public_ip'] == true;
+        s.signInMethod =
+            SignInMethod.values.asNameMap()[j['signin_method']] ??
+            s.signInMethod;
         if (j['dismissed_update'] case final String v) s.dismissedUpdate = v;
         if (j['update_version'] case final String v) s.updateVersion = v;
         if (j['update_url'] case final String v) s.updateUrl = v;
@@ -191,6 +201,7 @@ class AppSettings extends ChangeNotifier {
     String? language,
     ThemeMode? themeMode,
     CloseAction? closeAction,
+    SignInMethod? signInMethod,
     bool? firstRun,
     bool? showPublicIp,
     DateTime? lowQuotaDismissedAt,
@@ -218,6 +229,7 @@ class AppSettings extends ChangeNotifier {
     this.language = language ?? this.language;
     this.themeMode = themeMode ?? this.themeMode;
     this.closeAction = closeAction ?? this.closeAction;
+    this.signInMethod = signInMethod ?? this.signInMethod;
     notifyListeners();
     _save();
   }
@@ -232,6 +244,7 @@ class AppSettings extends ChangeNotifier {
           'language': language,
           'theme': themeMode.name,
           'close': closeAction.name,
+          'signin_method': signInMethod.name,
           'welcome_done': !firstRun,
           'show_public_ip': showPublicIp,
           'low_quota_dismissed_at': lowQuotaDismissedAt?.toIso8601String(),

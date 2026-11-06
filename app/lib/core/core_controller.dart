@@ -251,7 +251,9 @@ class CoreController extends ChangeNotifier {
       for (var i = 0; i < 20; i++) {
         final next = await api.status();
         status = next;
-        if ((next.state.phase == Phase.off) != on) break;
+        if (next.proxyOn == on || (on && next.connectFailure.isNotEmpty)) {
+          break;
+        }
         await Future<void>.delayed(const Duration(milliseconds: 150));
       }
     } finally {
@@ -424,10 +426,15 @@ class CoreController extends ChangeNotifier {
       _retestAt = null;
       _retestDelay = _retestFirst;
     }
-    if (s.state.phase != Phase.running || testing || switchingProxy) return;
+    if (!s.proxyOn ||
+        s.state.phase != Phase.running ||
+        testing ||
+        switchingProxy) {
+      return;
+    }
     if (s.noNetwork) return;
-    // The core's auto-connect tests by itself.
-    if (s.autoConnecting) return;
+    // The core owns both kinds of connection attempts.
+    if (s.autoConnecting || s.connectPending) return;
     if (s.confirmedBy(lastTest)) {
       _retestAt = null;
       _retestDelay = _retestFirst;

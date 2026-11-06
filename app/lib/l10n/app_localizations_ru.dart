@@ -738,6 +738,21 @@ class AppLocalizationsRu extends AppLocalizations {
       'Когда израсходована эта доля трафика, включается следующий аккаунт.';
 
   @override
+  String get signInMethod => 'Способ входа';
+
+  @override
+  String get signInMethodBrowser => 'Вход через браузер';
+
+  @override
+  String get signInMethodApi => 'Прямой вход';
+
+  @override
+  String get browserSignInBroken => 'Не удалось открыть страницу входа.';
+
+  @override
+  String get browserSignInFallback => 'Вход с почтой и паролем';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

@@ -14,10 +14,10 @@ import '../core/models.dart';
 import '../core/ports.dart';
 import '../l10n/app_localizations.dart';
 import '../platform.dart';
+import 'browser_signin.dart';
 import 'connection_mode.dart';
 import 'format.dart';
 import 'port_dialog.dart';
-import 'signin_dialog.dart';
 import 'widgets.dart';
 
 /// The home page: the switch, the state, where the traffic goes, and the
@@ -242,16 +242,24 @@ class _ProblemBox extends StatelessWidget {
 void _openAccounts(
   BuildContext context,
   CoreController core,
+  AppSettings settings,
   VoidCallback? onOpenAccounts,
 ) {
   if (onOpenAccounts != null) {
     onOpenAccounts();
   } else {
-    showSignInDialog(context, core);
+    startAddAccount(context, core, settings);
   }
 }
 
-/// The phone home's colors, light or dark with the app's theme.
+/// The core handles the initial connection while an explicit attempt is pending.
+void _testAfterPowerOn(CoreController core) {
+  final status = core.status;
+  if (status != null && status.proxyOn && !status.connectPending) {
+    unawaited(core.runTest().catchError((_) {}));
+  }
+}
+
 /// The computer's home: the phone's look with the computer's logic. The
 /// button turns the proxy on or off (off closes its port and gives Windows
 /// its own proxy setting back); the mode chooses who uses it: Proxy, apps
@@ -289,7 +297,7 @@ class _DesktopHome extends StatelessWidget {
   /// The button: off, or on with a test that confirms the connection.
   Future<void> _power(bool on) async {
     await core.setOn(on);
-    if (on) unawaited(core.runTest().catchError((_) {}));
+    if (on) _testAfterPowerOn(core);
   }
 
   @override
@@ -354,10 +362,14 @@ class _DesktopHome extends StatelessWidget {
 
   bool get _running => status.state.phase == Phase.running;
 
-  /// The proxy runs but no test since it started passed.
-  bool get _confirming => _running && !status.confirmedBy(core.lastTest);
+  /// The core is connecting, or the proxy still needs a passing test.
+  bool get _confirming =>
+      status.connectPending ||
+      (status.proxyOn && _running && !status.confirmedBy(core.lastTest));
 
   Color _accent(_HomePalette p) => switch (status.state.phase) {
+    _ when status.connectPending => p.busy,
+    _ when !status.proxyOn => p.idle,
     Phase.error => p.error,
     Phase.running when _confirming => p.busy,
     Phase.running => p.connected,
@@ -370,16 +382,19 @@ class _DesktopHome extends StatelessWidget {
     final theme = Theme.of(context);
     final look = PhaseLook.of(l, status);
     final proxy = status.proxy;
-    final on = status.state.phase != Phase.off;
+    final on = status.proxyOn;
     final confirming = _confirming;
+    final test = status.isCurrentTest(core.lastTest) ? core.lastTest : null;
+    final noNetwork = !status.connectPending && status.noNetwork && on;
     final failing =
+        !status.connectPending &&
         confirming &&
-        ((proxy?.wakeError.isNotEmpty ?? false) || core.lastTest?.ok == false);
+        ((proxy?.wakeError.isNotEmpty ?? false) || test?.ok == false);
     // The real reason; a long press or hover shows the core's own text.
-    final failure = failing ? failureText(l, proxy, core.lastTest) : null;
+    final failure = failing ? failureText(l, proxy, test) : null;
     // The last connect was given up: why, until the next one.
     final gaveUp = !on && status.connectFailure.isNotEmpty;
-    final connected = _running && !confirming;
+    final connected = on && _running && !confirming;
     final accent = _accent(p);
     final ip = !showIp
         ? ''
@@ -415,7 +430,7 @@ class _DesktopHome extends StatelessWidget {
             tooltip: on ? l.tapToDisconnect : l.tapToConnect,
             // No account yet: the accounts page, which explains them.
             onPressed: () => status.totalAccounts == 0
-                ? _openAccounts(context, core, onOpenAccounts)
+                ? _openAccounts(context, core, settings, onOpenAccounts)
                 : runShowingErrors(context, () => _power(!on)),
           ),
         ),
@@ -456,23 +471,23 @@ class _DesktopHome extends StatelessWidget {
                 ),
             ],
           )
-        else if (failing || (status.noNetwork && on) || gaveUp)
+        else if (failing || noNetwork || gaveUp)
           // Not connecting stands out from the ordinary hints.
           _ProblemBox(
-            text: status.noNetwork && on
+            text: noNetwork
                 ? l.noNetwork
                 : failure != null
                 ? failure.text
                 : failureCodeText(l, status.connectFailure),
             color: p.error,
             icon: Icons.error_outline_rounded,
-            tooltip: status.noNetwork ? '' : failure?.detail ?? '',
+            tooltip: noNetwork ? '' : failure?.detail ?? '',
           )
         else
           // A start failure's hint is general; the core's reason is on
           // hover or a long press.
           Tooltip(
-            message: status.state.phase == Phase.error
+            message: !status.connectPending && status.state.phase == Phase.error
                 ? status.state.message
                 : '',
             child: Text(
@@ -1042,13 +1057,18 @@ class _PhoneHome extends StatelessWidget {
   final VoidCallback? onOpenConnection;
   final VoidCallback? onOpenUpstreamProxy;
 
+  bool get _switchSystemProxy =>
+      status.systemProxySupported &&
+      !status.connectPending &&
+      status.connectFailure.isEmpty;
+
   Future<void> _toggle(bool on) async {
-    if (status.systemProxySupported) {
+    if (_switchSystemProxy) {
       await core.setSystemProxy(on ? 'clear' : 'set');
     } else {
       await core.setOn(!on);
     }
-    if (!on) unawaited(core.runTest().catchError((_) {}));
+    if (!on) _testAfterPowerOn(core);
   }
 
   @override
@@ -1103,24 +1123,28 @@ class _PhoneHome extends StatelessWidget {
     );
     // A computer's narrow window: on while the system proxy or TUN mode
     // carries the apps.
-    final on = canSwitch
+    final on = _switchSystemProxy
         ? status.systemProxySet || status.tunMode
-        : status.state.phase != Phase.off;
+        : status.proxyOn;
     final proxy = status.proxy;
     // The phone's VPN is "Connecting", in orange, until a test confirms it
     // works (the controller tests again meanwhile): with no internet it
     // does not claim to be connected.
     final confirming =
-        on && running && !canSwitch && !status.confirmedBy(core.lastTest);
+        status.connectPending ||
+        (on && running && !canSwitch && !status.confirmedBy(core.lastTest));
+    final test = status.isCurrentTest(core.lastTest) ? core.lastTest : null;
+    final noNetwork = !status.connectPending && status.noNetwork && on;
     final failing =
+        !status.connectPending &&
         confirming &&
-        ((proxy?.wakeError.isNotEmpty ?? false) || core.lastTest?.ok == false);
+        ((proxy?.wakeError.isNotEmpty ?? false) || test?.ok == false);
     // The real reason; a long press or hover shows the core's own text.
-    final failure = failing ? failureText(l, proxy, core.lastTest) : null;
+    final failure = failing ? failureText(l, proxy, test) : null;
     // The last connect was given up: why, until the next one.
     final gaveUp = !on && status.connectFailure.isNotEmpty;
     final connected =
-        running && (status.computerUsesVpn || !canSwitch) && !confirming;
+        on && running && (status.computerUsesVpn || !canSwitch) && !confirming;
     final ip = !showIp
         ? ''
         : status.exit?.ipv4.isNotEmpty == true
@@ -1196,7 +1220,7 @@ class _PhoneHome extends StatelessWidget {
                   // No account yet: the accounts page, which explains
                   // them and links to Mozilla's sign-up.
                   onPressed: () => status.totalAccounts == 0
-                      ? _openAccounts(context, core, onOpenAccounts)
+                      ? _openAccounts(context, core, settings, onOpenAccounts)
                       : runShowingErrors(context, () => _toggle(on)),
                 ),
               ),
@@ -1235,25 +1259,27 @@ class _PhoneHome extends StatelessWidget {
                       ),
                   ],
                 )
-              else if (failing || (status.noNetwork && on) || gaveUp)
+              else if (failing || noNetwork || gaveUp)
                 // Not connecting stands out from the ordinary hints.
                 problem(
                   _ProblemBox(
-                    text: status.noNetwork && on
+                    text: noNetwork
                         ? l.noNetwork
                         : failure != null
                         ? failure.text
                         : failureCodeText(l, status.connectFailure),
                     color: p.error,
                     icon: Icons.error_outline_rounded,
-                    tooltip: status.noNetwork ? '' : failure?.detail ?? '',
+                    tooltip: noNetwork ? '' : failure?.detail ?? '',
                   ),
                 )
               else
                 // A start failure's hint is general; the core's reason is
                 // on a long press.
                 Tooltip(
-                  message: status.state.phase == Phase.error
+                  message:
+                      !status.connectPending &&
+                          status.state.phase == Phase.error
                       ? status.state.message
                       : '',
                   child: Text(
@@ -2550,7 +2576,8 @@ class _LowQuotaNoticeState extends State<_LowQuotaNotice> {
               Align(
                 alignment: AlignmentDirectional.centerEnd,
                 child: TextButton.icon(
-                  onPressed: () => showSignInDialog(context, widget.core),
+                  onPressed: () =>
+                      startAddAccount(context, widget.core, widget.settings),
                   icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
                   label: Text(l.addAccount),
                 ),

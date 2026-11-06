@@ -276,13 +276,13 @@ func readPassword(prompt string) (string, error) {
 // OAuth credentials with the email. It exits the process on failure.
 func interactiveSignIn() (*fxa.TokenResponse, string, string) {
 	email, password := promptCredentials()
+	ctx := fxa.WithRequestTimeout(context.Background(), proxy.APIRequestTimeout)
 
 	fmt.Print("Logging in... ")
-	loginCtx, loginCancel := context.WithTimeout(context.Background(), proxy.APIRequestTimeout)
-	loginResp, err := fxa.Login(loginCtx, email, password)
-	loginCancel()
+	loginResp, err := fxa.Login(ctx, email, password)
 	if err != nil {
 		fmt.Printf("failed: %v\n", err)
+		printBlockedHint(err)
 		os.Exit(1)
 	}
 	fmt.Println("OK")
@@ -292,22 +292,38 @@ func interactiveSignIn() (*fxa.TokenResponse, string, string) {
 	}
 
 	fmt.Print("Getting OAuth token... ")
-	tokenCtx, tokenCancel := context.WithTimeout(context.Background(), proxy.APIRequestTimeout)
-	token, err := fxa.OAuthToken(tokenCtx, loginResp.SessionToken)
+	token, err := fxa.OAuthToken(ctx, loginResp.SessionToken)
 	if err == nil {
 		// Not needed once the tokens exist; left alive it shows as
 		// "unknown" in the account's connected services.
-		if destroyErr := fxa.DestroySession(tokenCtx, loginResp.SessionToken); destroyErr != nil {
+		if destroyErr := fxa.DestroySession(ctx, loginResp.SessionToken); destroyErr != nil {
 			logx.Warn("ending the sign-in session failed err=%s", logx.Err(destroyErr))
 		}
 	}
-	tokenCancel()
 	if err != nil {
 		fmt.Printf("failed: %v\n", err)
+		printBlockedHint(err)
 		os.Exit(1)
 	}
 	fmt.Println("OK")
 	return token, email, password
+}
+
+// accountTransferGuide explains signing in with the app's browser page
+// and moving the account to a device without one.
+const accountTransferGuide = "https://github.com/armanlife/arman-vpn-client/blob/main/docs/BROWSER-SIGNIN.md"
+
+// printBlockedHint suggests the app's browser sign-in when Fastly's bot
+// check keeps refusing the terminal one.
+func printBlockedHint(err error) {
+	if !errors.Is(err, fxa.ErrChallengeBlocked) {
+		return
+	}
+	fmt.Println()
+	fmt.Println("Mozilla's security check is refusing sign-ins from this program right now.")
+	fmt.Println("Tip: sign in with the browser in the Arman VPN app, then copy that")
+	fmt.Println("device's data folder to this one.")
+	fmt.Println("Guide: " + accountTransferGuide)
 }
 
 // verifySessionInteractively prompts for the confirmation code FxA sent to
@@ -340,9 +356,8 @@ func verifySessionInteractively(email, sessionToken, verificationMethod string) 
 			continue
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), proxy.APIRequestTimeout)
+		ctx := fxa.WithRequestTimeout(context.Background(), proxy.APIRequestTimeout)
 		err = fxa.VerifySession(ctx, sessionToken, code)
-		cancel()
 		if err == nil {
 			fmt.Println("Session verified.")
 			return

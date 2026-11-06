@@ -733,6 +733,21 @@ class AppLocalizationsFa extends AppLocalizations {
       'وقتی این مقدار از حجم مصرف شود، حساب بعدی جایگزین می‌شود.';
 
   @override
+  String get signInMethod => 'روش ورود';
+
+  @override
+  String get signInMethodBrowser => 'ورود با مرورگر';
+
+  @override
+  String get signInMethodApi => 'ورود مستقیم';
+
+  @override
+  String get browserSignInBroken => 'صفحه ورود باز نشد.';
+
+  @override
+  String get browserSignInFallback => 'ورود با ایمیل و رمز عبور';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

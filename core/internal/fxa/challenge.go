@@ -13,6 +13,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -38,7 +39,8 @@ const (
 
 var (
 	fastlyChallengePrefixRe = regexp.MustCompile(`/_fs-ch-[A-Za-z0-9]+`)
-	fastlyInitCallRe        = regexp.MustCompile(`init\((\[[^\]]*\]),\s*"([^"]+)",\s*"([^"]+)"`)
+	fastlyInitStartRe       = regexp.MustCompile(`\binit\s*\(\s*\[`)
+	fastlyInitCallRe        = regexp.MustCompile(`^init\((\[[^\]]*\]),\s*"([^"]+)",\s*"([^"]+)"`)
 
 	// powAlphabet is the character set the Fastly proof-of-work solver
 	// brute-forces; it mirrors the challenge script's own alphabet.
@@ -99,7 +101,7 @@ func solveFastlyChallenge(ctx context.Context) error {
 	}
 	defer func() { <-challengeSolveSlot }()
 
-	ctx, cancel := contextWithMinDeadline(ctx, fastlySolveTimeout)
+	ctx, cancel := context.WithTimeout(ctx, fastlySolveTimeout)
 	defer cancel()
 
 	// Prefer the host that actually rejected the API request, but fall
@@ -107,6 +109,9 @@ func solveFastlyChallenge(ctx context.Context) error {
 	// page at all and the cookie it needs is issued with Domain=firefox.com.
 	var lastErr error
 	for _, base := range []string{fxaAPIHost, strings.TrimRight(fxaSiteURL, "/")} {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		err := solveChallengeOnHost(ctx, base)
 		if err == nil {
 			return nil
@@ -157,7 +162,7 @@ func solveChallengeOnHost(ctx context.Context, base string) error {
 		return fmt.Errorf("fetching challenge script: %w", err)
 	}
 
-	challenges, token, err := parseChallengeInit(script)
+	challenges, token, err := parseChallengeInit(script, prefix)
 	if err != nil {
 		return err
 	}
@@ -199,7 +204,7 @@ func solveChallengeOnHost(ctx context.Context, base string) error {
 			return readErr
 		}
 		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("challenge post-back returned HTTP %d: %s", resp.StatusCode, truncate(string(data), 256))
+			return fmt.Errorf("challenge post-back returned HTTP %d", resp.StatusCode)
 		}
 
 		var pbResp fastlyPostBackResponse
@@ -207,9 +212,9 @@ func solveChallengeOnHost(ctx context.Context, base string) error {
 			return fmt.Errorf("parsing post-back response: %w", err)
 		}
 		if pbResp.Status == "success" {
-			// Probe before installing the cookie: with rotating-exit
-			// proxies the cookie may be bound to an IP the API call
-			// will not reuse, and the probe catches that immediately.
+			// Verify that the challenge page clears before installing the
+			// cookies. The caller checks the API endpoint by replaying the
+			// original request.
 			if _, stillChallenged, err := fetchChallengePage(ctx, client, pageURL); err != nil {
 				return err
 			} else if stillChallenged {
@@ -218,12 +223,12 @@ func solveChallengeOnHost(ctx context.Context, base string) error {
 			if err := installChallengeCookies(jar, pageURL); err != nil {
 				return err
 			}
-			logx.Info("Fastly challenge solved host=%s challenges=%s rounds=%d took=%s",
+			logx.Info("Fastly challenge page probe passed host=%s challenges=%s rounds=%d took=%s",
 				strings.TrimPrefix(base, "https://"), strings.Join(kinds, ","), round+1, time.Since(start).Round(100*time.Millisecond))
 			return nil
 		}
 		if len(pbResp.Ch) == 0 || pbResp.Tok == "" {
-			return fmt.Errorf("unexpected post-back response: %s", truncate(string(data), 256))
+			return errors.New("challenge post-back is missing the next round")
 		}
 		challenges, token = pbResp.Ch, pbResp.Tok
 	}
@@ -264,23 +269,73 @@ func fetchText(ctx context.Context, client *http.Client, rawURL string) (string,
 	return string(data), nil
 }
 
-// parseChallengeInit extracts the challenge list and the challenge token
-// from the trailing init([...], "token", "prefix", ...) call in the script.
-func parseChallengeInit(script string) ([]fastlyChallenge, string, error) {
-	matches := fastlyInitCallRe.FindAllStringSubmatch(script, -1)
-	if len(matches) == 0 {
-		return nil, "", fmt.Errorf("challenge init call not found in script")
+// parseChallengeInit reads the first three arguments of an init call for the
+// fetched prefix, preferring the last valid JSON form over the legacy form.
+// It never evaluates JavaScript.
+func parseChallengeInit(script, prefix string) ([]fastlyChallenge, string, error) {
+	calls := fastlyInitStartRe.FindAllStringIndex(script, -1)
+	var legacyChallenges []fastlyChallenge
+	var legacyToken string
+	for i := len(calls) - 1; i >= 0; i-- {
+		call := calls[i]
+		var challenges []fastlyChallenge
+		var token, scriptPrefix string
+		rest, ok := decodeChallengeInitArgs(script[call[1]-1:], &challenges, &token, &scriptPrefix)
+		if !ok || scriptPrefix != prefix || token == "" || len(challenges) == 0 ||
+			slices.ContainsFunc(challenges, func(c fastlyChallenge) bool { return c.Ty == "" }) {
+			continue
+		}
+		if hasChallengeInitDelimiter(rest) {
+			return challenges, token, nil
+		}
+		// The legacy pattern also matched flat calls with JavaScript comments
+		// after the prefix. Keep that form when a real delimiter follows.
+		if legacyChallenges == nil && fastlyInitCallRe.MatchString(script[call[0]:len(script)-len(rest)]) &&
+			hasLegacyChallengeInitDelimiter(rest) {
+			legacyChallenges, legacyToken = challenges, token
+		}
 	}
-	m := matches[len(matches)-1]
+	if legacyChallenges != nil {
+		return legacyChallenges, legacyToken, nil
+	}
+	return nil, "", errors.New("valid challenge init call not found in script")
+}
 
-	var challenges []fastlyChallenge
-	if err := json.Unmarshal([]byte(m[1]), &challenges); err != nil {
-		return nil, "", fmt.Errorf("parsing challenge list: %w", err)
+func decodeChallengeInitArgs(rest string, destinations ...any) (string, bool) {
+	for i, destination := range destinations {
+		if i > 0 {
+			var ok bool
+			rest, ok = strings.CutPrefix(rest, ",")
+			if !ok {
+				return "", false
+			}
+		}
+		decoder := json.NewDecoder(strings.NewReader(rest))
+		if decoder.Decode(destination) != nil {
+			return "", false
+		}
+		rest = strings.TrimSpace(rest[decoder.InputOffset():])
 	}
-	if len(challenges) == 0 {
-		return nil, "", fmt.Errorf("empty challenge list")
+	return rest, true
+}
+
+func hasChallengeInitDelimiter(rest string) bool {
+	if strings.HasPrefix(rest, ")") {
+		return true
 	}
-	return challenges, m[2], nil
+	after, ok := strings.CutPrefix(rest, ",")
+	return ok && strings.TrimSpace(after) != ""
+}
+
+func hasLegacyChallengeInitDelimiter(rest string) bool {
+	for strings.HasPrefix(rest, "/*") {
+		_, after, ok := strings.Cut(rest[2:], "*/")
+		if !ok {
+			return false
+		}
+		rest = strings.TrimSpace(after)
+	}
+	return hasChallengeInitDelimiter(rest)
 }
 
 // answerChallenge produces the fst-post-back answer payload for one
@@ -372,6 +427,11 @@ func fetchPAT(ctx context.Context, client *http.Client, prefixURL, token string)
 
 	resp, err := client.Do(req)
 	if err != nil {
+		// net/http includes the full URL, which contains the PAT token.
+		var requestErr *url.Error
+		if errors.As(err, &requestErr) {
+			err = requestErr.Err
+		}
 		return "", fmt.Errorf("PAT request: %w", err)
 	}
 	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
@@ -385,7 +445,7 @@ func fetchPAT(ctx context.Context, client *http.Client, prefixURL, token string)
 		return "", nil
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("PAT request returned HTTP %d: %s", resp.StatusCode, truncate(string(data), 256))
+		return "", fmt.Errorf("PAT request returned HTTP %d", resp.StatusCode)
 	}
 
 	var out struct {
@@ -436,40 +496,6 @@ func installChallengeCookies(solverJar http.CookieJar, pageURL string) error {
 	parsed2, _ := url.Parse(fxaSiteURL)
 	controlplane.SetCookies(parsed2, cookies)
 	return nil
-}
-
-// contextWithMinDeadline returns a context with at least d of deadline left.
-// When the parent already has a longer deadline it is returned unchanged;
-// otherwise the deadline is extended while the parent's cancellation still
-// propagates. The parent's deadline passing is not a cancellation: it is
-// the deadline being extended (a pass renewal's 15 s API timeout must not
-// cut a challenge solve that takes longer on a slow phone).
-func contextWithMinDeadline(ctx context.Context, d time.Duration) (context.Context, context.CancelFunc) {
-	if deadline, ok := ctx.Deadline(); ok && time.Until(deadline) >= d {
-		return ctx, func() {}
-	}
-	extended, cancel := context.WithTimeout(context.WithoutCancel(ctx), d)
-	watcherDone := make(chan struct{})
-	go func() {
-		select {
-		case <-ctx.Done():
-			if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
-				cancel()
-			}
-		case <-watcherDone:
-		}
-	}()
-	return extended, func() {
-		close(watcherDone)
-		cancel()
-	}
-}
-
-func truncate(s string, n int) string {
-	if len(s) <= n {
-		return s
-	}
-	return s[:n] + "..."
 }
 
 // baseOrigin derives the Origin header value for challenge requests from a

@@ -29,7 +29,9 @@ Accounts are added from the dashboard ([DASHBOARD.md](DASHBOARD.md)) or with `-a
 | Fastly image CAPTCHA during any call | `need_captcha` | answered inside the challenge solver through `fxa.WithCaptchaSolver` |
 | Email typed in another letter case than the account's (errno 120) | none | login again with the email the error names, and the typed one as `originalLoginEmail` |
 
-The password's key stretching uses the email exactly as the account has it, so FxA refuses another letter case and names the account's own spelling; `fxa.Login` repeats the sign-in once with it, as Firefox does, and the account is stored under that spelling (`fxa.SignedInEmail`). Wrong codes can be retried up to five times. The terminal `-add-account` supports email codes and confirmation links only.
+The password's key stretching uses the email exactly as the account has it, so FxA refuses another letter case and names the account's own spelling; `fxa.Login` repeats the sign-in once with it, as Firefox does, and the account is stored under that spelling (`fxa.SignedInEmail`). Email and authenticator verification allow up to five rejected codes. Network errors, HTTP 406 challenge failures, and temporary server errors keep the same code prompt open for another submission within the 15-minute sign-in deadline. The terminal `-add-account` supports email codes and confirmation links only.
+
+An account can also come from a browser sign-in (`POST /signin/browser`): the app's webview shows accounts.firefox.com as Firefox desktop's sync sign-in (`context=fx_desktop_v3&service=sync`) and captures the session token from the page's `fxaccounts:login` WebChannel message, with every code and CAPTCHA handled in the page itself. The page sends that message right after the password, before any code the sign-in asks for, so the app hands the token over at once and keeps the page open. The core (`startBrowser` in `signin_flow.go`) asks `GET /recovery_email/status` (`fxa.SessionVerified`) every 3 seconds until FxA reports the session confirmed, then exchanges the token (`fxa.OAuthToken`, retried briefly while FxA still answers errnos 104 and 138); the app closes the page once that sign-in has finished, and cancels it when the page is closed first. The account is stored without a password, so signing it in again goes through the browser too. The webview reaches the pages through the core's sign-in proxy (`POST /signin/browser/proxy`, `internal/signinproxy`), which connects the way the core's own account requests do, with no account and the VPN off; the app sets it with WebView2's `--proxy-server` on Windows and androidx.webkit's `ProxyController` on Android.
 
 After verification, `fxa.OAuthToken` issues offline OAuth credentials, the account is stored (an existing account with the same email is updated and becomes ready), its quota is read, and the account manager reloads. The session token and password are discarded.
 
@@ -43,6 +45,8 @@ Defaults and relevant paths:
 | --- | --- |
 | FxA base | `https://api.accounts.firefox.com/v1` |
 | OAuth | `/oauth/token` relative to that base |
+| OAuth authorization code | `/oauth/authorization` relative to that base |
+| OAuth token fallback | `https://oauth.accounts.firefox.com/v1/token` |
 | Guardian base | `https://vpn.mozilla.org`, `network.guardian_endpoint` in `config.json` |
 | Guardian pass | `GET /api/v1/fpn/token` |
 | Guardian quota | `HEAD /api/v1/fpn/token` (headers only, no pass minted) |
@@ -149,7 +153,15 @@ Do not infer live quota-exhaustion behavior from parsing quota headers. The hist
 
 [internal/controlplane](../internal/controlplane/client.go) owns a shared 30-second HTTP client and cookie jar. Configure `controlplane.SetTransport` before requests start. This client is distinct from data-plane sessions.
 
-[challenge.go](../internal/fxa/challenge.go) handles account-API HTTP 406 challenges, PoW/PAT, and challenge cookies, with at most five challenge attempts. `contextWithMinDeadline` can extend a short caller deadline to the configured minimum: FxA uses 90 seconds and challenge solving uses 60 seconds. Check the actual context path before promising a strict end-to-end timeout. Each 406 is logged at INFO (`the account server answered HTTP 406`), each solved challenge with its host, the kinds of challenge asked, the rounds, and the time (`Fastly challenge solved host=accounts.firefox.com challenges=pat,pow,clientmetrics rounds=2 took=4.1s`), and a failed solve at WARN, so the logs show how often the bot check comes and whether the solver keeps up.
+When the account API returns HTTP 406 during refresh, the core first tries Mozilla's published OAuth token endpoint once with the same refresh grant. Both endpoints use the same refresh tokens. If the OAuth endpoint is unreachable or also returns 406, the original account-API challenge flow runs. A confirmed invalid refresh token (OAuth HTTP 400, errno 108) requires reauthentication.
+
+When the Hawk-signed sign-in token exchange returns HTTP 406, the core uses the same verified session to request an authorization code with S256 PKCE and a fresh state value. After matching the returned state, it exchanges the code and verifier at Mozilla's OAuth token endpoint. This keeps email, TOTP, and unblock verification in the existing sign-in flow. Only the authorization request carries the session's Hawk credential.
+
+[challenge.go](../internal/fxa/challenge.go) handles account-API HTTP 406 challenges, PoW/PAT, and challenge cookies. The CLI and runtime token refresh limit the first HTTP attempt of each FxA call to 15 seconds. After the first 406, the fallback, up to five challenge solves, and their API retries share a 90-second budget. Each solve may take up to 60 seconds within that budget. The caller's operation deadline and cancellation still apply. Every successful solve is followed by a retry if the budget permits, including the fifth.
+
+`Fastly challenge page probe passed` records the challenge page's host, task types, rounds, and duration. The separate `FxA API retry returned HTTP …` line records the original request's method, host, path, and response status. A cleared challenge page alone does not establish acceptance at the API endpoint.
+
+The solver reads the challenge script's initialization arguments as JSON and checks the asset prefix against the path it fetched. The legacy regular expression remains a fallback for flat calls with JavaScript comments after the prefix. Neither parser executes the script.
 
 Do not disable production TLS validation to work around a challenge or local interception. Test-only certificate configurations must remain local to tests.
 

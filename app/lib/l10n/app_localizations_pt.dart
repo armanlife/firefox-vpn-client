@@ -738,6 +738,21 @@ class AppLocalizationsPt extends AppLocalizations {
       'A próxima conta assume quando esta porcentagem da franquia for consumida.';
 
   @override
+  String get signInMethod => 'Método de login';
+
+  @override
+  String get signInMethodBrowser => 'Entrar pelo navegador';
+
+  @override
+  String get signInMethodApi => 'Entrar diretamente';
+
+  @override
+  String get browserSignInBroken => 'Não foi possível abrir a página de login.';
+
+  @override
+  String get browserSignInFallback => 'Entrar com e-mail e senha';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

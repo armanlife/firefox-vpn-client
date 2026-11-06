@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -223,6 +224,34 @@ func (f *ServerFailover) Instead(location, fallback []Candidate, server Candidat
 	}
 	choices := append(append([]Candidate(nil), location...), fallback...)
 	return nextServer(choices, server, f.Avoided)
+}
+
+// StandInAfterTimeout picks a server for an immediate retry of a first
+// connection to the recommended location. A network or account failure
+// shared by all servers still uses the normal wake retry policy.
+func (f *ServerFailover) StandInAfterTimeout(fallback []Candidate, server Candidate, err error) (Candidate, bool) {
+	var timeout net.Error
+	if f == nil || !server.IsRecommended() || FailureCode(err) != FailureUnreachable ||
+		!errors.As(err, &timeout) || !timeout.Timeout() {
+		return Candidate{}, false
+	}
+	return nextServer(fallback, server, f.Avoided)
+}
+
+// StandInConnected keeps the timed-out server out of the choice after its
+// stand-in has established a session. A failed stand-in leaves the usual
+// failure thresholds in charge.
+func (f *ServerFailover) StandInConnected(server Candidate) {
+	key, err := canonicalProxyAddr(server.Addr)
+	if err != nil {
+		return
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.avoided == nil {
+		f.avoided = make(map[string]time.Time)
+	}
+	f.avoided[key] = f.now().Add(serverAvoidTime)
 }
 
 // inLocation reports whether addr is one of location's servers.

@@ -737,6 +737,21 @@ class AppLocalizationsAr extends AppLocalizations {
       'ينتقل التطبيق إلى الحساب التالي عند استهلاك هذه النسبة من الرصيد.';
 
   @override
+  String get signInMethod => 'طريقة تسجيل الدخول';
+
+  @override
+  String get signInMethodBrowser => 'تسجيل الدخول عبر المتصفح';
+
+  @override
+  String get signInMethodApi => 'تسجيل الدخول المباشر';
+
+  @override
+  String get browserSignInBroken => 'تعذّر فتح صفحة تسجيل الدخول.';
+
+  @override
+  String get browserSignInFallback => 'تسجيل الدخول بالبريد وكلمة المرور';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

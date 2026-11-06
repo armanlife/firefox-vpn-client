@@ -72,8 +72,7 @@ class CoreService : VpnService() {
                 turnOff(this@CoreService)
                 return
             }
-            // The core gave the connect up (no connection to Mozilla within
-            // a minute): the VPN and its notification go too.
+            // The core finished its attempts: the VPN and its notification go too.
             if (!mobile.Mobile.isOn()) {
                 Log.w(TAG, "the connect was given up; turning the VPN off")
                 turnOff(this@CoreService)
@@ -87,6 +86,7 @@ class CoreService : VpnService() {
                 return
             }
             val code = when {
+                mobile.Mobile.connectPending() -> ""
                 offline -> NO_NETWORK
                 mobile.Mobile.running() -> mobile.Mobile.exitCountry()
                 else -> ""
@@ -234,7 +234,14 @@ class CoreService : VpnService() {
         startCore(this, on = true)
         // On already after the button (Connect, which a SetOn would cancel);
         // this turns it on after the system restarted the service.
-        if (!mobile.Mobile.isOn()) mobile.Mobile.setOn(true)
+        if (!mobile.Mobile.isOn()) {
+            if (intent == null) {
+                mobile.Mobile.setOn(true)
+            } else {
+                turnOff(this)
+                return START_NOT_STICKY
+            }
+        }
         if (usesVpn(this) && !startTunnel()) {
             turnOff(this)
             return START_NOT_STICKY
@@ -619,7 +626,7 @@ class CoreService : VpnService() {
                 context.startService(intent)
             }
             startCore(context, on = true)
-            // Given up by the core if it does not reach Mozilla in a minute.
+            // The core owns the connection and any retries.
             mobile.Mobile.connect()
             on = true
             connected = false

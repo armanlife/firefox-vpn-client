@@ -37,6 +37,11 @@ void main() {
           ('POST', '/api/system-proxy') => (200, {'mode': 'clear'}),
           ('DELETE', '/api/accounts/a') => (200, {}),
           ('DELETE', '/api/signin/s') => (200, {}),
+          ('POST', '/api/signin/browser/proxy') => (
+            200,
+            {'address': '127.0.0.1:41234'},
+          ),
+          ('DELETE', '/api/signin/browser/proxy') => (200, {'closed': true}),
           ('POST', '/api/test') => (409, {'error': 'the proxy is not running'}),
           _ => (404, {'error': 'not found'}),
         };
@@ -71,6 +76,13 @@ void main() {
       await api.removeAccount('a');
       expect(seen['type'], 'application/json');
       await api.cancelSignIn('s');
+      expect(seen['type'], 'application/json');
+    });
+
+    test('opens and closes the sign-in proxy', () async {
+      expect(await api.openSignInProxy(port: 41234), '127.0.0.1:41234');
+      expect(jsonDecode(seen['body'] as String), {'port': 41234});
+      await api.closeSignInProxy();
       expect(seen['type'], 'application/json');
     });
 

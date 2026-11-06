@@ -156,15 +156,15 @@ func (d *Daemon) expectedSelection(cfg config.Config) (proxy.Candidate, string) 
 // connectEngine is the first wake: it fetches the server list and a pass
 // (together), resolves "fastest" with that pass, selects the upstream, and
 // builds the controller with its first H2/H3 session. idle.wakeMu is held.
-func (d *Daemon) connectEngine(e *proxyEngine) (*proxy.Controller, error) {
+func (d *Daemon) connectEngine(ctx context.Context, e *proxyEngine) (*proxy.Controller, error) {
 	cfg := e.cfg
 	server := strings.TrimSpace(cfg.Proxy.Server)
 	country := strings.TrimSpace(cfg.Proxy.Country)
 
 	listed := make(chan []serverlist.Country, 1)
 	go func() { listed <- d.refreshLocations(cfg) }()
-	ctx, cancel := context.WithTimeout(context.Background(), proxy.PassRenewTimeout)
-	auth, pass, err := d.pool.AcquirePass(ctx, e.upstream.Guardian)
+	passCtx, cancel := context.WithTimeout(ctx, proxy.PassRenewTimeout)
+	auth, pass, err := d.pool.AcquirePass(passCtx, e.upstream.Guardian)
 	cancel()
 	if err != nil {
 		return nil, err
@@ -180,7 +180,11 @@ func (d *Daemon) connectEngine(e *proxyEngine) (*proxy.Controller, error) {
 		known := d.countries
 		d.mu.Unlock()
 		if len(known) == 0 || server != "" {
-			countries = <-listed
+			select {
+			case countries = <-listed:
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
 		} else {
 			logx.Debug("server list still loading; connecting with the one from before")
 			countries = known
@@ -190,7 +194,10 @@ func (d *Daemon) connectEngine(e *proxyEngine) (*proxy.Controller, error) {
 
 	fastest := server == "" && strings.EqualFold(country, proxy.FastestCountry)
 	if fastest {
-		country = d.resolveFastestCountry(pass.RawToken)
+		country = d.resolveFastestCountry(ctx, pass.RawToken)
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 	selected, fromState, err := proxy.ResolveWithStateAndCountry(server, country, countries, d.paths.Selection, d.failover.Avoided)
 	if err != nil {
@@ -243,7 +250,7 @@ func (d *Daemon) connectEngine(e *proxyEngine) (*proxy.Controller, error) {
 	withPass := upstream
 	withPass.Auth, withPass.Pass = auth, pass
 	controller, err := proxy.NewController(withPass)
-	if err != nil && upstream.UseH3 {
+	if err != nil && ctx.Err() == nil && upstream.UseH3 {
 		// Networks that filter QUIC (UDP), as in Iran, often let the same
 		// server through over TCP: HTTP/2 for this engine instead.
 		logx.Warn("HTTP/3 did not connect; using HTTP/2 instead proxy=%s err=%s", selected.Addr, logx.Err(err))
@@ -251,6 +258,22 @@ func (d *Daemon) connectEngine(e *proxyEngine) (*proxy.Controller, error) {
 		controller, err = proxy.NewController(withPass)
 		if err == nil {
 			e.fellBackToH2.Store(true)
+		}
+	}
+	if err != nil && ctx.Err() == nil && fallback != nil && !standIn && !e.upstream.UseH3 && selected.IsRecommended() {
+		if next, ok := upstream.Failover.StandInAfterTimeout(fallback(), selected, err); ok {
+			if nextURL, urlErr := proxy.NormalizeURL(next.Addr); urlErr == nil {
+				logx.Info("recommended server timed out on first connect; trying a stand-in from=%s to=%s", selected.Addr, next.Addr)
+				withPass.Server, withPass.ProxyURL = next, nextURL
+				if alternate, alternateErr := proxy.NewController(withPass); alternateErr == nil {
+					upstream.Failover.StandInConnected(selected)
+					controller, err = alternate, nil
+					upstream.Server, upstream.ProxyURL = next, nextURL
+					selected, standIn, selectionSource = next, true, "server_failover"
+				} else {
+					logx.Warn("recommended server's stand-in did not connect proxy=%s err=%s", next.Addr, logx.Err(alternateErr))
+				}
+			}
 		}
 	}
 	if err != nil {
@@ -284,9 +307,9 @@ func (d *Daemon) connectEngine(e *proxyEngine) (*proxy.Controller, error) {
 // reconnectEngine wakes an engine that was connected before: a new pass
 // and session for the same server (or the one the failover moved to),
 // without selecting or measuring again. idle.wakeMu is held.
-func (d *Daemon) reconnectEngine(e *proxyEngine) (*proxy.Controller, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), proxy.PassRenewTimeout)
-	auth, pass, err := d.pool.AcquirePass(ctx, e.upstream.Guardian)
+func (d *Daemon) reconnectEngine(ctx context.Context, e *proxyEngine) (*proxy.Controller, error) {
+	passCtx, cancel := context.WithTimeout(ctx, proxy.PassRenewTimeout)
+	auth, pass, err := d.pool.AcquirePass(passCtx, e.upstream.Guardian)
 	cancel()
 	if err != nil {
 		return nil, err

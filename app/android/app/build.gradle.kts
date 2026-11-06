@@ -110,4 +110,7 @@ dependencies {
     // The Go core: `gomobile bind -target=android -androidapi 24
     // -o app/android/app/libs/core.aar ./mobile` in core/ (see app/README.md).
     implementation(files("libs/core.aar"))
+    // ProxyController: the browser sign-in's WebView uses the core's
+    // sign-in proxy. The version webview_flutter_android itself uses.
+    implementation("androidx.webkit:webkit:1.15.0")
 }

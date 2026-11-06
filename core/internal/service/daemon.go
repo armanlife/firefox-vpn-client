@@ -123,10 +123,12 @@ type Daemon struct {
 	// the persisted choice, which the switch updated.
 	failover *proxy.ServerFailover
 	signins  *signInRegistry
-	restart  chan struct{}
-	stop     chan struct{}
-	stopOnce sync.Once
-	finished chan struct{}
+	// signInProxy is the browser sign-in's proxy (signin_proxy.go).
+	signInProxy signInProxy
+	restart     chan struct{}
+	stop        chan struct{}
+	stopOnce    sync.Once
+	finished    chan struct{}
 	// LocalToken authorizes local clients (the tray) without the dashboard
 	// login; it is regenerated at every start and stored in the data folder.
 	localToken string
@@ -191,11 +193,9 @@ type Daemon struct {
 	// connection test (autoconnect.go).
 	autoConnect chan struct{}
 	// connectAttempt is the user's connect until it reaches Mozilla or is
-	// given up; connectFailure why the last one was given up; lastConnected
-	// when a connection last reached Mozilla (connect.go).
-	connectAttempt chan struct{}
+	// given up. connectFailure is why the last one was given up.
+	connectAttempt *connectAttempt
 	connectFailure string
-	lastConnected  time.Time
 	engine         *proxyEngine
 	state          engineState
 	countries      []serverlist.Country
@@ -310,6 +310,7 @@ func (d *Daemon) Run() error {
 	go d.watchNetwork()
 	d.superviseEngine()
 	d.CloseTunListener()
+	d.signInProxy.close()
 	if d.dashboard != nil {
 		d.dashboard.close()
 	}
@@ -481,6 +482,9 @@ func (d *Daemon) setOn(on bool) {
 	d.mu.Lock()
 	changed := d.off == on
 	d.off = !on
+	if on {
+		d.connectFailure = ""
+	}
 	d.mu.Unlock()
 	if changed {
 		logx.Info("proxy turned on=%t", on)

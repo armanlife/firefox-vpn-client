@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../app_settings.dart';
 import '../core/core_api.dart';
 import '../core/core_controller.dart';
 import '../core/models.dart';
 import '../l10n/app_localizations.dart';
+import 'browser_signin.dart';
 import 'format.dart';
 import 'signin_dialog.dart';
 import 'widgets.dart';
 
 class AccountsPage extends StatelessWidget {
-  const AccountsPage({super.key, required this.core});
+  const AccountsPage({super.key, required this.core, required this.settings});
 
   final CoreController core;
+  final AppSettings settings;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +30,7 @@ class AccountsPage extends StatelessWidget {
           children: [
             Expanded(child: PageTitle(l.navAccounts)),
             FilledButton.icon(
-              onPressed: () => showSignInDialog(context, core),
+              onPressed: () => startAddAccount(context, core, settings),
               icon: const Icon(Icons.add_rounded),
               label: Text(l.addAccount),
             ),
@@ -36,19 +39,23 @@ class AccountsPage extends StatelessWidget {
         const SizedBox(height: 20),
         if (core.accounts == null)
           const Center(child: CircularProgressIndicator())
-        else if (list.isEmpty)
-          const NoAccountsPanel()
         else ...[
-          for (var i = 0; i < list.length; i++) ...[
-            if (i > 0) const SizedBox(height: 12),
-            _AccountCard(
-              core: core,
-              account: list[i],
-              threshold: threshold,
-              first: i == 0,
-              last: i == list.length - 1,
-            ),
-          ],
+          if (list.isEmpty)
+            const NoAccountsPanel()
+          else
+            for (var i = 0; i < list.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12),
+              _AccountCard(
+                core: core,
+                settings: settings,
+                account: list[i],
+                threshold: threshold,
+                first: i == 0,
+                last: i == list.length - 1,
+              ),
+            ],
+          const SizedBox(height: 12),
+          _SignInMethodRow(settings: settings),
           // Nothing to switch to with one account.
           if (list.length > 1) ...[
             const SizedBox(height: 12),
@@ -85,6 +92,74 @@ class AccountsPage extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Chooses which sign-in flow Add account opens.
+class _SignInMethodRow extends StatelessWidget {
+  const _SignInMethodRow({required this.settings});
+
+  final AppSettings settings;
+
+  static String _label(AppLocalizations l, SignInMethod method) =>
+      switch (method) {
+        SignInMethod.browser => l.signInMethodBrowser,
+        SignInMethod.api => l.signInMethodApi,
+      };
+
+  Future<void> _change(BuildContext context) async {
+    final l = AppLocalizations.of(context);
+    final picked = await showDialog<SignInMethod>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l.signInMethod),
+        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+        content: SizedBox(
+          width: 360,
+          child: RadioGroup<SignInMethod>(
+            groupValue: settings.signInMethod,
+            onChanged: (v) => Navigator.pop(context, v),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final method in SignInMethod.values)
+                  RadioListTile<SignInMethod>(
+                    value: method,
+                    title: Text(_label(l, method)),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l.cancel),
+          ),
+        ],
+      ),
+    );
+    if (picked != null) settings.update(signInMethod: picked);
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: settings,
+    builder: (context, _) => Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        leading: const Icon(Icons.login_rounded),
+        title: Text(AppLocalizations.of(context).signInMethod),
+        // The value goes under the title: too long beside it on a phone.
+        subtitle: Text(
+          _label(AppLocalizations.of(context), settings.signInMethod),
+        ),
+        // Mirrors itself in right-to-left languages.
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: () => _change(context),
+      ),
+    ),
+  );
 }
 
 /// How much of an account's data is used before the next one takes over
@@ -287,6 +362,7 @@ class _CreateAccountGuide extends StatelessWidget {
 class _AccountCard extends StatelessWidget {
   const _AccountCard({
     required this.core,
+    required this.settings,
     required this.account,
     required this.threshold,
     required this.first,
@@ -294,6 +370,7 @@ class _AccountCard extends StatelessWidget {
   });
 
   final CoreController core;
+  final AppSettings settings;
   final Account account;
   final double threshold;
   final bool first;
@@ -517,7 +594,9 @@ class _AccountCard extends StatelessWidget {
     } on CoreApiException catch (e) {
       if (!context.mounted) return;
       if (e.statusCode == 409) {
-        await showSignInDialog(context, core, email: account.email);
+        // No stored password (a browser-added or Google/Apple account):
+        // the whole sign-in again, the way the settings say.
+        await startAddAccount(context, core, settings, email: account.email);
       } else {
         showError(context, e.message);
       }

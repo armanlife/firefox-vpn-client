@@ -736,6 +736,21 @@ class AppLocalizationsTr extends AppLocalizations {
       'Kotanın bu kadarı dolunca sıradaki hesaba geçilir.';
 
   @override
+  String get signInMethod => 'Giriş yöntemi';
+
+  @override
+  String get signInMethodBrowser => 'Tarayıcıyla giriş';
+
+  @override
+  String get signInMethodApi => 'Doğrudan giriş';
+
+  @override
+  String get browserSignInBroken => 'Giriş sayfası açılamadı.';
+
+  @override
+  String get browserSignInFallback => 'E-posta ve parola ile giriş';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

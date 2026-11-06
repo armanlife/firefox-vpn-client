@@ -1,10 +1,12 @@
 package service
 
 import (
+	"context"
 	"net/http"
 	"testing"
 	"time"
 
+	"github.com/armanlife/arman-vpn-client/core/internal/netcheck"
 	"github.com/armanlife/arman-vpn-client/core/internal/proxy"
 )
 
@@ -26,12 +28,11 @@ func connectFailure(t *testing.T, d *Daemon) string {
 
 // A connect that never reaches Mozilla is given up: the proxy goes off,
 // and the status says why.
-func TestConnectGivesUpWithoutAConnection(t *testing.T) {
+func TestConnectGivesUpWhenNoAttemptCompletes(t *testing.T) {
 	shortConnectWindow(t)
-	d := runOffDaemon(t, "clear")
+	d := newTestDaemon(t) // no supervisor, so no wake can complete
 	d.Connect()
-	waitMessage(t, d, PhaseRunning, "Proxy running")
-	waitMessage(t, d, PhaseOff, "Proxy off")
+	waitForCondition(t, time.Second, func() bool { return !d.IsOn() })
 	if got := connectFailure(t, d); got != proxy.FailureOther {
 		t.Fatalf("reason %q, want %q", got, proxy.FailureOther)
 	}
@@ -44,13 +45,43 @@ func TestConnectGivesUpWithoutAConnection(t *testing.T) {
 
 // One connection to Mozilla is enough; the proxy stays on after.
 func TestConnectThatReachedMozillaStaysOn(t *testing.T) {
-	shortConnectWindow(t)
-	d := runOffDaemon(t, "clear")
+	d, f := runLazyDaemon(t)
+	d.SetOn(false)
+	waitMessage(t, d, PhaseOff, "Proxy off")
 	d.Connect()
-	d.markConnected()
-	time.Sleep(300 * time.Millisecond)
+	waitForCondition(t, 5*time.Second, func() bool {
+		view, _ := d.StatusView()
+		return view.Pass != nil && !view.ConnectPending
+	})
 	if !d.IsOn() || connectFailure(t, d) != "" {
 		t.Fatalf("on %t, reason %q", d.IsOn(), connectFailure(t, d))
+	}
+	if got := f.passes.Load(); got != 1 {
+		t.Fatalf("the button must wake the proxy without client traffic: got %d pass requests", got)
+	}
+}
+
+func TestConnectRetriesBeforePublishingFailure(t *testing.T) {
+	oldCheck := netcheck.Check
+	netcheck.Check = func(context.Context) netcheck.Result { return netcheck.Online }
+	t.Cleanup(func() { netcheck.Check = oldCheck })
+
+	d, f := runLazyDaemon(t)
+	d.SetOn(false)
+	waitMessage(t, d, PhaseOff, "Proxy off")
+	f.guardianFails.Store(true)
+	d.Connect()
+	waitForCondition(t, 5*time.Second, func() bool {
+		view, _ := d.StatusView()
+		return view.Proxy != nil && view.Proxy.WakeError != ""
+	})
+	if view, _ := d.StatusView(); !view.ConnectPending || view.ConnectFailure != "" || !d.IsOn() {
+		t.Fatalf("the first failure must leave the connect pending: pending=%t failure=%q", view.ConnectPending, view.ConnectFailure)
+	}
+	waitMessage(t, d, PhaseOff, "Proxy off")
+	view, _ := d.StatusView()
+	if got := f.passes.Load(); got != 2 || view.ConnectPending || view.ConnectFailure != proxy.FailureOther {
+		t.Fatalf("after retries: %d pass requests, pending=%t, failure=%q", got, view.ConnectPending, view.ConnectFailure)
 	}
 }
 

@@ -736,6 +736,21 @@ class AppLocalizationsAz extends AppLocalizations {
       'Trafikin bu qədəri istifadə olunanda növbəti hesaba keçilir.';
 
   @override
+  String get signInMethod => 'Giriş üsulu';
+
+  @override
+  String get signInMethodBrowser => 'Brauzerlə giriş';
+
+  @override
+  String get signInMethodApi => 'Birbaşa giriş';
+
+  @override
+  String get browserSignInBroken => 'Giriş səhifəsi açıla bilmədi.';
+
+  @override
+  String get browserSignInFallback => 'E-poçt və şifrə ilə giriş';
+
+  @override
   String get sectionDns => 'DNS';
 
   @override

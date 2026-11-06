@@ -152,8 +152,7 @@ func SetOn(on bool) {
 	}
 }
 
-// Connect turns the proxy on for the user (the button): the core turns it
-// off again when it does not reach Mozilla within a minute (IsOn).
+// Connect turns the proxy on and tries to reach Mozilla within a minute.
 func Connect() {
 	mu.Lock()
 	d := running
@@ -170,6 +169,15 @@ func IsOn() bool {
 	d := running
 	mu.Unlock()
 	return d != nil && d.IsOn()
+}
+
+// ConnectPending keeps the Android notification in its connecting state
+// during the core's explicit connection attempts.
+func ConnectPending() bool {
+	mu.Lock()
+	d := running
+	mu.Unlock()
+	return d != nil && d.ConnectPending()
 }
 
 // NetworkChanged tells the core about Android's network: connected or

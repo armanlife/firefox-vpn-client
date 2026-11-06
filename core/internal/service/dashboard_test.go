@@ -339,6 +339,7 @@ func TestDashboardSignInWithoutAPassword(t *testing.T) {
 func TestDashboardSignInWithEmailCode(t *testing.T) {
 	d := newTestDaemon(t)
 	session := strings.Repeat("ab", 32)
+	verified := false
 	setCoreControlPlane(t, func(r *http.Request) (*http.Response, error) {
 		switch {
 		case r.URL.Path == "/v1/account/login":
@@ -348,9 +349,20 @@ func TestDashboardSignInWithEmailCode(t *testing.T) {
 			if !strings.Contains(string(body), `"123456"`) {
 				return coreResponse(r, http.StatusBadRequest, `{"errno":183,"message":"Invalid code"}`, nil), nil
 			}
+			verified = true
 			return coreResponse(r, http.StatusOK, `{}`, nil), nil
 		case r.URL.Path == "/v1/oauth/token":
+			return coreResponse(r, http.StatusNotAcceptable, "", nil), nil
+		case r.URL.Path == "/v1/oauth/authorization":
+			var request struct{ State string }
+			if !verified || json.NewDecoder(r.Body).Decode(&request) != nil || request.State == "" {
+				return nil, fmt.Errorf("OAuth authorization did not follow verification")
+			}
+			return coreResponse(r, http.StatusOK, `{"code":"fixture-code","state":"`+request.State+`"}`, nil), nil
+		case r.URL.Host == "oauth.accounts.firefox.com" && r.URL.Path == "/v1/token":
 			return coreResponse(r, http.StatusOK, `{"access_token":"access-new","refresh_token":"refresh-new","expires_in":3600,"scope":"profile"}`, nil), nil
+		case r.URL.Path == "/v1/session/destroy":
+			return coreResponse(r, http.StatusOK, `{}`, nil), nil
 		case r.Method == http.MethodHead && strings.HasSuffix(r.URL.Path, "/api/v1/fpn/token"):
 			return coreResponse(r, http.StatusOK, "", quotaHeader(2)), nil
 		}
@@ -591,5 +603,47 @@ func TestNetworkURLsNameTheComputersAddresses(t *testing.T) {
 		if got := networkURLs(listen, "/app/"); got != nil {
 			t.Errorf("%s: %v", listen, got)
 		}
+	}
+}
+
+func TestSignInProxyOnlyForTheApp(t *testing.T) {
+	d := newTestDaemon(t)
+	d.localToken = "local-token-fixture"
+	t.Cleanup(d.signInProxy.close)
+	handler := newDashboardServer(d).handler()
+	call := func(method, token string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(method, "/api/signin/browser/proxy", strings.NewReader(`{"port":0}`))
+		req.Host = "127.0.0.1:10820"
+		req.Header.Set("Content-Type", "application/json")
+		if token != "" {
+			req.Header.Set(localTokenHeader, token)
+		}
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		return rec
+	}
+
+	// A browser on the dashboard (no login set here) is not the app.
+	if rec := call(http.MethodPost, ""); rec.Code != http.StatusForbidden {
+		t.Fatalf("without the local token: %d %s, want 403", rec.Code, rec.Body)
+	}
+	if rec := call(http.MethodPost, "wrong"); rec.Code != http.StatusForbidden {
+		t.Fatalf("with a wrong token: %d %s, want 403", rec.Code, rec.Body)
+	}
+
+	rec := call(http.MethodPost, d.localToken)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("open: %d %s", rec.Code, rec.Body)
+	}
+	first := decodeBody[map[string]string](t, rec)["address"]
+	if !strings.HasPrefix(first, "127.0.0.1:") {
+		t.Fatalf("address %q, want loopback", first)
+	}
+	// Opened again (the page shown again): the same proxy.
+	if again := decodeBody[map[string]string](t, call(http.MethodPost, d.localToken))["address"]; again != first {
+		t.Fatalf("second open gave %q, want %q", again, first)
+	}
+	if rec := call(http.MethodDelete, d.localToken); rec.Code != http.StatusOK {
+		t.Fatalf("close: %d %s", rec.Code, rec.Body)
 	}
 }
