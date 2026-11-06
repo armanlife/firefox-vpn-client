@@ -228,11 +228,14 @@ func TestChallengeSlotWaiterGivesUp(t *testing.T) {
 	}
 }
 
-// The solver's requests carry the User-Agent the API calls do.
-func TestChallengeRequestsCarryFirefoxUserAgent(t *testing.T) {
-	var got []string
+// The solver's requests carry the same Firefox headers the API calls do,
+// including the no-compression Accept-Encoding that keeps Mozilla's edge from
+// answering them with HTTP 406.
+func TestChallengeRequestsCarryFirefoxHeaders(t *testing.T) {
+	type got struct{ userAgent, acceptEncoding string }
+	var requests []got
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		got = append(got, r.Header.Get("User-Agent"))
+		requests = append(requests, got{r.Header.Get("User-Agent"), r.Header.Get("Accept-Encoding")})
 		_, _ = w.Write([]byte(`{"auth":"a"}`))
 	}))
 	defer server.Close()
@@ -243,12 +246,15 @@ func TestChallengeRequestsCarryFirefoxUserAgent(t *testing.T) {
 	if _, err := fetchPAT(ctx, server.Client(), server.URL, "token"); err != nil {
 		t.Fatal(err)
 	}
-	if len(got) != 2 {
-		t.Fatalf("requests seen: %d", len(got))
+	if len(requests) != 2 {
+		t.Fatalf("requests seen: %d", len(requests))
 	}
-	for _, ua := range got {
-		if ua != controlplane.FirefoxUserAgent() {
-			t.Fatalf("User-Agent %q, want %q", ua, controlplane.FirefoxUserAgent())
+	for _, request := range requests {
+		if request.userAgent != controlplane.FirefoxUserAgent() {
+			t.Fatalf("User-Agent %q, want %q", request.userAgent, controlplane.FirefoxUserAgent())
+		}
+		if request.acceptEncoding != "identity" {
+			t.Fatalf("Accept-Encoding %q, want %q", request.acceptEncoding, "identity")
 		}
 	}
 }

@@ -20,6 +20,17 @@ func TestFirefoxPlatform(t *testing.T) {
 	}
 }
 
+// The control plane asks for no compression: net/http adds "Accept-Encoding:
+// gzip" by itself, and Mozilla's edge answers that exact header over
+// HTTP/1.1 with HTTP 406 before the request reaches FxA.
+func TestFirefoxHeadersAskForNoCompression(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "https://api.accounts.firefox.com/", nil)
+	ApplyFirefoxHeaders(req)
+	if got := req.Header.Get("Accept-Encoding"); got != "identity" {
+		t.Fatalf("Accept-Encoding %q, want %q", got, "identity")
+	}
+}
+
 // The User-Agent names the Firefox release product details gave, and keeps
 // the last good one when an answer is not a version.
 func TestFirefoxUserAgentFollowsTheRelease(t *testing.T) {

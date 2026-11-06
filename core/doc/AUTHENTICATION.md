@@ -153,6 +153,8 @@ Do not infer live quota-exhaustion behavior from parsing quota headers. The hist
 
 [internal/controlplane](../internal/controlplane/client.go) owns a shared 30-second HTTP client and cookie jar. Configure `controlplane.SetTransport` before requests start. This client is distinct from data-plane sessions.
 
+An HTTP 406 from Mozilla's edge is not always a failed challenge. The edge refuses one request fingerprint outright: `Accept-Encoding: gzip` as the sole encoding, which is exactly what net/http adds by itself when a request leaves the header unset. This client speaks HTTP/1.1 because it carries Firefox's TLS hello through uTLS, and net/http speaks HTTP/2 only over its own TLS, so that header is present on every control-plane call. Firefox asks for `gzip, deflate, br, zstd`; net/http decodes only the gzip it requested itself, so `ApplyFirefoxHeaders` and the challenge solver ask for `identity` instead. A 406 that survives a cleared challenge page means the edge refused the fingerprint, not the cookie.
+
 When the account API returns HTTP 406 during refresh, the core first tries Mozilla's published OAuth token endpoint once with the same refresh grant. Both endpoints use the same refresh tokens. If the OAuth endpoint is unreachable or also returns 406, the original account-API challenge flow runs. A confirmed invalid refresh token (OAuth HTTP 400, errno 108) requires reauthentication.
 
 When the Hawk-signed sign-in token exchange returns HTTP 406, the core uses the same verified session to request an authorization code with S256 PKCE and a fresh state value. After matching the returned state, it exchanges the code and verifier at Mozilla's OAuth token endpoint. This keeps email, TOTP, and unblock verification in the existing sign-in flow. Only the authorization request carries the session's Hawk credential.
@@ -170,6 +172,7 @@ Do not disable production TLS validation to work around a challenge or local int
 - `TestAccountPool*`, `TestDashboardSignInWithEmailCode`: account failover and the dashboard sign-in flow.
 - `TestLoginWithUnblockCodeSendsCode`, `TestVerifyTOTPReportsRejectedCode`, `TestAnswerChallengeAsksCaptchaSolver`: unblock codes, TOTP, and CAPTCHA answers.
 - `TestLoginCorrectsTheEmailCase`: an email in another letter case is signed in with the account's own spelling.
+- `TestFirefoxHeadersAskForNoCompression`, `TestChallengeRequestsCarryFirefoxHeaders`: the control plane and the solver avoid the `Accept-Encoding: gzip` fingerprint the edge answers with 406.
 - `TestNewFxaAPIErrorParsesErrno`: typed account error parsing.
 - `TestAnchorProxyPassClaims*`, `TestFetchProxyPassSendsNoCacheAndAnchorsExpiry`: Guardian claim-time anchoring.
 - `TestHTTPErrorClassifiesStatus`, `TestParseProxyUsage`, `TestFxaAPIErrorClassifiesReauthRequired`: status, quota, and sign-in classification.

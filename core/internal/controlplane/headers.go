@@ -56,7 +56,17 @@ func firefoxPlatform(goos, goarch string) string {
 
 // ApplyFirefoxHeaders sets the User-Agent and Accept headers Firefox sends
 // with every control plane API request.
+//
+// Accept-Encoding is "identity" on purpose. net/http adds "Accept-Encoding:
+// gzip" by itself when the header is unset; over HTTP/1.1 (the control
+// plane's only protocol: uTLS carries Firefox's hello, and net/http speaks
+// HTTP/2 only over its own TLS) that exact header is a bot signature
+// Mozilla's edge rejects with HTTP 406 before FxA ever sees the request.
+// The challenge solver cannot clear it, because the retry carries the same
+// header. Firefox's real "gzip, deflate, br, zstd" also passes, but net/http
+// decodes only the gzip it asked for itself, so no compression is requested.
 func ApplyFirefoxHeaders(req *http.Request) {
 	req.Header.Set("User-Agent", FirefoxUserAgent())
 	req.Header.Set("Accept", "*/*")
+	req.Header.Set("Accept-Encoding", "identity")
 }
