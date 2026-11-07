@@ -488,13 +488,17 @@ func installChallengeCookies(solverJar http.CookieJar, pageURL string) error {
 		return fmt.Errorf("challenge completed but no cookies were issued")
 	}
 
-	apiURL, err := url.Parse(fxaAuthServer + "/")
-	if err != nil {
-		return err
+	targets := []string{
+		fxaAuthServer + "/",
+		"https://api.accounts.firefox.com/",
+		"https://oauth.accounts.firefox.com/",
+		fxaSiteURL,
 	}
-	controlplane.SetCookies(apiURL, cookies)
-	parsed2, _ := url.Parse(fxaSiteURL)
-	controlplane.SetCookies(parsed2, cookies)
+	for _, t := range targets {
+		if u, err := url.Parse(t); err == nil {
+			controlplane.SetCookies(u, cookies)
+		}
+	}
 	return nil
 }
 

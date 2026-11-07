@@ -44,3 +44,24 @@ func TestFirefoxUserAgentFollowsTheRelease(t *testing.T) {
 		t.Fatalf("Accept-Encoding = %q, want identity", got)
 	}
 }
+
+func TestFirefoxHeadersIncludeFetchMetadata(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodPost, "https://api.accounts.firefox.com/v1/oauth/token", nil)
+	ApplyFirefoxHeaders(req)
+
+	if got := req.Header.Get("Sec-Fetch-Dest"); got != "empty" {
+		t.Errorf("Sec-Fetch-Dest = %q, want empty", got)
+	}
+	if got := req.Header.Get("Sec-Fetch-Mode"); got != "cors" {
+		t.Errorf("Sec-Fetch-Mode = %q, want cors", got)
+	}
+	if got := req.Header.Get("Sec-Fetch-Site"); got != "same-site" {
+		t.Errorf("Sec-Fetch-Site = %q, want same-site", got)
+	}
+	if got := req.Header.Get("Origin"); got != "https://accounts.firefox.com" {
+		t.Errorf("Origin = %q, want https://accounts.firefox.com", got)
+	}
+	if got := req.Header.Get("Referer"); got != "https://accounts.firefox.com/" {
+		t.Errorf("Referer = %q, want https://accounts.firefox.com/", got)
+	}
+}

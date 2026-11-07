@@ -192,6 +192,11 @@ func Do(req *http.Request) (*http.Response, error) {
 	return client.Do(req)
 }
 
+// Cookies returns the cookies for u in the shared client's cookie jar.
+func Cookies(u *url.URL) []*http.Cookie {
+	return client.Jar.Cookies(u)
+}
+
 // SetCookies stores cookies for u in the shared client's cookie jar.
 func SetCookies(u *url.URL, cookies []*http.Cookie) {
 	client.Jar.SetCookies(u, cookies)

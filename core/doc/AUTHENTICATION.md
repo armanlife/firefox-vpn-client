@@ -143,7 +143,7 @@ Do not infer live quota-exhaustion behavior from parsing quota headers. The hist
 
 [internal/controlplane](../internal/controlplane/client.go) owns a shared 30-second HTTP client and cookie jar. Configure `controlplane.SetTransport` before requests start. This client is distinct from data-plane sessions.
 
-Control-plane and challenge requests set `Accept-Encoding: identity`. In live HTTP/1.1 tests against Mozilla's token endpoint, Go's automatic `gzip` header received HTTP 406, while `identity` reached FxA for both the sign-in and refresh grants. Challenge probes on the website and API responses are evaluated separately.
+Control-plane and challenge requests set Accept-Encoding: identity. In live HTTP/1.1 tests against Mozilla's token endpoint, Go's automatic gzip header received HTTP 406, while identity reached FxA for both the sign-in and refresh grants. In addition, modern browser fetch metadata (Sec-Fetch-Dest, Sec-Fetch-Mode, Sec-Fetch-Site) and Origin/Referer headers are sent with control-plane requests to Mozilla/Firefox endpoints; without them, Fastly's bot detection flags the request as a non-browser client spoofing Firefox's User-Agent and answers with HTTP 406 even after the challenge was solved. Challenge probes on the website and API responses are evaluated separately.
 
 When the account API returns HTTP 406 during refresh, the core first tries Mozilla's published OAuth token endpoint once with the same refresh grant. Both endpoints use the same refresh tokens. If the OAuth endpoint is unreachable or also returns 406, the original account-API challenge flow runs. A confirmed invalid refresh token (OAuth HTTP 400, errno 108) requires reauthentication.
 

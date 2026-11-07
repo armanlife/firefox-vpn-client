@@ -61,4 +61,16 @@ func ApplyFirefoxHeaders(req *http.Request) {
 	// Keep net/http from adding gzip as the sole encoding. That header was
 	// associated with HTTP 406 on the HTTP/1.1 OAuth path in live A/B tests.
 	req.Header.Set("Accept-Encoding", "identity")
+
+	// Fastly's anti-bot WAF checks modern browser fingerprinting for requests
+	// claiming to be Firefox. Real Firefox fetch/XHR requests to accounts.firefox.com
+	// include fetch metadata (Sec-Fetch-*) and Origin/Referer headers. Without these,
+	// Fastly flags the request as bot spoofing and returns HTTP 406.
+	req.Header.Set("Sec-Fetch-Dest", "empty")
+	req.Header.Set("Sec-Fetch-Mode", "cors")
+	req.Header.Set("Sec-Fetch-Site", "same-site")
+	if req.URL != nil && (strings.HasSuffix(req.URL.Hostname(), "firefox.com") || strings.HasSuffix(req.URL.Hostname(), "mozilla.com") || strings.HasSuffix(req.URL.Hostname(), "mozilla.org")) {
+		req.Header.Set("Origin", "https://accounts.firefox.com")
+		req.Header.Set("Referer", "https://accounts.firefox.com/")
+	}
 }
