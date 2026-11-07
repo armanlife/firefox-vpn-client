@@ -70,8 +70,8 @@ String? updateProxy(CoreStatus? status) {
   return CoreLocator.listenUri(proxy.listen).authority;
 }
 
-/// Looks for a newer release on GitHub every 5 days: the app looks a minute
-/// after it starts, and then every hour, whether 5 days have passed since
+/// Looks for a newer release on GitHub daily: the app looks a minute
+/// after it starts, and then every hour, whether a day has passed since
 /// the last look that worked. What it finds is kept in the settings, so the
 /// home page shows it after a restart too; the computer also shows a
 /// notification while the window is in the tray. The About page looks at
@@ -86,7 +86,7 @@ String? updateProxy(CoreStatus? status) {
 /// opens the download.
 abstract final class Updates {
   /// How long a successful look holds.
-  static const every = Duration(days: 5);
+  static const every = Duration(days: 1);
 
   /// The newer release, once one was found.
   static final available = ValueNotifier<Release?>(null);

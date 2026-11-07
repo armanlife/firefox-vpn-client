@@ -69,18 +69,20 @@ const updatesFile = 'updates.json';
 
 /// Reads which release this app should update to: the version that
 /// [updatesFile] (GitHub's raw file of [repo]) names for [os], once that
-/// release is published with [os]'s file ([releaseFilePart]); when the file
-/// cannot be read (some networks block GitHub's raw files) or does not name
-/// [os], the latest release on GitHub.
+/// release is published with [os]'s file ([releaseFilePart]). When the raw
+/// file cannot be read or does not name [os], try its jsDelivr mirror, then
+/// the latest release on GitHub.
 /// null when [current] is the newest, or when there is no release yet; an
 /// error while the named release is not published yet, so the next look
 /// comes soon. [proxy] ("host:port"), when set, carries the requests (the
 /// VPN's own proxy, for networks where GitHub is blocked); they fall back
-/// to a direct connection. [server], [os], and [current] are for tests.
+/// to a direct connection. [server], [updatesMirror], [os], and [current]
+/// are for tests; a custom [server] uses a mirror only when one is supplied.
 Future<Release?> checkForUpdate({
   String? proxy,
   String repo = githubRepo,
   String? server,
+  String? updatesMirror,
   String? os,
   String current = appVersion,
 }) async {
@@ -91,13 +93,21 @@ Future<Release?> checkForUpdate({
         proxy == null || srv.isNotEmpty ? 'DIRECT' : 'PROXY $proxy; DIRECT';
   try {
     final system = os ?? Platform.operatingSystem;
-    final wanted = await _namedVersion(
+    var wanted = await _namedVersion(
       client,
       srv.isEmpty
           ? 'https://raw.githubusercontent.com/$repo/HEAD/.github/$updatesFile'
           : '$srv/$updatesFile',
       system,
     );
+    final mirror =
+        updatesMirror ??
+        (srv.isEmpty
+            ? 'https://cdn.jsdelivr.net/gh/$repo@main/.github/$updatesFile'
+            : null);
+    if (wanted == null && mirror != null) {
+      wanted = await _namedVersion(client, mirror, system);
+    }
     if (wanted == null) return await _latestRelease(client, srv, repo, current);
     if (!newerVersion(wanted, current)) return null;
     final releases = srv.isEmpty
@@ -122,8 +132,8 @@ String? versionFor(Object? updates, String os) {
 }
 
 /// The version that the [updatesFile] at [url] names for [os]; null when it
-/// cannot be read, is not JSON, or does not name one (whatever went wrong:
-/// the latest release then decides).
+/// cannot be read, is not JSON, or does not name one, allowing the caller
+/// to try the next metadata source.
 Future<String?> _namedVersion(HttpClient client, String url, String os) async {
   try {
     final (status, body) = await _get(client, url);

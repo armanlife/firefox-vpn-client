@@ -6,10 +6,14 @@ import 'package:arman_vpn/core/updates.dart';
 
 /// A release server on loopback in GitHub's place: [routes] maps
 /// "METHOD /path" to a status and a body; anything else is 404.
-Future<String> serve(Map<String, (int, String)> routes) async {
+Future<String> serve(
+  Map<String, (int, String)> routes, {
+  List<String>? requests,
+}) async {
   final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
   addTearDown(() => server.close(force: true));
   server.listen((req) {
+    requests?.add('${req.method} ${req.uri.path}');
     final (status, body) = routes['${req.method} ${req.uri.path}'] ?? (404, '');
     req.response.statusCode = status;
     if (req.method != 'HEAD') req.response.write(body);
@@ -89,6 +93,115 @@ void main() {
       );
       expect(phone?.version, '1.0.4');
     });
+
+    test('a valid primary file takes precedence over the mirror', () async {
+      final mirrorRequests = <String>[];
+      final mirror = await serve({
+        'GET /updates.json': (200, '{"android":"9.9.9"}'),
+      }, requests: mirrorRequests);
+      final primary = await serve({'GET /updates.json': (200, updates)});
+      expect(
+        await checkForUpdate(
+          server: primary,
+          updatesMirror: '$mirror/updates.json',
+          os: 'android',
+          current: '1.0.4',
+        ),
+        isNull,
+      );
+      expect(mirrorRequests, isEmpty);
+    });
+
+    test('the mirror supplies metadata when the primary is unusable', () async {
+      for (final response in [
+        (503, ''),
+        (200, 'not JSON'),
+        (200, '{"windows":"invalid"}'),
+        (200, '{"android":"1.0.4"}'),
+      ]) {
+        final primaryRequests = <String>[];
+        final mirrorRequests = <String>[];
+        final primary = await serve({
+          'GET /updates.json': response,
+          'HEAD /releases/download/v1.0.6/Arman-VPN-1.0.6-Windows-x64.zip': (
+            302,
+            '',
+          ),
+        }, requests: primaryRequests);
+        final mirror = await serve({
+          'GET /updates.json': (200, updates),
+        }, requests: mirrorRequests);
+        final release = await checkForUpdate(
+          server: primary,
+          updatesMirror: '$mirror/updates.json',
+          os: 'windows',
+          current: '1.0.5',
+        );
+        expect(release?.version, '1.0.6', reason: '$response');
+        expect(release?.url, '$primary/releases/tag/v1.0.6');
+        expect(primaryRequests, [
+          'GET /updates.json',
+          'HEAD /releases/download/v1.0.6/Arman-VPN-1.0.6-Windows-x64.zip',
+        ]);
+        expect(mirrorRequests, ['GET /updates.json']);
+      }
+    });
+
+    test('an unreachable primary uses the mirror', () async {
+      final mirror = await serve({'GET /updates.json': (200, updates)});
+      final unavailable = await HttpServer.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final primary = 'http://127.0.0.1:${unavailable.port}';
+      await unavailable.close(force: true);
+      expect(
+        await checkForUpdate(
+          server: primary,
+          updatesMirror: '$mirror/updates.json',
+          os: 'android',
+          current: '1.0.4',
+        ),
+        isNull,
+      );
+    });
+
+    test(
+      'an unusable primary and mirror fall back to the release API',
+      () async {
+        final requests = <String>[];
+        final primary = await serve({
+          'GET /updates.json': (503, ''),
+          'GET /releases/latest': (200, latest),
+        }, requests: requests);
+        final mirror = await serve({'GET /updates.json': (200, 'not JSON')});
+        final release = await checkForUpdate(
+          server: primary,
+          updatesMirror: '$mirror/updates.json',
+          os: 'macos',
+          current: '1.0.4',
+        );
+        expect(release?.version, '1.0.6');
+        expect(requests, ['GET /updates.json', 'GET /releases/latest']);
+      },
+    );
+
+    test(
+      'a mirrored version still requires its published release file',
+      () async {
+        final primary = await serve({'GET /updates.json': (503, '')});
+        final mirror = await serve({'GET /updates.json': (200, updates)});
+        await expectLater(
+          checkForUpdate(
+            server: primary,
+            updatesMirror: '$mirror/updates.json',
+            os: 'windows',
+            current: '1.0.5',
+          ),
+          throwsA(isA<HttpException>()),
+        );
+      },
+    );
 
     test('a phone is not offered a release made for the computers', () async {
       final url = await serve({
