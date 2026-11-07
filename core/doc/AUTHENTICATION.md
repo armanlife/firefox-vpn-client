@@ -157,6 +157,8 @@ The core can also use the same verified session to request an authorization code
 
 `Fastly challenge page probe passed` records the challenge page's host, task types, rounds, and duration. The separate `FxA API retry returned HTTP …` line records the original request's method, host, path, and response status. A cleared challenge page alone does not establish acceptance at the API endpoint.
 
+Solved challenge cookies are installed for the account API, its root path, the alternate OAuth origin (`oauth.accounts.firefox.com`), and the sign-in site. Retries at either token endpoint can then carry the solved cookie; it is not copied to Guardian or unrelated hosts.
+
 The solver reads the challenge script's initialization arguments as JSON and checks the asset prefix against the path it fetched. The legacy regular expression remains a fallback for flat calls with JavaScript comments after the prefix. Neither parser executes the script.
 
 Do not disable production TLS validation to work around a challenge or local interception. Test-only certificate configurations must remain local to tests.
