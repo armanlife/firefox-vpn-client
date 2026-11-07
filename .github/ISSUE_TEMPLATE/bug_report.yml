@@ -2,6 +2,15 @@ name: Bug report
 description: Report a problem with Arman VPN and share the details needed to investigate it.
 labels: [bug]
 body:
+  - type: checkboxes
+    id: search-first
+    attributes:
+      label: Search first
+      description: Please [search existing issues](https://github.com/armanlife/arman-vpn-client/issues?q=is%3Aissue) before reporting.
+      options:
+        - label: I searched and no similar issues were found
+          required: true
+
   - type: textarea
     id: behavior
     attributes:
